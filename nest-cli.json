@@ -7,6 +7,15 @@
     "webpack": true
   },
   "projects": {
+    "bootstrap": {
+      "type": "library",
+      "root": "libs/bootstrap",
+      "entryFile": "index",
+      "sourceRoot": "libs/bootstrap/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/bootstrap/tsconfig.lib.json"
+      }
+    },
     "config": {
       "type": "library",
       "root": "libs/config",
@@ -25,13 +34,13 @@
         "tsConfigPath": "libs/database/tsconfig.lib.json"
       }
     },
-    "bootstrap": {
+    "health": {
       "type": "library",
-      "root": "libs/bootstrap",
+      "root": "libs/health",
       "entryFile": "index",
-      "sourceRoot": "libs/bootstrap/src",
+      "sourceRoot": "libs/health/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/bootstrap/tsconfig.lib.json"
+        "tsConfigPath": "libs/health/tsconfig.lib.json"
       }
     }
   }
