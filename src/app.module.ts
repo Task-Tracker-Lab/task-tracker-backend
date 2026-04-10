@@ -7,10 +7,19 @@ import { ConfigService } from '@nestjs/config';
 import * as schema from './shared/entities';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe, ZodValidationException } from 'nestjs-zod';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 @Module({
     imports: [
         ConfigModule,
+        PrometheusModule.registerAsync({
+            useFactory: () => ({
+                path: 'dump',
+                defaultMetrics: {
+                    enabled: true,
+                },
+            }),
+        }),
         DatabaseModule.registerAsync({
             global: true,
             inject: [ConfigService],
