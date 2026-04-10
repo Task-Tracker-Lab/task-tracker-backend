@@ -24,6 +24,12 @@
             "@libs/database/*": ["./libs/database/src/*"]
         }
     },
-    "include": ["src/**/*", "libs/**/*", "drizzle.config.ts", "vitest.config.ts"],
+    "include": [
+        "src/**/*",
+        "libs/**/*",
+        "drizzle.config.ts",
+        "vitest.config.ts",
+        "vitest.config.e2e.ts"
+    ],
     "exclude": ["dist", "node_modules"]
 }
