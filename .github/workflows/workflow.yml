@@ -31,16 +31,9 @@ jobs:
           --health-retries=5
 
     env:
-      HOST: localhost
       PORT: 3000
-      DB_USERNAME: tracker
-      DB_PASSWORD: tracker
-      DB_DATABASE: tracker
       DATABASE_URL: postgresql://test:test@localhost:5432/test
-      JWT_SECRET: test
-      JWT_EXPIRES_IN: 1d
       NODE_ENV: test
-      CORS_ALLOWED_ORIGINS: http://localhost:3000
 
     steps:
       - name: Checkout
