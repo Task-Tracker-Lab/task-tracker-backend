@@ -1,63 +1,41 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "declaration": false,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false,
-    "types": [
-      "node",
-      "vitest/globals"
-    ],
-    "paths": {
-      "@libs/bootstrap": [
-        "./libs/bootstrap/src"
-      ],
-      "@libs/bootstrap/*": [
-        "./libs/bootstrap/src/*"
-      ],
-      "@libs/config": [
-        "./libs/config/src"
-      ],
-      "@libs/config/*": [
-        "./libs/config/src/*"
-      ],
-      "@libs/database": [
-        "./libs/database/src"
-      ],
-      "@libs/database/*": [
-        "./libs/database/src/*"
-      ],
-      "@libs/health": [
-        "libs/health/src"
-      ],
-      "@libs/health/*": [
-        "libs/health/src/*"
-      ]
+    "compilerOptions": {
+        "module": "commonjs",
+        "declaration": false,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "ES2021",
+        "sourceMap": true,
+        "outDir": "./dist",
+        "incremental": true,
+        "skipLibCheck": true,
+        "strictNullChecks": false,
+        "noImplicitAny": false,
+        "strictBindCallApply": false,
+        "forceConsistentCasingInFileNames": false,
+        "noFallthroughCasesInSwitch": false,
+        "types": ["node", "vitest/globals"],
+        "paths": {
+            "@libs/bootstrap": ["./libs/bootstrap/src"],
+            "@libs/bootstrap/*": ["./libs/bootstrap/src/*"],
+            "@libs/config": ["./libs/config/src"],
+            "@libs/config/*": ["./libs/config/src/*"],
+            "@libs/database": ["./libs/database/src"],
+            "@libs/database/*": ["./libs/database/src/*"],
+            "@libs/health": ["libs/health/src"],
+            "@libs/health/*": ["libs/health/src/*"]
+        },
+        "baseUrl": "./"
     },
-    "baseUrl": "./"
-  },
-  "include": [
-    "src/**/*",
-    "libs/**/*",
-    "test/**/*",
-    "drizzle.config.ts",
-    "vitest.config.ts",
-    "vitest.config.e2e.ts"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules"
-  ]
+    "include": [
+        "src/**/*",
+        "libs/**/*",
+        "test/**/*",
+        "drizzle.config.ts",
+        "vitest.config.ts",
+        "vitest.config.e2e.ts"
+    ],
+    "exclude": ["dist", "node_modules"]
 }
