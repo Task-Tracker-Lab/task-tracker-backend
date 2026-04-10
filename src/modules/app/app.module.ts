@@ -10,6 +10,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { HealthModule } from '@libs/health';
 import { UserModule } from '../user';
 import { GlobalExceptionFilter } from 'src/shared/error';
+import { AuthModule } from '../auth';
 
 @Module({
     imports: [
@@ -33,6 +34,7 @@ import { GlobalExceptionFilter } from 'src/shared/error';
                 };
             },
         }),
+        AuthModule,
         UserModule,
         HealthModule.register('gateway'),
     ],
