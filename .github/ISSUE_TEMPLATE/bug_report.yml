@@ -1,41 +1,41 @@
-name: "Bug Report"
-description: "Сообщить об ошибке в работе приложения"
-labels: ["bug", "triage"]
+name: 'Bug Report'
+description: 'Сообщить об ошибке в работе приложения'
+labels: ['bug', 'triage']
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Спасибо, что решили помочь сделать проект лучше!
-  - type: input
-    id: version
-    attributes:
-      label: "Версия приложения"
-      description: "Какую версию вы используете? (например, 0.0.1)"
-      placeholder: "0.0.x"
-    validations:
-      required: true
-  - type: textarea
-    id: steps
-    attributes:
-      label: "Шаги воспроизведения"
-      description: "Как нам увидеть эту ошибку?"
-      placeholder: |
-        1. Запустить docker-compose
-        2. Отправить POST запрос на /api/v1/auth...
-    validations:
-      required: true
-  - type: dropdown
-    id: environment
-    attributes:
-      label: "Окружение"
-      options:
-        - Docker
-        - Local (pnpm)
-        - Production
-    validations:
-      required: true
-  - type: textarea
-    id: expected
-    attributes:
-      label: "Ожидаемое поведение"
-      placeholder: "Что должно было произойти?"
+    - type: markdown
+      attributes:
+          value: |
+              Спасибо, что решили помочь сделать проект лучше!
+    - type: input
+      id: version
+      attributes:
+          label: 'Версия приложения'
+          description: 'Какую версию вы используете? (например, 0.0.1)'
+          placeholder: '0.0.x'
+      validations:
+          required: true
+    - type: textarea
+      id: steps
+      attributes:
+          label: 'Шаги воспроизведения'
+          description: 'Как нам увидеть эту ошибку?'
+          placeholder: |
+              1. Запустить docker-compose
+              2. Отправить POST запрос на /api/v1/auth...
+      validations:
+          required: true
+    - type: dropdown
+      id: environment
+      attributes:
+          label: 'Окружение'
+          options:
+              - Docker
+              - Local (pnpm)
+              - Production
+      validations:
+          required: true
+    - type: textarea
+      id: expected
+      attributes:
+          label: 'Ожидаемое поведение'
+          placeholder: 'Что должно было произойти?'

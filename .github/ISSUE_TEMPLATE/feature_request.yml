@@ -1,18 +1,18 @@
-name: "🚀 Feature Request"
-description: "Предложить новую идею или улучшение"
-labels: ["enhancement"]
+name: '🚀 Feature Request'
+description: 'Предложить новую идею или улучшение'
+labels: ['enhancement']
 body:
-  - type: textarea
-    id: problem
-    attributes:
-      label: "Какую проблему мы решаем?"
-      description: "Опишите, почему текущего функционала недостаточно."
-    validations:
-      required: true
-  - type: textarea
-    id: solution
-    attributes:
-      label: "Ваше предложение"
-      description: "Как именно вы видите реализацию этой фичи?"
-    validations:
-      required: true
+    - type: textarea
+      id: problem
+      attributes:
+          label: 'Какую проблему мы решаем?'
+          description: 'Опишите, почему текущего функционала недостаточно.'
+      validations:
+          required: true
+    - type: textarea
+      id: solution
+      attributes:
+          label: 'Ваше предложение'
+          description: 'Как именно вы видите реализацию этой фичи?'
+      validations:
+          required: true
