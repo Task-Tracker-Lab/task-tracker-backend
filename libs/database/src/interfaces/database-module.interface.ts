@@ -12,11 +12,14 @@ export interface DatabaseModuleOptionsFactory {
     createDatabaseOptions(): Promise<DatabaseModuleOptions> | DatabaseModuleOptions;
 }
 
-export interface DatabaseModuleAsyncOptions extends Pick<ModuleMetadata, 'imports'> {
+export interface DatabaseModuleAsyncOptions<TArgs extends unknown[] = any[]> extends Pick<
+    ModuleMetadata,
+    'imports'
+> {
     useExisting?: Type<DatabaseModuleOptionsFactory>;
     useClass?: Type<DatabaseModuleOptionsFactory>;
     useFactory?: (
-        ...args: unknown[]
+        ...args: TArgs
     ) => Promise<Omit<DatabaseModuleOptions, 'global'>> | Omit<DatabaseModuleOptions, 'global'>;
     inject?: FactoryProvider['inject'];
     global?: boolean;

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build output
+dist
+artifacts
+out
+
+# Environment variables
+.env
+.env.production
+.env.local
+!.env.example
+
+# Docker / Infrastructure
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+Dockerfile.*
+.dockerignore
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+*.swp
+*.log
+
+# Tests and Coverage
+coverage
+test-results
+*.spec.ts
+*.e2e-spec.ts
