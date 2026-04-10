@@ -16,6 +16,7 @@
         "strictBindCallApply": false,
         "forceConsistentCasingInFileNames": false,
         "noFallthroughCasesInSwitch": false,
+        "types": ["node", "vitest/globals"],
         "paths": {
             "@libs/config": ["./libs/config/src"],
             "@libs/config/*": ["./libs/config/src/*"],
