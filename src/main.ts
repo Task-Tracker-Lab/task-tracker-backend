@@ -1,5 +1,5 @@
 import { bootstrapApp } from '@libs/bootstrap';
-import { AppModule } from './app.module';
+import { AppModule } from './modules/app/app.module';
 
 bootstrapApp({
     serviceName: 'Tracker Monolit',
