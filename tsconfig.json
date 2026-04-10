@@ -21,7 +21,9 @@
             "@libs/config": ["./libs/config/src"],
             "@libs/config/*": ["./libs/config/src/*"],
             "@libs/database": ["./libs/database/src"],
-            "@libs/database/*": ["./libs/database/src/*"]
+            "@libs/database/*": ["./libs/database/src/*"],
+            "@libs/bootstrap": ["./libs/bootstrap/src"],
+            "@libs/bootstrap/*": ["./libs/bootstrap/src/*"]
         }
     },
     "include": [
