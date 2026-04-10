@@ -3,6 +3,7 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { SwaggerOptions } from '../interfaces';
 import { SWAGGER_DEFAULTS } from '../configs/swagger';
+import { GlobalErrorResponse } from 'src/shared/error/schema';
 
 export async function setupSwagger(app: NestFastifyApplication, options: SwaggerOptions = {}) {
     const { title, description, version, path, server } = {
@@ -22,7 +23,9 @@ export async function setupSwagger(app: NestFastifyApplication, options: Swagger
     if (stage) builder.addServer(`https://api.${stage}`, 'Staging');
     if (domain) builder.addServer(`https://api.${domain}`, 'Production');
 
-    const document = SwaggerModule.createDocument(app, builder.build());
+    const document = SwaggerModule.createDocument(app, builder.build(), {
+        extraModels: [GlobalErrorResponse.Output],
+    });
 
     SwaggerModule.setup(path, app, cleanupOpenApiDoc(document), {
         jsonDocumentUrl: `${path}/s/json`,

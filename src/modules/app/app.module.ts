@@ -5,9 +5,11 @@ import { DatabaseModule } from '@libs/database';
 import { ConfigService } from '@nestjs/config';
 import * as schema from '../../shared/entities';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
-import { ZodValidationPipe, ZodValidationException } from 'nestjs-zod';
+import { ZodValidationPipe } from 'nestjs-zod';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { HealthModule } from '@libs/health';
+import { UserModule } from '../user';
+import { GlobalExceptionFilter } from 'src/shared/error';
 
 @Module({
     imports: [
@@ -31,6 +33,7 @@ import { HealthModule } from '@libs/health';
                 };
             },
         }),
+        UserModule,
         HealthModule.register('gateway'),
     ],
     controllers: [AppController],
@@ -41,7 +44,7 @@ import { HealthModule } from '@libs/health';
         },
         {
             provide: APP_FILTER,
-            useClass: ZodValidationException,
+            useClass: GlobalExceptionFilter,
         },
     ],
 })
