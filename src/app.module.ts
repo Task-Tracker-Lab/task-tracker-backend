@@ -4,8 +4,8 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@libs/config';
 
 @Module({
-  imports: [ConfigModule],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [ConfigModule],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}
