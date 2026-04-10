@@ -5,41 +5,41 @@ import { ConfigSchema } from './config.schema';
 import { ZodError } from 'zod/v4';
 
 const validateConfig = (config: Record<string, unknown>) => {
-  try {
-    return ConfigSchema.parse(config);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      console.group('\nENVIRONMENT_VALIDATION_ERROR\n');
+    try {
+        return ConfigSchema.parse(config);
+    } catch (error) {
+        if (error instanceof ZodError) {
+            console.group('\nENVIRONMENT_VALIDATION_ERROR\n');
 
-      error.issues.forEach((issue) => {
-        const field = issue.path.join('.') || 'ROOT';
+            error.issues.forEach((issue) => {
+                const field = issue.path.join('.') || 'ROOT';
 
-        console.group(`Field: ${field}`);
-        console.error(`Message: ${issue.message}`);
-        console.error(`Code:    ${issue.code.toUpperCase()}`);
-        console.groupEnd();
-        console.error('\n');
-      });
+                console.group(`Field: ${field}`);
+                console.error(`Message: ${issue.message}`);
+                console.error(`Code:    ${issue.code.toUpperCase()}`);
+                console.groupEnd();
+                console.error('\n');
+            });
 
-      console.groupEnd();
+            console.groupEnd();
 
-      throw new Error('Invalid environment configuration');
+            throw new Error('Invalid environment configuration');
+        }
+        throw error;
     }
-    throw error;
-  }
 };
 
 @Module({
-  imports: [
-    NestConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: path.resolve(process.cwd(), '.env'),
-      validate: validateConfig,
-      validationOptions: {
-        abortEarly: true,
-      },
-    }),
-  ],
-  exports: [NestConfigModule],
+    imports: [
+        NestConfigModule.forRoot({
+            isGlobal: true,
+            envFilePath: path.resolve(process.cwd(), '.env'),
+            validate: validateConfig,
+            validationOptions: {
+                abortEarly: true,
+            },
+        }),
+    ],
+    exports: [NestConfigModule],
 })
 export class ConfigModule {}
