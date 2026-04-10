@@ -10,9 +10,16 @@ module.exports = {
     root: true,
     env: {
         node: true,
-        jest: true,
     },
-    ignorePatterns: ['.eslintrc.js'],
+    globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        vi: 'readonly',
+    },
+    ignorePatterns: ['.eslintrc.js', 'dist', 'node_modules'],
     rules: {
         '@typescript-eslint/interface-name-prefix': 'off',
         '@typescript-eslint/explicit-function-return-type': 'off',
