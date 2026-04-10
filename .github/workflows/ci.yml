@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [dev, main, "feat/**"]
+    branches: [dev, main]
   push:
-    branches: [dev, main, "feat/**"]
+    branches: [dev, main]
 
 jobs:
   quality-check:

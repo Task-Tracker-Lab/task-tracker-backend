@@ -1,0 +1,19 @@
+name: "Close stale issues and PRs"
+
+on:
+    schedule:
+        - cron: "30 1 * * *"
+
+jobs:
+    stale:
+        runs-on: ubuntu-latest
+        permissions:
+            issues: write
+            pull-requests: write
+        steps:
+            - uses: actions/stale@v9
+              with:
+                  stale-issue-message: "Эта задача давно не обновлялась. Она будет закрыта через 5 дней, если не появится новой активности."
+                  stale-pr-message: "Этот PR замер. Мы закроем его через 5 дней, чтобы не копить очередь, но вы всегда можете переоткрыть его позже."
+                  days-before-stale: 30
+                  days-before-close: 5
