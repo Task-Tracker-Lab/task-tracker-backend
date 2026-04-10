@@ -5,6 +5,8 @@ import { ConfigModule } from '@libs/config';
 import { DatabaseModule } from '@libs/database';
 import { ConfigService } from '@nestjs/config';
 import * as schema from './shared/entities';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { ZodValidationPipe, ZodValidationException } from 'nestjs-zod';
 
 @Module({
     imports: [
@@ -22,6 +24,16 @@ import * as schema from './shared/entities';
         }),
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [
+        AppService,
+        {
+            provide: APP_PIPE,
+            useClass: ZodValidationPipe,
+        },
+        {
+            provide: APP_FILTER,
+            useClass: ZodValidationException,
+        },
+    ],
 })
 export class AppModule {}

@@ -1,14 +1,18 @@
-import { NestFactory } from '@nestjs/core';
+import { bootstrapApp } from '@libs/bootstrap';
 import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
 
-async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
-
-    const config = app.get(ConfigService);
-    const port = config.getOrThrow('PORT');
-
-    await app.listen(port);
-}
-
-bootstrap();
+bootstrapApp({
+    serviceName: 'Tracker Monolit',
+    appModule: AppModule,
+    apiPrefix: 'api/v1',
+    defaultPort: 2000,
+    portEnvKey: 'PORT',
+    swaggerOptions: {
+        title: 'Task Tracker API',
+        description: 'API бэкенда таск-трекера',
+        version: '0.1.0',
+        path: 'ui',
+    },
+    useCors: true,
+    useCookieParser: true,
+});
