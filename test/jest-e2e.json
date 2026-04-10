@@ -5,5 +5,11 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "@libs/config/(.*)": "<rootDir>/../libs/config/src/$1",
+    "@libs/config": "<rootDir>/../libs/config/src",
+    "@libs/database/(.*)": "<rootDir>/../libs/database/src/$1",
+    "@libs/database": "<rootDir>/../libs/database/src"
   }
 }
