@@ -18,7 +18,7 @@ COPY . .
 RUN pnpm run build
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm prune --prod
+    pnpm prune --prod --ignore-scripts
 
 FROM node:20-alpine AS runner
 WORKDIR /app
