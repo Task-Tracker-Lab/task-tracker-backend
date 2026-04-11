@@ -12,6 +12,6 @@ const REPOSITORY = {
     imports: [],
     controllers: [UserController],
     providers: [REPOSITORY, UserService],
-    exports: [REPOSITORY],
+    exports: [UserService],
 })
 export class UserModule {}

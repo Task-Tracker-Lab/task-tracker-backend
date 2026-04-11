@@ -12,10 +12,11 @@
 
 import { ApiBaseController } from '../../../shared/decorators';
 import { Delete, Get, HttpCode, Patch, Post } from '@nestjs/common';
+import { AuthService } from '../auth.service';
 
 @ApiBaseController('auth', 'Auth')
 export class AuthController {
-    // constructor(private readonly facade: AuthService) {}
+    constructor(private readonly facade: AuthService) {}
 
     @Post('register')
     // @PostRegisterSwagger()
