@@ -1,5 +1,6 @@
 import { ApiResponse, getSchemaPath } from '@nestjs/swagger';
 import { GlobalErrorResponse } from './schema';
+import { applyDecorators } from '@nestjs/common';
 
 export const ApiErrorResponse = (
     status: number,
@@ -28,3 +29,22 @@ export const ApiErrorResponse = (
         },
     });
 };
+
+export const ApiBadRequest = (description: string = 'Некорректный запрос') =>
+    applyDecorators(ApiErrorResponse(400, 'BAD_REQUEST', description));
+
+export const ApiRequireAuth = () =>
+    applyDecorators(ApiErrorResponse(401, 'AUTH_REQUIRED', 'Сессия истекла или токен не валиден'));
+
+export const ApiForbidden = () =>
+    applyDecorators(
+        ApiErrorResponse(403, 'ACCESS_DENIED', 'У вас недостаточно прав для этого действия'),
+    );
+
+export const ApiNotFound = (description: string = 'Ресурс не найден') =>
+    applyDecorators(ApiErrorResponse(404, 'NOT_FOUND', description));
+
+export const ApiValidationError = (
+    description: string = 'Ошибка валидации входных данных',
+    fields: any[] = [],
+) => applyDecorators(ApiErrorResponse(400, 'VALIDATION_FAILED', description, fields));
