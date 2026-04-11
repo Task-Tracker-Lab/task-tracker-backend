@@ -1,4 +1,4 @@
-import { Body, Get, Patch, Post, Query } from '@nestjs/common';
+import { Body, Get, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { UserService } from '../user.service';
 import { createId } from '@paralleldrive/cuid2';
 import {
@@ -10,8 +10,10 @@ import {
 } from './user.swagger';
 import { UpdateNotificationsDto, UpdateProfileDto } from '../dtos';
 import { ApiBaseController } from '../../../shared/decorators';
+import { BearerAuthGuard } from 'src/shared/guards';
 
 @ApiBaseController('users', 'Users')
+@UseGuards(BearerAuthGuard)
 export class UserController {
     constructor(private readonly facade: UserService) {}
 

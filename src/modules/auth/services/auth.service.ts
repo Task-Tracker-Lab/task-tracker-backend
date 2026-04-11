@@ -40,7 +40,7 @@ export class AuthService {
             });
         }
 
-        const isExists = await this.findUserCommand.execute(dto.email);
+        const isExists = await this.findUserCommand.execute({ email: dto.email });
 
         if (isExists) {
             throw new ConflictException({
@@ -131,7 +131,7 @@ export class AuthService {
     };
 
     public sigIn = async (dto: SignInDto, meta: DeviceMetadata) => {
-        const user = await this.findUserCommand.execute(dto.email);
+        const user = await this.findUserCommand.execute({ email: dto.email });
 
         if (!user) {
             throw new UnauthorizedException({
@@ -167,5 +167,72 @@ export class AuthService {
         };
     };
 
-    public refresh = async () => {};
+    public refresh = async (token: string, metadata: DeviceMetadata) => {
+        const payload = await this.tokenService.validateToken(token, 'refresh');
+
+        if (!payload || !payload.jti) {
+            throw new UnauthorizedException({
+                code: 'INVALID_TOKEN',
+                message: 'Сессия недействительна или истекла',
+            });
+        }
+
+        const session = await this.sessionRepo.findById(payload.jti);
+
+        if (!session || session.isRevoked) {
+            throw new UnauthorizedException({
+                code: 'SESSION_REVOKED',
+                message: 'Ваша сессия была отозвана или завершена',
+            });
+        }
+
+        console.log(session);
+
+        const user = await this.findUserCommand.execute({ id: session.userId });
+
+        if (!user) {
+            await this.sessionRepo.revoke(session.id);
+            throw new UnauthorizedException({
+                code: 'USER_NOT_FOUND',
+                message: 'Аккаунт пользователя не найден',
+            });
+        }
+
+        await this.sessionRepo.revoke(session.id);
+
+        const newSession = await this.sessionRepo.create({
+            userId: user.id,
+            ...metadata,
+            expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        });
+
+        const { access, refresh } = await this.tokenService.generateTokens(user, newSession.id);
+
+        return {
+            tokens: { access, refresh },
+            success: true,
+            message: 'Токены успешно обновлены',
+        };
+    };
+
+    public signOut = async (token: string) => {
+        const payload = await this.tokenService.validateToken(token, 'refresh');
+
+        if (!payload?.jti) {
+            throw new UnauthorizedException({ code: 'SESSION_EXPIRED', message: 'Сессия истекла' });
+        }
+
+        const session = await this.sessionRepo.findById(payload.jti);
+
+        if (!session) {
+            throw new UnauthorizedException({
+                code: 'SESSION_NOT_FOUND',
+                message: 'Сессия не найдена',
+            });
+        }
+
+        await this.sessionRepo.revoke(session.id);
+
+        return { success: true, message: 'Успешно вышли из системы!' };
+    };
 }

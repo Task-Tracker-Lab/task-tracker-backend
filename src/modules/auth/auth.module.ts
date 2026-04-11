@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { SessionRepository } from './repository';
+import { BearerStrategy, CookieStrategy } from './strategies';
 
 @Module({
     imports: [
@@ -53,6 +54,8 @@ import { SessionRepository } from './repository';
     providers: [
         AuthService,
         TokenService,
+        CookieStrategy,
+        BearerStrategy,
         { provide: 'ISessionRepository', useClass: SessionRepository },
     ],
     exports: [],

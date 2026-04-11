@@ -25,8 +25,7 @@ export class UserRepository implements IUserRepository {
             .from(sc.users)
             .leftJoin(sc.userSecurity, eq(sc.users.id, sc.userSecurity.userId))
             .leftJoin(sc.userNotifications, eq(sc.users.id, sc.userNotifications.userId))
-            .where(eq(sc.users.id, id))
-            .limit(1);
+            .where(eq(sc.users.id, id));
 
         if (rows.length === 0) return null;
 
@@ -46,11 +45,7 @@ export class UserRepository implements IUserRepository {
     }
 
     async findById(id: string): Promise<User | null> {
-        const [result] = await this.repository
-            .select()
-            .from(sc.users)
-            .where(eq(sc.users.id, id))
-            .limit(1);
+        const [result] = await this.repository.select().from(sc.users).where(eq(sc.users.id, id));
         return result || null;
     }
 
@@ -59,20 +54,23 @@ export class UserRepository implements IUserRepository {
             .select()
             .from(sc.users)
             .leftJoin(sc.userSecurity, eq(sc.users.id, sc.userSecurity.userId))
-            .where(eq(sc.users.email, email))
-            .limit(1);
+            .where(eq(sc.users.email, email));
 
-        const resulted = { ...result.users, ...result.user_security };
+        if (!result || !result.users) {
+            return null;
+        }
 
-        return resulted || null;
+        return {
+            ...result.users,
+            ...result.user_security,
+        };
     }
 
     async findSecurityByUserId(userId: string) {
         const [result] = await this.repository
             .select()
             .from(sc.userSecurity)
-            .where(eq(sc.userSecurity.userId, userId))
-            .limit(1);
+            .where(eq(sc.userSecurity.userId, userId));
         return result || null;
     }
 

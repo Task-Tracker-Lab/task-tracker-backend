@@ -1,5 +1,5 @@
 import { ApiBaseController } from '../../../shared/decorators';
-import { Body, Delete, Get, HttpCode, Patch, Post, Req, Res } from '@nestjs/common';
+import { Body, Delete, Get, HttpCode, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import {
     DeleteTerminateSessionSwagger,
@@ -16,6 +16,7 @@ import {
 import { SignInDto, SignUpDto, VerifyDto } from '../dtos';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDeviceMeta } from '../helpers';
+import { BearerAuthGuard, CookieAuthGuard } from 'src/shared/guards';
 
 @ApiBaseController('auth', 'Auth')
 export class AuthController {
@@ -25,7 +26,6 @@ export class AuthController {
     @PostRegisterSwagger()
     @HttpCode(202)
     async signUp(@Body() dto: SignUpDto) {
-        console.log('SIGNUP', dto);
         return this.facade.signUp(dto);
     }
 
@@ -39,12 +39,14 @@ export class AuthController {
     ) {
         const meta = getDeviceMeta(req);
         const { tokens, ...response } = await this.facade.verify(dto, meta);
+
         res.setCookie('refresh', tokens.refresh, {
             httpOnly: true,
             secure: false,
             path: '/',
             sameSite: 'lax',
         });
+
         return { ...response, token: tokens.access };
     }
 
@@ -57,24 +59,47 @@ export class AuthController {
     ) {
         const meta = getDeviceMeta(req);
         const { tokens, ...response } = await this.facade.sigIn(dto, meta);
+
         res.setCookie('refresh', tokens.refresh, {
             httpOnly: true,
             secure: false,
             path: '/',
             sameSite: 'lax',
         });
+
         return { ...response, token: tokens.access };
     }
 
     @Post('sign-out')
+    @UseGuards(BearerAuthGuard)
     @PostLogoutSwagger()
-    @HttpCode(200)
-    async logout() {}
+    async logout(@Res({ passthrough: true }) res: FastifyReply, @Req() req: FastifyRequest) {
+        const session = req.cookies['refresh'];
+        const response = await this.facade.signOut(session);
+
+        res.clearCookie('refresh', { path: '/' });
+
+        return response;
+    }
 
     @Post('refresh')
+    @UseGuards(CookieAuthGuard)
     @PostRefreshSwagger()
     @HttpCode(200)
-    async refresh() {}
+    async refresh(@Res({ passthrough: true }) res: FastifyReply, @Req() req: FastifyRequest) {
+        const meta = getDeviceMeta(req);
+        const session = req.cookies['refresh'];
+        const { tokens, ...response } = await this.facade.refresh(session, meta);
+
+        res.setCookie('refresh', tokens.refresh, {
+            httpOnly: true,
+            secure: false,
+            path: '/',
+            sameSite: 'lax',
+        });
+
+        return { token: tokens.access, ...response };
+    }
 
     @Get('sessions')
     @GetSessionsSwagger()
