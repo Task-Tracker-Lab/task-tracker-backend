@@ -1,15 +1,3 @@
-// POST /auth/register — Регистрация (создание записей в users, user_security, user_notifications).
-// POST /auth/login — Вход (выдача Access/Refresh токенов). Если включен 2FA — возврат промежуточного токена.
-// POST /auth/refresh — Обновление пары токенов через Refresh Token.
-// POST /auth/logout — Удаление текущей сессии из Redis.
-// GET /auth/sessions — Список всех активных устройств пользователя.
-// DELETE /auth/sessions/:cuid — Принудительное завершение сессии на другом устройстве.
-// POST /auth/change-password — Смена пароля (требует oldPassword и newPassword).
-// Logic: При успехе обновляем lastPasswordChange и инвалидируем все сессии в Redis, кроме текущей.
-// POST /auth/2fa/enable — Генерация QR-кода (возвращает otpauth ссылку).
-// POST /auth/2fa/confirm — Подтверждение включения 2FA (проверка первого кода).
-// PATCH /auth/2fa/disable — Отключение (обязательно под паролем или кодом).
-
 import { ApiBaseController } from '../../../shared/decorators';
 import { Delete, Get, HttpCode, Patch, Post } from '@nestjs/common';
 import { AuthService } from '../auth.service';
@@ -30,24 +18,24 @@ import {
 export class AuthController {
     constructor(private readonly facade: AuthService) {}
 
-    @Post('register')
+    @Post('sign-up')
     @PostRegisterSwagger()
     async register() {}
 
-    @Post('login')
+    @Post('sign-in')
     @PostLoginSwagger()
     @HttpCode(200)
     async login() {}
+
+    @Post('sign-out')
+    @PostLogoutSwagger()
+    @HttpCode(200)
+    async logout() {}
 
     @Post('refresh')
     @PostRefreshSwagger()
     @HttpCode(200)
     async refresh() {}
-
-    @Post('logout')
-    @PostLogoutSwagger()
-    @HttpCode(200)
-    async logout() {}
 
     @Get('sessions')
     @GetSessionsSwagger()
