@@ -9,3 +9,57 @@
 // POST /auth/2fa/enable — Генерация QR-кода (возвращает otpauth ссылку).
 // POST /auth/2fa/confirm — Подтверждение включения 2FA (проверка первого кода).
 // PATCH /auth/2fa/disable — Отключение (обязательно под паролем или кодом).
+
+import { ApiBaseController } from '../../../shared/decorators';
+import { Delete, Get, HttpCode, Patch, Post } from '@nestjs/common';
+
+@ApiBaseController('auth', 'Auth')
+export class AuthController {
+    // constructor(private readonly facade: AuthService) {}
+
+    @Post('register')
+    // @PostRegisterSwagger()
+    async register() {}
+
+    @Post('login')
+    // @PostLoginSwagger()
+    @HttpCode(200)
+    async login() {}
+
+    @Post('refresh')
+    // @PostRefreshSwagger()
+    @HttpCode(200)
+    async refresh() {}
+
+    @Post('logout')
+    // @PostLogoutSwagger()
+    @HttpCode(200)
+    async logout() {}
+
+    @Get('sessions')
+    // @GetSessionsSwagger()
+    async getSessions() {}
+
+    @Delete('sessions/:cuid')
+    // @DeleteTerminateSessionSwagger
+    async terminateSession() {}
+
+    @Post('change-password')
+    // @PostChangePasswordSwagger
+    @HttpCode(200)
+    async changePassword() {}
+
+    @Post('2fa/enable')
+    @HttpCode(200)
+    // @PostEnable2faSwagger
+    async enable2fa() {}
+
+    @Patch('2fa/disable')
+    // @PostDisable2faSwagger
+    async disable2fa() {}
+
+    @Post('2fa/confirm')
+    @HttpCode(200)
+    // @PostConfirm2faSwagger
+    async confirm2fa() {}
+}
