@@ -98,15 +98,23 @@ export const GetMeActivitySwagger = () =>
             status: 200,
             description: 'Список активностей успешно получен.',
             schema: {
-                example: [
-                    {
-                        id: 'clj1abc230000jk78',
-                        eventType: 'TASK_COMPLETED',
-                        description: 'Завершена задача "Обновить текст лендинга"',
-                        createdAt: '2026-04-10T20:00:00.000Z',
-                        metadata: { taskId: 'clj1xyz990000abc1' },
+                example: {
+                    data: [
+                        {
+                            id: 'clj1abc230000jk78',
+                            eventType: 'TASK_COMPLETED',
+                            description: 'Завершена задача "Обновить текст лендинга"',
+                            createdAt: '2026-04-10T20:00:00.000Z',
+                            metadata: { taskId: 'clj1xyz990000abc1' },
+                        },
+                    ],
+                    meta: {
+                        total: 45,
+                        page: 1,
+                        limit: 20,
+                        totalPages: 3,
                     },
-                ],
+                },
             },
         }),
         ApiUnauthorized(),

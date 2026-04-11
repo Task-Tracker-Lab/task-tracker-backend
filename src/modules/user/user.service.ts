@@ -36,7 +36,12 @@ export class UserService {
             metadata: { fields: Object.keys(dto) },
         });
 
-        return updatedUser;
+        return {
+            success: true,
+            message: 'Профиль успешно обновлен',
+            updatedAt: new Date().toISOString(),
+            data: updatedUser,
+        };
     };
 
     public updateNotifications = async (id: string, dto: UpdateNotificationsDto) => {
@@ -44,7 +49,7 @@ export class UserService {
 
         if (!user) this.throwUserNotFound();
 
-        await this.userRepo.updateNotifications(id, {
+        const settings = await this.userRepo.updateNotifications(id, {
             email: dto.email,
             push: dto.push,
         });
@@ -55,17 +60,30 @@ export class UserService {
             eventType: 'NOTIFICATIONS_UPDATED',
         });
 
-        return { success: true };
+        return {
+            success: true,
+            newSettings: settings,
+        };
     };
 
-    public getActivity = async (id: string, page: number = 1, limit: number = 20) => {
+    public getActivity = async (id: string, page: number, limit: number) => {
         const safeLimit = Math.min(limit, 50);
         const offset = (page - 1) * safeLimit;
 
-        return await this.userRepo.findActivityByUser(id, {
+        const { items, total } = await this.userRepo.findActivityByUser(id, {
             limit: safeLimit,
             offset,
         });
+
+        return {
+            items,
+            meta: {
+                total,
+                page,
+                limit: safeLimit,
+                totalPages: Math.ceil(total / safeLimit),
+            },
+        };
     };
 
     public uploadAvatar = async (id: string, avatarUrl: string) => {
