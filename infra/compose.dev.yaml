@@ -14,11 +14,9 @@ services:
       - ../.env
     ports:
       - "3000:3000"
-    depends_on:
-      database:
-        condition: service_healthy
-      redis:
-        condition: service_started
+    # depends_on:
+    # database:
+    #   condition: service_healthy
     networks:
       - backend
 
@@ -30,9 +28,9 @@ services:
     env_file:
       - ../.env
     environment:
-      POSTGRES_USER: ${DB_USERNAME:-admin}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin}
-      POSTGRES_DB: ${DB_DATABASE:-tracker}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
       - "6000:5432"
     volumes:
@@ -40,7 +38,7 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      test: ["CMD-SHELL", "pg_isready -q"]
       interval: 5s
       timeout: 5s
       retries: 5

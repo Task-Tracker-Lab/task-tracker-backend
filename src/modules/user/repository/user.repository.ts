@@ -2,7 +2,13 @@ import * as sc from '../entities';
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
 import { IUserRepository } from './user.repository.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import { NewUser, NewUserActivity, User, UserNotifications } from '../entities/user.domain';
+import type {
+    NewUser,
+    NewUserActivity,
+    User,
+    UserNotifications,
+    UserWithPassword,
+} from '../entities/user.domain';
 import { createId } from '@paralleldrive/cuid2';
 import { desc, eq, count } from 'drizzle-orm';
 
@@ -48,13 +54,17 @@ export class UserRepository implements IUserRepository {
         return result || null;
     }
 
-    async findByEmail(email: string): Promise<User | null> {
+    async findByEmail(email: string): Promise<UserWithPassword | null> {
         const [result] = await this.repository
             .select()
             .from(sc.users)
+            .leftJoin(sc.userSecurity, eq(sc.users.id, sc.userSecurity.userId))
             .where(eq(sc.users.email, email))
             .limit(1);
-        return result || null;
+
+        const resulted = { ...result.users, ...result.user_security };
+
+        return resulted || null;
     }
 
     async findSecurityByUserId(userId: string) {

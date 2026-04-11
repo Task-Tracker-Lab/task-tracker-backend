@@ -1,15 +1,16 @@
-import {
+import type {
     NewUser,
     NewUserActivity,
     User,
     UserActivity,
     UserNotifications,
     UserProfile,
+    UserWithPassword,
 } from '../entities/user.domain';
 
 export interface IUserRepository {
     findById(id: string): Promise<User | null>;
-    findByEmail(email: string): Promise<User | null>;
+    findByEmail(email: string): Promise<UserWithPassword | null>;
 
     existsByEmail(email: string): Promise<boolean>;
 

@@ -1,10 +1,11 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { UserModule } from '../user';
 import { AuthController } from './controller';
-import { AuthService } from './auth.service';
+import { AuthService, TokenService } from './services';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { SessionRepository } from './repository';
 
 @Module({
     imports: [
@@ -49,7 +50,11 @@ import { RedisModule } from '@nestjs-modules/ioredis';
         forwardRef(() => UserModule),
     ],
     controllers: [AuthController],
-    providers: [AuthService],
+    providers: [
+        AuthService,
+        TokenService,
+        { provide: 'ISessionRepository', useClass: SessionRepository },
+    ],
     exports: [],
 })
 export class AuthModule {}

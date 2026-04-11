@@ -1,13 +1,20 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1775839169154,
-      "tag": "0000_stale_sunspot",
-      "breakpoints": true
-    }
-  ]
+    "version": "7",
+    "dialect": "postgresql",
+    "entries": [
+        {
+            "idx": 0,
+            "version": "7",
+            "when": 1775839169154,
+            "tag": "0000_stale_sunspot",
+            "breakpoints": true
+        },
+        {
+            "idx": 1,
+            "version": "7",
+            "when": 1775925642197,
+            "tag": "0001_solid_kronos",
+            "breakpoints": true
+        }
+    ]
 }

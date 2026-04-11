@@ -1,16 +1,16 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod/v4';
 
-export const LoginSchema = z
+export const SignInSchema = z
     .object({
         email: z.email('Некорректный формат email').describe('Email пользователя'),
         password: z.string().describe('Пароль пользователя'),
     })
     .describe('Схема входа в систему');
 
-export class LoginDto extends createZodDto(LoginSchema) {}
+export class SignInDto extends createZodDto(SignInSchema) {}
 
-export const RegisterSchema = z
+export const SignUpSchema = z
     .object({
         email: z.email('Некорректный формат email').describe('Email пользователя'),
         password: z
@@ -18,20 +18,41 @@ export const RegisterSchema = z
             .min(8, 'Пароль должен содержать минимум 8 символов')
             .max(32, 'Пароль должен содержать максимум 32 символа')
             .describe('Пароль (минимум 8 символов)'),
-        fullName: z
+        firstName: z
             .string()
             .min(2, 'Имя должно содержать минимум 2 символа')
-            .max(255)
-            .describe('Полное имя пользователя'),
+            .max(50)
+            .trim()
+            .describe('Имя'),
+        lastName: z
+            .string()
+            .min(2, 'Фамилия должна содержать минимум 2 символа')
+            .max(50)
+            .trim()
+            .describe('Фамилия'),
+        middleName: z
+            .string()
+            .max(50)
+            .trim()
+            .optional()
+            .or(z.literal(''))
+            .describe('Отчество (опционально)'),
     })
     .describe('Схема регистрации пользователя');
 
-export class RegisterDto extends createZodDto(RegisterSchema) {}
+export class SignUpDto extends createZodDto(SignUpSchema) {}
 
-export const RefreshSchema = z
+export const VerifySchema = z
     .object({
-        refreshToken: z.string().describe('Refresh токен для обновления сессии'),
+        email: z
+            .string()
+            .email('Некорректный формат email')
+            .describe('Email пользователя, на который был отправлен код'),
+        code: z
+            .string()
+            .length(6, 'Код должен содержать ровно 6 символов')
+            .describe('6-значный OTP код подтверждения'),
     })
-    .describe('Схема обновления токенов');
+    .describe('Схема верификации OTP кода');
 
-export class RefreshDto extends createZodDto(RefreshSchema) {}
+export class VerifyDto extends createZodDto(VerifySchema) {}

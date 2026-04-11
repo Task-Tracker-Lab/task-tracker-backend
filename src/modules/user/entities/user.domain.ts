@@ -17,3 +17,5 @@ export type UserProfile = User & {
     security: Omit<UserSecurity, 'passwordHash' | 'twoFactorSecret' | 'userId'>;
     notifications: UserNotifications['settings'];
 };
+
+export type UserWithPassword = User & UserSecurity;

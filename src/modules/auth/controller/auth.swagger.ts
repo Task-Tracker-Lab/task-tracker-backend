@@ -8,14 +8,7 @@ import {
     ApiUnauthorized,
     ApiValidationError,
 } from 'src/shared/error';
-import {
-    ChangePasswordDto,
-    Confirm2FaDto,
-    Disable2FaDto,
-    LoginDto,
-    RefreshDto,
-    RegisterDto,
-} from '../dtos';
+import { ChangePasswordDto, Confirm2FaDto, Disable2FaDto, SignInDto, SignUpDto } from '../dtos';
 
 export const PostRegisterSwagger = () =>
     applyDecorators(
@@ -23,7 +16,7 @@ export const PostRegisterSwagger = () =>
             summary: 'Регистрация нового пользователя',
             description: 'Создает пользователя, базовые настройки безопасности и уведомлений.',
         }),
-        ApiBody({ type: RegisterDto }),
+        ApiBody({ type: SignUpDto.Output }),
         ApiResponse({
             status: 201,
             description: 'Пользователь успешно зарегистрирован.',
@@ -31,7 +24,6 @@ export const PostRegisterSwagger = () =>
                 example: {
                     success: true,
                     message: 'Регистрация прошла успешно',
-                    userId: 'clj1abc230000jk78',
                 },
             },
         }),
@@ -46,7 +38,7 @@ export const PostLoginSwagger = () =>
             description:
                 'Возвращает Access/Refresh токены. Если у пользователя включена 2FA, вернет временный токен.',
         }),
-        ApiBody({ type: LoginDto }),
+        ApiBody({ type: SignInDto.Output }),
         ApiResponse({
             status: 200,
             description: 'Успешный вход.',
@@ -69,7 +61,6 @@ export const PostRefreshSwagger = () =>
             summary: 'Обновление токенов',
             description: 'Выдает новую пару Access и Refresh токенов.',
         }),
-        ApiBody({ type: RefreshDto }),
         ApiResponse({
             status: 200,
             description: 'Токены успешно обновлены.',
