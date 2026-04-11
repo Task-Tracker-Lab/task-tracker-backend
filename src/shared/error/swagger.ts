@@ -48,3 +48,6 @@ export const ApiValidationError = (
     description: string = 'Ошибка валидации входных данных',
     fields: any[] = [],
 ) => applyDecorators(ApiErrorResponse(400, 'VALIDATION_FAILED', description, fields));
+
+export const ApiConflict = (description: string = 'Ресурс уже существует') =>
+    applyDecorators(ApiErrorResponse(409, 'CONFLICT', description));

@@ -13,54 +13,66 @@
 import { ApiBaseController } from '../../../shared/decorators';
 import { Delete, Get, HttpCode, Patch, Post } from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import {
+    DeleteTerminateSessionSwagger,
+    GetSessionsSwagger,
+    PostChangePasswordSwagger,
+    PostConfirm2faSwagger,
+    PostDisable2faSwagger,
+    PostEnable2faSwagger,
+    PostLoginSwagger,
+    PostLogoutSwagger,
+    PostRefreshSwagger,
+    PostRegisterSwagger,
+} from './auth.swagger';
 
 @ApiBaseController('auth', 'Auth')
 export class AuthController {
     constructor(private readonly facade: AuthService) {}
 
     @Post('register')
-    // @PostRegisterSwagger()
+    @PostRegisterSwagger()
     async register() {}
 
     @Post('login')
-    // @PostLoginSwagger()
+    @PostLoginSwagger()
     @HttpCode(200)
     async login() {}
 
     @Post('refresh')
-    // @PostRefreshSwagger()
+    @PostRefreshSwagger()
     @HttpCode(200)
     async refresh() {}
 
     @Post('logout')
-    // @PostLogoutSwagger()
+    @PostLogoutSwagger()
     @HttpCode(200)
     async logout() {}
 
     @Get('sessions')
-    // @GetSessionsSwagger()
+    @GetSessionsSwagger()
     async getSessions() {}
 
     @Delete('sessions/:cuid')
-    // @DeleteTerminateSessionSwagger
+    @DeleteTerminateSessionSwagger()
     async terminateSession() {}
 
     @Post('change-password')
-    // @PostChangePasswordSwagger
+    @PostChangePasswordSwagger()
     @HttpCode(200)
     async changePassword() {}
 
     @Post('2fa/enable')
     @HttpCode(200)
-    // @PostEnable2faSwagger
+    @PostEnable2faSwagger()
     async enable2fa() {}
 
     @Patch('2fa/disable')
-    // @PostDisable2faSwagger
+    @PostDisable2faSwagger()
     async disable2fa() {}
 
     @Post('2fa/confirm')
     @HttpCode(200)
-    // @PostConfirm2faSwagger
+    @PostConfirm2faSwagger()
     async confirm2fa() {}
 }
