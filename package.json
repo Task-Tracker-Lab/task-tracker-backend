@@ -28,6 +28,7 @@
         "@fastify/cookie": "^11.0.2",
         "@fastify/cors": "^11.2.0",
         "@fastify/static": "^9.1.0",
+        "@nestjs-modules/ioredis": "^2.2.1",
         "@nestjs/common": "^11.1.18",
         "@nestjs/config": "^4.0.4",
         "@nestjs/core": "^11.1.18",

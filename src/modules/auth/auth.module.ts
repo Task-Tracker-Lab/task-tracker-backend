@@ -4,6 +4,7 @@ import { AuthController } from './controller';
 import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 @Module({
     imports: [
@@ -26,6 +27,24 @@ import { ConfigService } from '@nestjs/config';
                     clockTolerance: 10,
                 },
             }),
+        }),
+        RedisModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: async (cfg: ConfigService) => {
+                const host = cfg.get('REDIS_HOST', { infer: true });
+                const port = cfg.get('REDIS_PORT', { infer: true });
+
+                return {
+                    type: 'single',
+                    url: `redis://${host}:${port}`,
+                    options: {
+                        retryStrategy(times) {
+                            return Math.min(times * 50, 2000);
+                        },
+                        commandTimeout: 3000,
+                    },
+                };
+            },
         }),
         forwardRef(() => UserModule),
     ],

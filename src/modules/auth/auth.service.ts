@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 @Injectable()
 export class AuthService {
     constructor(
+        @InjectRedis()
+        private readonly redis: Redis,
         private readonly userService: UserService,
         // private readonly jwtService: JwtService,
-        // @Inject('IRedisService')
-        // private readonly redisService: IRedisService,
         // private readonly emailService: EmailService,
     ) {}
 

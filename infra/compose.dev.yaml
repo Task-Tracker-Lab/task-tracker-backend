@@ -46,6 +46,20 @@ services:
       retries: 5
     profiles: ["infra"]
 
+  redis:
+    hostname: redis
+    container_name: redis
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "7000:6379"
+    command: redis-server --save 60 1 --loglevel notice
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    profiles: ["infra"]
+
 volumes:
   postgres_data:
   redis_data:
