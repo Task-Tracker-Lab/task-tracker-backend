@@ -1,4 +1,9 @@
 import { z } from 'zod/v4';
+import { jwtSecretValidation } from './helpers/jwt-secren-validation';
+
+const timeStringSchema = z.string().regex(/^[0-9]+[smhdw]$/, {
+    message: 'Invalid time format. Use: s, m, h, d, w (e.g., 15m, 24h, 30d)',
+});
 
 export const ConfigSchema = z.object({
     PORT: z.coerce.number().default(3000),
@@ -29,6 +34,16 @@ export const ConfigSchema = z.object({
         .min(1, "CORS_ALLOWED_ORIGINS can't be empty")
         .transform((val) => val.split(',').map((s) => s.trim()))
         .pipe(z.array(z.string().url('Each origin must be a valid URL'))),
+    JWT_ACCESS_SECRET: z.string().refine(jwtSecretValidation, {
+        message:
+            'JWT_ACCESS_SECRET must be at least 32 characters long OR contain at least 5 words separated by hyphens',
+    }),
+    JWT_REFRESH_SECRET: z.string().refine(jwtSecretValidation, {
+        message:
+            'JWT_REFRESH_SECRET must be at least 32 characters long OR contain at least 5 words separated by hyphens',
+    }),
+    JWT_ACCESS_EXPIRES_IN: timeStringSchema.default('15m'),
+    JWT_REFRESH_EXPIRES_IN: timeStringSchema.default('30d'),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
