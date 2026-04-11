@@ -1,12 +1,17 @@
-import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
+import { Body, Get, Patch, Post, Query } from '@nestjs/common';
 import { UserService } from '../user.service';
 import { createId } from '@paralleldrive/cuid2';
-import { GetMeSwagger } from './user.swagger';
-import { ApiTags } from '@nestjs/swagger';
+import {
+    GetMeActivitySwagger,
+    GetMeSwagger,
+    PatchMeNotificationsSwagger,
+    PatchMeSwagger,
+    PostMeAvatarSwagger,
+} from './user.swagger';
 import { UpdateNotificationsDto, UpdateProfileDto } from '../dtos';
+import { ApiBaseController } from '../../../shared/decorators';
 
-@ApiTags('Users')
-@Controller('users')
+@ApiBaseController('users', 'Users')
 export class UserController {
     constructor(private readonly facade: UserService) {}
 
@@ -33,16 +38,18 @@ export class UserController {
     }
 
     @Patch('me')
+    @PatchMeSwagger()
     async updateProfile(@Body() dto: UpdateProfileDto) {
         return {
             success: true,
-            message: 'Profile updated successfully',
+            message: 'Профиль успешно обновлен.',
             updatedAt: new Date().toISOString(),
             data: dto,
         };
     }
 
     @Patch('me/notifications')
+    @PatchMeNotificationsSwagger()
     async updateNotifications(@Body() settings: UpdateNotificationsDto) {
         return {
             success: true,
@@ -51,6 +58,7 @@ export class UserController {
     }
 
     @Get('me/activity')
+    @GetMeActivitySwagger()
     async getActivity(@Query('limit') limit: string) {
         return [
             {
@@ -85,6 +93,7 @@ export class UserController {
     }
 
     @Post('me/avatar')
+    @PostMeAvatarSwagger()
     async uploadAvatar() {
         return {
             avatarUrl: 'https://api.dicebear.com/9.x/notionists/svg?seed=Aneka',
