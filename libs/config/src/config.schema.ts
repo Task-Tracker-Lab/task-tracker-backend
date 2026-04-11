@@ -44,6 +44,12 @@ export const ConfigSchema = z.object({
     }),
     JWT_ACCESS_EXPIRES_IN: timeStringSchema.default('15m'),
     JWT_REFRESH_EXPIRES_IN: timeStringSchema.default('30d'),
+    MAIL_HOST: z.string().default('smtp.gmail.com'),
+    MAIL_PORT: z.coerce.number().default(465),
+    MAIL_USER: z.email('MAIL_USER must be a valid email'),
+    MAIL_PASSWORD: z.string().min(1, 'MAIL_PASSWORD is missing'),
+    MAIL_FROM_NAME: z.string().default('Foodies App'),
+    MAIL_FROM_EMAIL: z.email().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

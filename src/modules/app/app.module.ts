@@ -11,6 +11,7 @@ import { HealthModule } from '@libs/health';
 import { UserModule } from '../user';
 import { GlobalExceptionFilter } from 'src/shared/error';
 import { AuthModule } from '../auth';
+import { MailModule } from '../mail';
 
 @Module({
     imports: [
@@ -36,6 +37,7 @@ import { AuthModule } from '../auth';
         }),
         AuthModule,
         UserModule,
+        MailModule,
         HealthModule.register('gateway'),
     ],
     controllers: [AppController],
