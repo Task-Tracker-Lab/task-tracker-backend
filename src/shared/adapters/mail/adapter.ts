@@ -4,11 +4,10 @@ import * as nodemailer from 'nodemailer';
 import * as hbs from 'handlebars';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as validator from 'email-validator';
-import { BadRequestException } from '@nestjs/common';
+import { IMailPort } from './port';
 
 @Injectable()
-export class MailService {
+export class MailAdapter implements IMailPort {
     private transporter: nodemailer.Transporter;
 
     constructor(private cfg: ConfigService) {
@@ -23,16 +22,7 @@ export class MailService {
         });
     }
 
-    private validateEmail(email: string) {
-        const isValid = validator.validate(email);
-        if (!isValid) {
-            throw new BadRequestException('Invalid email address');
-        }
-    }
-
     private async sendMail(to: string, subject: string, templateName: string, context: any) {
-        this.validateEmail(to);
-
         const templatePath = path.join(process.cwd(), 'templates', `${templateName}.hbs`);
         const templateSource = fs.readFileSync(templatePath, 'utf8');
 

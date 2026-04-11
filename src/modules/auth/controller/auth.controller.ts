@@ -1,19 +1,20 @@
 import { ApiBaseController } from '../../../shared/decorators';
-import { Body, Delete, Get, HttpCode, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import {
-    DeleteTerminateSessionSwagger,
-    GetSessionsSwagger,
-    PostChangePasswordSwagger,
-    PostConfirm2faSwagger,
-    PostDisable2faSwagger,
-    PostEnable2faSwagger,
     PostLoginSwagger,
     PostLogoutSwagger,
     PostRefreshSwagger,
     PostRegisterSwagger,
 } from './auth.swagger';
-import { SignInDto, SignUpDto, VerifyDto } from '../dtos';
+import {
+    PasswordResetConfirmDto,
+    ResetPasswordDto,
+    SignInDto,
+    SignUpDto,
+    VerifyDto,
+    VerifyResetCodeDto,
+} from '../dtos';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDeviceMeta } from '../helpers';
 import { BearerAuthGuard, CookieAuthGuard } from 'src/shared/guards';
@@ -29,7 +30,7 @@ export class AuthController {
         return this.facade.signUp(dto);
     }
 
-    @Post('verify')
+    @Post('sign-up/confirm')
     @PostRegisterSwagger()
     @HttpCode(201)
     async verify(
@@ -58,7 +59,7 @@ export class AuthController {
         @Body() dto: SignInDto,
     ) {
         const meta = getDeviceMeta(req);
-        const { tokens, ...response } = await this.facade.sigIn(dto, meta);
+        const { tokens, ...response } = await this.facade.signIn(dto, meta);
 
         res.setCookie('refresh', tokens.refresh, {
             httpOnly: true,
@@ -101,30 +102,18 @@ export class AuthController {
         return { token: tokens.access, ...response };
     }
 
-    @Get('sessions')
-    @GetSessionsSwagger()
-    async getSessions() {}
+    @Post('password/reset')
+    async resetPasswordRequest(@Body() dto: ResetPasswordDto) {
+        return this.facade.resetPass(dto);
+    }
 
-    @Delete('sessions/:cuid')
-    @DeleteTerminateSessionSwagger()
-    async terminateSession() {}
+    @Post('password/reset/verify')
+    async verifyResetCode(@Body() dto: VerifyResetCodeDto) {
+        return this.facade.verifyResetPassword(dto);
+    }
 
-    @Post('change-password')
-    @PostChangePasswordSwagger()
-    @HttpCode(200)
-    async changePassword() {}
-
-    @Post('2fa/enable')
-    @HttpCode(200)
-    @PostEnable2faSwagger()
-    async enable2fa() {}
-
-    @Patch('2fa/disable')
-    @PostDisable2faSwagger()
-    async disable2fa() {}
-
-    @Post('2fa/confirm')
-    @HttpCode(200)
-    @PostConfirm2faSwagger()
-    async confirm2fa() {}
+    @Post('password/reset/confirm')
+    async confirmPasswordReset(@Body() dto: PasswordResetConfirmDto) {
+        return this.facade.confirmResetPass(dto);
+    }
 }

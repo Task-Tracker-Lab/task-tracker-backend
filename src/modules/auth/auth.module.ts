@@ -7,6 +7,10 @@ import { ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { SessionRepository } from './repository';
 import { BearerStrategy, CookieStrategy } from './strategies';
+import { BullModule } from '@nestjs/bullmq';
+import { Queues } from 'src/shared/workers';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 
 @Module({
     imports: [
@@ -47,6 +51,13 @@ import { BearerStrategy, CookieStrategy } from './strategies';
                     },
                 };
             },
+        }),
+        BullModule.registerQueue({
+            name: Queues.MAIL,
+        }),
+        BullBoardModule.forFeature({
+            name: Queues.MAIL,
+            adapter: BullMQAdapter,
         }),
         forwardRef(() => UserModule),
     ],

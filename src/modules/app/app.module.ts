@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
 import { ConfigModule } from '@libs/config';
 import { DatabaseModule } from '@libs/database';
 import { ConfigService } from '@nestjs/config';
@@ -11,7 +10,11 @@ import { HealthModule } from '@libs/health';
 import { UserModule } from '../user';
 import { GlobalExceptionFilter } from 'src/shared/error';
 import { AuthModule } from '../auth';
-import { MailModule } from '../mail';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { FastifyAdapter } from '@bull-board/fastify';
+import { MailProcessor } from 'src/shared/workers';
+import { BullModule } from '@nestjs/bullmq';
+import { MailAdapter } from 'src/shared/adapters/mail';
 
 @Module({
     imports: [
@@ -35,13 +38,29 @@ import { MailModule } from '../mail';
                 };
             },
         }),
+        BullModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: (cfg: ConfigService) => ({
+                connection: {
+                    host: cfg.getOrThrow('REDIS_HOST'),
+                    port: cfg.getOrThrow('REDIS_PORT'),
+                },
+            }),
+        }),
         AuthModule,
         UserModule,
-        MailModule,
+        BullBoardModule.forRoot({
+            route: '/queues',
+            adapter: FastifyAdapter,
+        }),
         HealthModule.register('gateway'),
     ],
-    controllers: [AppController],
     providers: [
+        {
+            provide: 'IMailPort',
+            useClass: MailAdapter,
+        },
+        MailProcessor,
         {
             provide: APP_PIPE,
             useClass: ZodValidationPipe,

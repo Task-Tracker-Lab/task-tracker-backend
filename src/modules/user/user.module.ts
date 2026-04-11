@@ -2,14 +2,14 @@ import { Module } from '@nestjs/common';
 import { UserController } from './controller';
 import { UserService } from './user.service';
 import { UserRepository } from './repository/user.repository';
-import { CreateUserCommand, FindOneUserCommand } from './commands';
+import { CreateUserCommand, FindOneUserCommand, UpdatePassUserCommand } from './commands';
 
 const REPOSITORY = {
     provide: 'IUserRepository',
     useClass: UserRepository,
 };
 
-const COMMANDS = [CreateUserCommand, FindOneUserCommand];
+const COMMANDS = [CreateUserCommand, FindOneUserCommand, UpdatePassUserCommand];
 
 @Module({
     imports: [],

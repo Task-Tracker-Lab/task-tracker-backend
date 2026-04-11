@@ -1,21 +1,35 @@
 import {
     BadRequestException,
     ConflictException,
+    ForbiddenException,
     Inject,
     Injectable,
+    NotFoundException,
     UnauthorizedException,
     UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
-import { SignInDto, SignUpDto, VerifyDto } from '../dtos';
+import {
+    PasswordResetConfirmDto,
+    ResetPasswordDto,
+    SignInDto,
+    SignUpDto,
+    VerifyDto,
+    VerifyResetCodeDto,
+} from '../dtos';
 import { validate } from 'email-validator';
 import { generate, generateSecret, verify as verifyOTP } from 'otplib';
 import * as argon from 'argon2';
-import { CreateUserCommand, FindOneUserCommand } from '../../user';
+import { CreateUserCommand, FindOneUserCommand, UpdatePassUserCommand } from '../../user';
 import { TokenService } from './token.service';
 import { ISessionRepository } from '../repository';
 import { DeviceMetadata } from '../helpers';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queues, RegisterCodeEvent } from 'src/shared/workers';
+import type { Queue } from 'bullmq';
+import { MailJobs } from 'src/shared/workers/enum';
+import { ResetPasswordEvent } from 'src/shared/workers/events';
 
 @Injectable()
 export class AuthService {
@@ -24,9 +38,12 @@ export class AuthService {
         private readonly redis: Redis,
         @Inject('ISessionRepository')
         private readonly sessionRepo: ISessionRepository,
+        @InjectQueue(Queues.MAIL)
+        private readonly mailQueue: Queue,
         private readonly tokenService: TokenService,
         private readonly findUserCommand: FindOneUserCommand,
         private readonly createUserCommand: CreateUserCommand,
+        private readonly updateUserPass: UpdatePassUserCommand,
     ) {}
 
     public signUp = async (dto: SignUpDto) => {
@@ -67,11 +84,16 @@ export class AuthService {
             otp: { token, secret },
         };
 
-        console.log(data);
-
         await this.redis.set(`reg:${dto.email}`, JSON.stringify(data), 'EX', 900);
 
-        // this.mailService.sendOtp(dto.email, otp);
+        const event = new RegisterCodeEvent(dto.email, dto.firstName, token);
+        await this.mailQueue.add(MailJobs.SEND_REGISTER_CODE, event, {
+            attempts: 3,
+            backoff: {
+                type: 'exponential',
+                delay: 5000,
+            },
+        });
 
         return {
             success: true,
@@ -130,7 +152,7 @@ export class AuthService {
         };
     };
 
-    public sigIn = async (dto: SignInDto, meta: DeviceMetadata) => {
+    public signIn = async (dto: SignInDto, meta: DeviceMetadata) => {
         const user = await this.findUserCommand.execute({ email: dto.email });
 
         if (!user) {
@@ -234,5 +256,131 @@ export class AuthService {
         await this.sessionRepo.revoke(session.id);
 
         return { success: true, message: 'Успешно вышли из системы!' };
+    };
+
+    public resetPass = async (dto: ResetPasswordDto) => {
+        const isValidEmail = validate(dto.email);
+
+        if (!isValidEmail) {
+            throw new UnprocessableEntityException({
+                code: 'INVALID_EMAIL_FORMAT',
+                message: 'Указанный email адрес имеет некорректный формат',
+                details: { email: dto.email },
+            });
+        }
+
+        const user = await this.findUserCommand.execute({ email: dto.email });
+
+        if (!user) {
+            throw new NotFoundException({
+                code: 'USER_NOT_FOUND',
+                message: 'Пользователь с таким email не найден',
+                details: { email: dto.email },
+            });
+        }
+
+        const secret = generateSecret();
+        const token = await generate({
+            secret,
+            digits: 6,
+            period: 900,
+            strategy: 'totp',
+        });
+
+        const resetPayload = {
+            email: user.email,
+            otp: { secret, token },
+            isVerified: false,
+        };
+
+        await this.redis.set(`pass:reset:${dto.email}`, JSON.stringify(resetPayload), 'EX', 900);
+
+        const event = new ResetPasswordEvent(dto.email, token);
+        await this.mailQueue.add(MailJobs.SEND_RESET_PASSWORD, event, {
+            attempts: 3,
+            backoff: {
+                type: 'exponential',
+                delay: 5000,
+            },
+        });
+
+        return {
+            success: true,
+            message: 'Код для восстановления пароля отправлен на вашу почту',
+        };
+    };
+
+    public verifyResetPassword = async (dto: VerifyResetCodeDto) => {
+        const redisKey = `pass:reset:${dto.email}`;
+        const cachedData = await this.redis.get(redisKey);
+
+        if (!cachedData) {
+            throw new BadRequestException({
+                code: 'RESET_SESSION_EXPIRED',
+                message: 'Время подтверждения истекло или запрос не найден. Запросите код снова.',
+            });
+        }
+
+        const resetSession = JSON.parse(cachedData);
+
+        const isValid = await verifyOTP({
+            token: dto.code,
+            secret: resetSession.otp.secret,
+            digits: 6,
+            period: 900,
+            strategy: 'totp',
+        });
+
+        console.log(isValid);
+
+        if (!isValid) {
+            throw new BadRequestException({
+                code: 'INVALID_VERIFICATION_CODE',
+                message: 'Неверный или истекший код подтверждения',
+            });
+        }
+
+        await this.redis.set(
+            redisKey,
+            JSON.stringify({ ...resetSession, isVerified: true }),
+            'EX',
+            600,
+        );
+
+        return {
+            success: true,
+            message: 'Код успешно подтвержден. Теперь вы можете установить новый пароль.',
+        };
+    };
+
+    public confirmResetPass = async (dto: PasswordResetConfirmDto) => {
+        const redisKey = `pass:reset:${dto.email}`;
+        const cachedData = await this.redis.get(redisKey);
+
+        if (!cachedData) {
+            throw new BadRequestException({
+                code: 'RESET_SESSION_NOT_FOUND',
+                message: 'Сессия восстановления не найдена или истекла. Начните процесс заново.',
+            });
+        }
+
+        const resetSession = JSON.parse(cachedData);
+
+        if (!resetSession.isVerified) {
+            throw new ForbiddenException({
+                code: 'CODE_NOT_VERIFIED',
+                message: 'Код подтверждения еще не был верифицирован.',
+            });
+        }
+
+        const hashed = await argon.hash(dto.password);
+
+        await this.updateUserPass.execute(dto.email, hashed);
+        await this.redis.del(redisKey);
+
+        return {
+            success: true,
+            message: 'Пароль успешно изменен. Теперь вы можете войти в аккаунт.',
+        };
     };
 }

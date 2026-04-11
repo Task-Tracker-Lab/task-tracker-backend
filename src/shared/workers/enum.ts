@@ -1,0 +1,9 @@
+export enum Queues {
+    MAIL = 'MAIL_QUEUE',
+}
+
+export enum MailJobs {
+    SEND_REGISTER_CODE = 'SEND_REGISTER_CODE',
+    SEND_RESET_PASSWORD = 'SEND_RESET_PASSWORD',
+    SEND_CHANGE_EMAIL = 'SEND_CHANGE_EMAIL',
+}
