@@ -8,7 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { UpdateNotificationsDto, UpdateProfileDto, UserResponse } from '../dtos';
 import { applyDecorators } from '@nestjs/common';
-import { ApiBadRequest, ApiRequireAuth, ApiValidationError } from 'src/shared/error';
+import { ApiBadRequest, ApiUnauthorized, ApiValidationError } from 'src/shared/error';
 
 export const GetMeSwagger = () =>
     applyDecorators(
@@ -23,7 +23,7 @@ export const GetMeSwagger = () =>
             description: 'Данные профиля успешно получены.',
             type: UserResponse.Output,
         }),
-        ApiRequireAuth(),
+        ApiUnauthorized(),
     );
 
 export const PatchMeSwagger = () =>
@@ -55,7 +55,7 @@ export const PatchMeSwagger = () =>
                 code: 'too_small',
             },
         ]),
-        ApiRequireAuth(),
+        ApiUnauthorized(),
     );
 
 export const PatchMeNotificationsSwagger = () =>
@@ -78,7 +78,7 @@ export const PatchMeNotificationsSwagger = () =>
             },
         }),
         ApiValidationError('Некорректный формат настроек'),
-        ApiRequireAuth(),
+        ApiUnauthorized(),
     );
 
 export const GetMeActivitySwagger = () =>
@@ -109,7 +109,7 @@ export const GetMeActivitySwagger = () =>
                 ],
             },
         }),
-        ApiRequireAuth(),
+        ApiUnauthorized(),
     );
 
 export const PostMeAvatarSwagger = () =>
@@ -141,5 +141,5 @@ export const PostMeAvatarSwagger = () =>
             },
         }),
         ApiBadRequest('Файл не передан или имеет неверный формат'),
-        ApiRequireAuth(),
+        ApiUnauthorized(),
     );

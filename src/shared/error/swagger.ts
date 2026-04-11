@@ -33,8 +33,8 @@ export const ApiErrorResponse = (
 export const ApiBadRequest = (description: string = 'Некорректный запрос') =>
     applyDecorators(ApiErrorResponse(400, 'BAD_REQUEST', description));
 
-export const ApiRequireAuth = () =>
-    applyDecorators(ApiErrorResponse(401, 'AUTH_REQUIRED', 'Сессия истекла или токен не валиден'));
+export const ApiUnauthorized = (description: string = 'Сессия истекла или токен не валиден') =>
+    applyDecorators(ApiErrorResponse(401, 'AUTH_REQUIRED', description));
 
 export const ApiForbidden = () =>
     applyDecorators(
