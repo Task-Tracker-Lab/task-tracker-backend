@@ -24,6 +24,8 @@
         "prepare": "husky"
     },
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.1029.0",
+        "@aws-sdk/s3-request-presigner": "^3.1029.0",
         "@bull-board/api": "^6.21.0",
         "@bull-board/fastify": "^6.21.0",
         "@bull-board/nestjs": "^6.21.0",

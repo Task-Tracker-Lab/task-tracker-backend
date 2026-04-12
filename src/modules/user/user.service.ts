@@ -2,12 +2,14 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { IUserRepository } from './repository/user.repository.interface';
 import { UpdateNotificationsDto, UpdateProfileDto } from './dtos';
 import { createId } from '@paralleldrive/cuid2';
+import { S3Service } from '@libs/s3';
 
 @Injectable()
 export class UserService {
     constructor(
         @Inject('IUserRepository')
         private readonly userRepo: IUserRepository,
+        private readonly s3: S3Service,
     ) {}
 
     private throwUserNotFound() {
