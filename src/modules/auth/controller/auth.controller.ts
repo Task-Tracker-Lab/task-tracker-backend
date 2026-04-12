@@ -31,7 +31,6 @@ export class AuthController {
     }
 
     @Post('sign-up/confirm')
-    @PostRegisterSwagger()
     @HttpCode(201)
     async verify(
         @Res({ passthrough: true }) res: FastifyReply,

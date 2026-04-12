@@ -24,10 +24,10 @@
             "@libs/config/*": ["./libs/config/src/*"],
             "@libs/database": ["./libs/database/src"],
             "@libs/database/*": ["./libs/database/src/*"],
-            "@libs/health": ["libs/health/src"],
-            "@libs/health/*": ["libs/health/src/*"],
-            "@libs/s3": ["libs/s3/src"],
-            "@libs/s3/*": ["libs/s3/src/*"]
+            "@libs/health": ["./libs/health/src"],
+            "@libs/health/*": ["./libs/health/src/*"],
+            "@libs/s3": ["./libs/s3/src"],
+            "@libs/s3/*": ["./libs/s3/src/*"]
         },
         "baseUrl": "./"
     },

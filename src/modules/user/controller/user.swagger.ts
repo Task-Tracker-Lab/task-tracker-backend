@@ -9,6 +9,7 @@ import {
 import { UpdateNotificationsDto, UpdateProfileDto, UserResponse } from '../dtos';
 import { applyDecorators } from '@nestjs/common';
 import { ApiBadRequest, ApiUnauthorized, ApiValidationError } from 'src/shared/error';
+import { ActionResponse } from 'src/shared/dtos';
 
 export const GetMeSwagger = () =>
     applyDecorators(
@@ -36,17 +37,7 @@ export const PatchMeSwagger = () =>
         ApiResponse({
             status: 200,
             description: 'Профиль успешно обновлен.',
-            schema: {
-                example: {
-                    success: true,
-                    message: 'Профиль успешно обновлен.',
-                    updatedAt: '2026-10-24T14:30:00.000Z',
-                    data: {
-                        fullName: 'Alexey Smirnov',
-                        timezone: 'Europe/Moscow',
-                    },
-                },
-            },
+            type: ActionResponse.Output,
         }),
         ApiValidationError('Ошибка валидации (например, слишком короткое имя)', [
             {
@@ -70,14 +61,7 @@ export const PatchMeNotificationsSwagger = () =>
         ApiResponse({
             status: 200,
             description: 'Настройки успешно сохранены.',
-            schema: {
-                example: {
-                    success: true,
-                    newSettings: {
-                        email: { task_assigned: false },
-                    },
-                },
-            },
+            type: ActionResponse.Output,
         }),
         ApiValidationError('Некорректный формат настроек'),
         ApiUnauthorized(),
@@ -143,12 +127,7 @@ export const PostMeAvatarSwagger = () =>
         ApiResponse({
             status: 201,
             description: 'Аватар успешно загружен.',
-            schema: {
-                example: {
-                    avatarUrl: 'https://api.dicebear.com/9.x/notionists/svg?seed=Aneka',
-                    success: true,
-                },
-            },
+            type: ActionResponse.Output,
         }),
         ApiBadRequest('Файл не передан или имеет неверный формат'),
         ApiUnauthorized(),

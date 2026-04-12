@@ -8,14 +8,18 @@ export type UserSecurity = InferSelectModel<typeof userSecurity>;
 export type NewUserSecurity = InferInsertModel<typeof userSecurity>;
 
 export type UserNotifications = InferSelectModel<typeof userNotifications>;
-export type NotificationSettings = UserNotifications['settings'];
+export type NotificationSettings = Pick<UserNotifications, 'settings'>;
 
 export type UserActivity = InferSelectModel<typeof userActivity>;
 export type NewUserActivity = InferInsertModel<typeof userActivity>;
 
-export type UserProfile = User & {
-    security: Omit<UserSecurity, 'passwordHash' | 'twoFactorSecret' | 'userId'>;
-    notifications: UserNotifications['settings'];
+export type UserProfile = {
+    user: User;
+    security: Pick<UserSecurity, 'lastPasswordChange' | 'is2faEnabled'>;
+    notifications: NotificationSettings['settings'];
 };
 
-export type UserWithPassword = User & UserSecurity;
+export type UserWithSecurity = {
+    user: User;
+    security: Pick<UserSecurity, 'passwordHash'>;
+};

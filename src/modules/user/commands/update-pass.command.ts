@@ -9,7 +9,7 @@ export class UpdatePassUserCommand {
     ) {}
 
     async execute(email: string, password: string) {
-        const user = await this.repository.findByEmail(email);
+        const { user } = await this.repository.findByEmail(email);
 
         if (!user) {
             throw new NotFoundException({
@@ -19,6 +19,6 @@ export class UpdatePassUserCommand {
             });
         }
 
-        await this.repository.updatePasswordHash(user.id, password);
+        return this.repository.updatePasswordHash(user.id, password);
     }
 }

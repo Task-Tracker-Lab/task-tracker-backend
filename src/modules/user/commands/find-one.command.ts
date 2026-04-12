@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IUserRepository } from '../repository/user.repository.interface';
-import { User, UserWithPassword } from '../entities/user.domain';
+import type { UserWithSecurity } from '../entities/user.domain';
 
 @Injectable()
 export class FindOneUserCommand {
@@ -9,8 +9,8 @@ export class FindOneUserCommand {
         private readonly repository: IUserRepository,
     ) {}
 
-    async execute(params: { email: string }): Promise<UserWithPassword | null>;
-    async execute(params: { id: string }): Promise<User | null>;
+    async execute(params: { email: string }): Promise<UserWithSecurity | null>;
+    async execute(params: { id: string }): Promise<UserWithSecurity | null>;
     async execute(params: { email?: string; id?: string }): Promise<any> {
         const { email, id } = params;
 

@@ -4,6 +4,7 @@ import {
     ForbiddenException,
     Inject,
     Injectable,
+    InternalServerErrorException,
     NotFoundException,
     UnauthorizedException,
     UnprocessableEntityException,
@@ -153,16 +154,16 @@ export class AuthService {
     };
 
     public signIn = async (dto: SignInDto, meta: DeviceMetadata) => {
-        const user = await this.findUserCommand.execute({ email: dto.email });
+        const { user, security } = await this.findUserCommand.execute({ email: dto.email });
 
-        if (!user) {
+        if (!user || !security) {
             throw new UnauthorizedException({
                 code: 'INVALID_CREDENTIALS',
                 message: 'Неверный email или пароль',
             });
         }
 
-        const isPasswordValid = await argon.verify(user.passwordHash, dto.password);
+        const isPasswordValid = await argon.verify(security.passwordHash, dto.password);
 
         if (!isPasswordValid) {
             throw new UnauthorizedException({
@@ -208,7 +209,7 @@ export class AuthService {
             });
         }
 
-        const user = await this.findUserCommand.execute({ id: session.userId });
+        const { user } = await this.findUserCommand.execute({ id: session.userId });
 
         if (!user) {
             await this.sessionRepo.revoke(session.id);
@@ -267,7 +268,7 @@ export class AuthService {
             });
         }
 
-        const user = await this.findUserCommand.execute({ email: dto.email });
+        const { user } = await this.findUserCommand.execute({ email: dto.email });
 
         if (!user) {
             throw new NotFoundException({
@@ -370,8 +371,14 @@ export class AuthService {
         }
 
         const hashed = await argon.hash(dto.password);
+        const isUpdated = await this.updateUserPass.execute(dto.email, hashed);
 
-        await this.updateUserPass.execute(dto.email, hashed);
+        if (!isUpdated) {
+            throw new InternalServerErrorException({
+                code: 'PASSWORD_UPDATE_FAILED',
+                message: 'Не удалось обновить пароль. Попробуйте позже.',
+            });
+        }
         await this.redis.del(redisKey);
 
         return {

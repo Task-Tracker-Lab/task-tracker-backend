@@ -9,6 +9,7 @@ import {
     ApiValidationError,
 } from 'src/shared/error';
 import { ChangePasswordDto, Confirm2FaDto, Disable2FaDto, SignInDto, SignUpDto } from '../dtos';
+import { ActionResponse } from 'src/shared/dtos';
 
 export const PostRegisterSwagger = () =>
     applyDecorators(
@@ -20,12 +21,7 @@ export const PostRegisterSwagger = () =>
         ApiResponse({
             status: 201,
             description: 'Пользователь успешно зарегистрирован.',
-            schema: {
-                example: {
-                    success: true,
-                    message: 'Регистрация прошла успешно',
-                },
-            },
+            type: ActionResponse.Output,
         }),
         ApiValidationError('Ошибка валидации данных (например, неверный формат email)'),
         ApiConflict('Пользователь с таким email уже существует'),
@@ -45,9 +41,8 @@ export const PostLoginSwagger = () =>
             schema: {
                 example: {
                     success: true,
-                    require2fa: false,
-                    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5c...',
-                    refreshToken: 'def50200508a1768c7e...',
+                    message: false,
+                    token: 'eyJhbGciOiJIUzI1NiIsInR5c...',
                 },
             },
         }),
@@ -67,8 +62,8 @@ export const PostRefreshSwagger = () =>
             schema: {
                 example: {
                     success: true,
-                    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5c...',
-                    refreshToken: 'def50200508a1768c7e...',
+                    token: 'eyJhbGciOiJIUzI1NiIsInR5c...',
+                    message: 'def50200508a1768c7e...',
                 },
             },
         }),
@@ -82,7 +77,7 @@ export const PostLogoutSwagger = () =>
             summary: 'Выход из системы',
             description: 'Удаляет текущую сессию пользователя из Redis.',
         }),
-        ApiResponse({ status: 200, description: 'Успешный выход.' }),
+        ApiResponse({ status: 200, description: 'Успешный выход.', type: ActionResponse.Output }),
         ApiUnauthorized(),
     );
 
@@ -110,7 +105,7 @@ export const GetSessionsSwagger = () =>
         ApiUnauthorized(),
     );
 
-export const DeleteTerminateSessionSwagger = () =>
+export const DeleteSessionSwagger = () =>
     applyDecorators(
         ApiOperation({
             summary: 'Завершить чужую сессию',
@@ -129,7 +124,7 @@ export const PostChangePasswordSwagger = () =>
             summary: 'Смена пароля',
             description: 'Требует текущий и новый пароль. Инвалидирует все остальные сессии.',
         }),
-        ApiBody({ type: ChangePasswordDto }),
+        ApiBody({ type: ChangePasswordDto.Output }),
         ApiResponse({ status: 200, description: 'Пароль успешно изменен.' }),
         ApiBadRequest('Неверный старый пароль'),
         ApiUnauthorized(),
@@ -161,7 +156,7 @@ export const PostDisable2faSwagger = () =>
             summary: 'Подтверждение включения 2FA',
             description: 'Проверяет первый код из приложения для окончательной активации 2FA.',
         }),
-        ApiBody({ type: Confirm2FaDto }),
+        ApiBody({ type: Confirm2FaDto.Output }),
         ApiResponse({ status: 200, description: 'Двухфакторная аутентификация успешно включена.' }),
         ApiBadRequest('Неверный код подтверждения'),
         ApiUnauthorized(),
@@ -174,7 +169,7 @@ export const PostConfirm2faSwagger = () =>
             description:
                 'Отключает двухфакторную аутентификацию (требует подтверждения паролем или текущим кодом).',
         }),
-        ApiBody({ type: Disable2FaDto }),
+        ApiBody({ type: Disable2FaDto.Output }),
         ApiResponse({ status: 200, description: '2FA успешно отключена.' }),
         ApiBadRequest('Неверный код или пароль для отключения'),
         ApiUnauthorized(),

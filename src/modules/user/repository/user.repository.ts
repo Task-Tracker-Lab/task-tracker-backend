@@ -2,13 +2,7 @@ import * as sc from '../entities';
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
 import { IUserRepository } from './user.repository.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import type {
-    NewUser,
-    NewUserActivity,
-    User,
-    UserNotifications,
-    UserWithPassword,
-} from '../entities/user.domain';
+import type { NewUser, NewUserActivity, User, UserNotifications } from '../entities/user.domain';
 import { createId } from '@paralleldrive/cuid2';
 import { desc, eq, count } from 'drizzle-orm';
 
@@ -16,66 +10,62 @@ import { desc, eq, count } from 'drizzle-orm';
 export class UserRepository implements IUserRepository {
     constructor(
         @Inject(DATABASE_SERVICE)
-        private readonly repository: DatabaseService<typeof sc>,
+        private readonly db: DatabaseService<typeof sc>,
     ) {}
 
-    async findProfile(id: string) {
-        const rows = await this.repository
+    private get fullUserQuery() {
+        return this.db
             .select()
             .from(sc.users)
             .leftJoin(sc.userSecurity, eq(sc.users.id, sc.userSecurity.userId))
-            .leftJoin(sc.userNotifications, eq(sc.users.id, sc.userNotifications.userId))
-            .where(eq(sc.users.id, id));
+            .leftJoin(sc.userNotifications, eq(sc.users.id, sc.userNotifications.userId));
+    }
 
-        if (rows.length === 0) return null;
-
-        const { users: user, user_security: security, user_notifications: notifications } = rows[0];
+    async findProfile(id: string) {
+        const [rows] = await this.fullUserQuery.where(eq(sc.users.id, id));
+        if (!rows.users) return null;
+        const { lastPasswordChange, is2faEnabled } = rows.user_security;
+        const { settings } = rows.user_notifications;
 
         return {
-            ...user,
+            user: rows.users,
+            security: { lastPasswordChange, is2faEnabled },
+            notifications: settings,
+        };
+    }
+
+    async findById(id: string) {
+        const [row] = await this.fullUserQuery.where(eq(sc.users.id, id));
+        if (!row || !row.user_security) return null;
+        return {
+            user: row.users,
             security: {
-                is2faEnabled: security?.is2faEnabled ?? false,
-                lastPasswordChange: security?.lastPasswordChange ?? user.createdAt,
-            },
-            notifications: notifications?.settings ?? {
-                email: { task_assigned: true, mentions: true, daily_summary: false },
-                push: { task_assigned: true, reminders: true },
+                passwordHash: row.user_security.passwordHash,
             },
         };
     }
 
-    async findById(id: string): Promise<User | null> {
-        const [result] = await this.repository.select().from(sc.users).where(eq(sc.users.id, id));
-        return result || null;
-    }
-
-    async findByEmail(email: string): Promise<UserWithPassword | null> {
-        const [result] = await this.repository
-            .select()
-            .from(sc.users)
-            .leftJoin(sc.userSecurity, eq(sc.users.id, sc.userSecurity.userId))
-            .where(eq(sc.users.email, email));
-
-        if (!result || !result.users) {
-            return null;
-        }
-
+    async findByEmail(email: string) {
+        const [row] = await this.fullUserQuery.where(eq(sc.users.email, email.toLowerCase()));
+        if (!row || !row.user_security) return null;
         return {
-            ...result.users,
-            ...result.user_security,
+            user: row.users,
+            security: {
+                passwordHash: row.user_security.passwordHash,
+            },
         };
     }
 
     async findSecurityByUserId(userId: string) {
-        const [result] = await this.repository
+        const [result] = await this.db
             .select()
             .from(sc.userSecurity)
             .where(eq(sc.userSecurity.userId, userId));
         return result || null;
     }
 
-    async create(data: NewUser): Promise<User> {
-        return await this.repository.transaction(async (tx) => {
+    async create(data: NewUser) {
+        return await this.db.transaction(async (tx) => {
             const [newUser] = await tx.insert(sc.users).values(data).returning();
 
             await tx.insert(sc.userNotifications).values({
@@ -86,61 +76,56 @@ export class UserRepository implements IUserRepository {
         });
     }
 
-    async existsByEmail(email: string): Promise<boolean> {
-        const [result] = await this.repository
-            .select({ value: count() })
-            .from(sc.users)
-            .where(eq(sc.users.email, email));
-        return (result?.value ?? 0) > 0;
-    }
-
-    async updateProfile(id: string, data: Partial<User>): Promise<User> {
-        const [updated] = await this.repository
+    async updateProfile(id: string, data: Partial<User>) {
+        const { rowCount } = await this.db
             .update(sc.users)
             .set({ ...data, updatedAt: new Date() })
-            .where(eq(sc.users.id, id))
-            .returning();
-        return updated;
+            .where(eq(sc.users.id, id));
+        return (rowCount ?? 0) > 0;
     }
 
     async updateNotifications(id: string, settings: UserNotifications['settings']) {
-        await this.repository
+        const { rowCount } = await this.db
             .update(sc.userNotifications)
             .set({ settings })
             .where(eq(sc.userNotifications.userId, id));
+        return (rowCount ?? 0) > 0;
     }
 
     async updateAvatar(id: string, url: string) {
-        await this.repository
+        const { rowCount } = await this.db
             .update(sc.users)
             .set({ avatarUrl: url, updatedAt: new Date() })
             .where(eq(sc.users.id, id));
+        return (rowCount ?? 0) > 0;
     }
 
     async updatePasswordHash(id: string, hash: string) {
-        await this.repository
+        const { rowCount } = await this.db
             .insert(sc.userSecurity)
             .values({ userId: id, passwordHash: hash })
             .onConflictDoUpdate({
                 target: sc.userSecurity.userId,
                 set: { passwordHash: hash, lastPasswordChange: new Date() },
             });
+        return (rowCount ?? 0) > 0;
     }
 
     async logActivity(data: NewUserActivity) {
-        await this.repository.insert(sc.userActivity).values({
+        const { rowCount } = await this.db.insert(sc.userActivity).values({
             ...data,
             id: data.id ?? createId(),
         });
+        return (rowCount ?? 0) > 0;
     }
 
     async findActivityByUser(userId: string, options: { limit: number; offset: number }) {
         const [totalResult, items] = await Promise.all([
-            this.repository
+            this.db
                 .select({ value: count() })
                 .from(sc.userActivity)
                 .where(eq(sc.userActivity.userId, userId)),
-            this.repository
+            this.db
                 .select()
                 .from(sc.userActivity)
                 .where(eq(sc.userActivity.userId, userId))
