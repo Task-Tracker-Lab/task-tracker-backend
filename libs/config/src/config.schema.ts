@@ -14,7 +14,7 @@ export const ConfigSchema = z.object({
     DB_SCHEMA: z.string({ error: 'DB_SCHEMA is missing' }),
     DATABASE_URL: z.string().url('DATABASE_URL must be a valid connection string'),
     REDIS_HOST: z.string().default('redis'),
-    REDIS_PORT: z.coerce.number().default(6379),
+    REDIS_PORT: z.coerce.number().optional().default(6379),
     DOMAIN: z
         .string()
         .toLowerCase()

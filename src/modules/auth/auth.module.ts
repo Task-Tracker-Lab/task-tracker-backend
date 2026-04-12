@@ -37,12 +37,13 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
         RedisModule.forRootAsync({
             inject: [ConfigService],
             useFactory: async (cfg: ConfigService) => {
-                const host = cfg.get('REDIS_HOST', { infer: true });
-                const port = cfg.get('REDIS_PORT', { infer: true });
+                const host = cfg.getOrThrow('REDIS_HOST', { infer: true });
+                const port = cfg.get('REDIS_PORT');
+                const url = `redis://${host}${port ? `:${port}` : ''}`;
 
                 return {
                     type: 'single',
-                    url: `redis://${host}:${port}`,
+                    url,
                     options: {
                         retryStrategy(times) {
                             return Math.min(times * 50, 2000);

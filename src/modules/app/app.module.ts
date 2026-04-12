@@ -16,6 +16,7 @@ import { MailProcessor } from 'src/shared/workers';
 import { BullModule } from '@nestjs/bullmq';
 import { MailAdapter } from 'src/shared/adapters/mail';
 import { S3Module } from '@libs/s3';
+import { MigrationService } from 'src/shared/migration';
 
 @Module({
     imports: [
@@ -60,7 +61,7 @@ import { S3Module } from '@libs/s3';
             useFactory: (cfg: ConfigService) => ({
                 connection: {
                     host: cfg.getOrThrow('REDIS_HOST'),
-                    port: cfg.getOrThrow('REDIS_PORT'),
+                    port: cfg.get('REDIS_PORT'),
                 },
             }),
         }),
@@ -73,6 +74,7 @@ import { S3Module } from '@libs/s3';
         HealthModule.register('gateway'),
     ],
     providers: [
+        MigrationService,
         {
             provide: 'IMailPort',
             useClass: MailAdapter,

@@ -1,24 +1,31 @@
 version: "3.9"
 
-name: task-tracker
+name: task-tracker-api
 
 services:
   api:
     hostname: api
     container_name: api
-    build:
-      context: ../
-      dockerfile: Dockerfile.dev
-    restart: always
+    image: ghcr.io/task-tracker-lab/task-tracker-backend:feat-user
     env_file:
-      - ../.env
+      - .env
     ports:
       - "3000:3000"
     depends_on:
       database:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1024M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
 
   database:
     hostname: database
@@ -26,7 +33,7 @@ services:
     image: postgres:16-alpine
     restart: always
     env_file:
-      - ../.env
+      - .env
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -38,7 +45,11 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\" -q || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -q || exit 1',
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -56,6 +67,11 @@ services:
       - redis_data:/data
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     profiles: ["infra"]
 
 volumes:

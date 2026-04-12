@@ -55,15 +55,17 @@ export class DatabaseModule implements OnApplicationShutdown {
             provide: DATABASE_SERVICE,
             useFactory: async (cfg: ConfigService, opts: DatabaseModuleOptions) => {
                 const baseUrl = cfg.get<string>('DATABASE_URL');
+                const url = new URL(baseUrl);
+                url.searchParams.set('options', `-c search_path=${opts.schemaName || 'public'}`);
 
                 const pool = new Pool({
-                    connectionString: baseUrl,
+                    connectionString: url.toString(),
                     max: 20,
+                    min: 5,
+                    connectionTimeoutMillis: 5000,
                     idleTimeoutMillis: 30000,
-                });
-
-                pool.on('connect', (client) => {
-                    client.query(`SET search_path TO ${opts.schemaName || 'public'}`);
+                    maxUses: 7500,
+                    keepAlive: true,
                 });
 
                 this.pool = pool;
