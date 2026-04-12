@@ -138,7 +138,7 @@ export class AuthService {
 
         const session = await this.sessionRepo.create({
             userId: user.id,
-            expiresAt: new Date(),
+            expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
             ...meta,
         });
         const { access, refresh } = await this.tokenService.generateTokens(user, session.id);
@@ -173,7 +173,7 @@ export class AuthService {
 
         const { id } = await this.sessionRepo.create({
             userId: user.id,
-            expiresAt: new Date(),
+            expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
             ...meta,
         });
 
@@ -207,8 +207,6 @@ export class AuthService {
                 message: 'Ваша сессия была отозвана или завершена',
             });
         }
-
-        console.log(session);
 
         const user = await this.findUserCommand.execute({ id: session.userId });
 
