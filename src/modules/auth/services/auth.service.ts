@@ -115,7 +115,7 @@ export class AuthService {
 
         const userData = JSON.parse(cachedData);
 
-        const isValid = await verifyOTP({
+        const verifyResult = await verifyOTP({
             token: dto.code,
             secret: userData.otp.secret,
             algorithm: 'sha256',
@@ -124,7 +124,7 @@ export class AuthService {
             strategy: 'totp',
         });
 
-        if (!isValid) {
+        if (!verifyResult.valid) {
             throw new BadRequestException({
                 code: 'INVALID_OTP',
                 message: 'Неверный или истекший код подтверждения',
@@ -323,7 +323,7 @@ export class AuthService {
 
         const resetSession = JSON.parse(cachedData);
 
-        const isValid = await verifyOTP({
+        const verifyResult = await verifyOTP({
             token: dto.code,
             secret: resetSession.otp.secret,
             digits: 6,
@@ -331,9 +331,7 @@ export class AuthService {
             strategy: 'totp',
         });
 
-        console.log(isValid);
-
-        if (!isValid) {
+        if (!verifyResult.valid) {
             throw new BadRequestException({
                 code: 'INVALID_VERIFICATION_CODE',
                 message: 'Неверный или истекший код подтверждения',
