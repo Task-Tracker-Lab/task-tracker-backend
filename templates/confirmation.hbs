@@ -40,11 +40,7 @@
     <h2>Проверка безопасности</h2>
     <p>Привет, <b>{{name}}</b>! Используйте этот код для подтверждения:</p>
 
-    <div class="code-wrapper">
-      {{#each codeArray}}
-        <div class="digit">{{this}}</div>
-      {{/each}}
-    </div>
+    <div class="code-wrapper">{{#each codeArray}}<span class="digit">{{this}}</span>{{/each}}</div>
 
     <p style="font-size: 14px; color: #6b7280;">Код будет активен в течение 15 минут.</p>
   </div>
