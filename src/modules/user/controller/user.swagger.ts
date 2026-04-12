@@ -32,7 +32,7 @@ export const PatchMeSwagger = () =>
             summary: 'Обновить данные профиля',
             description: 'Позволяет точечно обновить имя, bio, часовой пояс и язык интерфейса.',
         }),
-        ApiBody({ type: UpdateProfileDto }),
+        ApiBody({ type: UpdateProfileDto.Output }),
         ApiResponse({
             status: 200,
             description: 'Профиль успешно обновлен.',
@@ -64,7 +64,9 @@ export const PatchMeNotificationsSwagger = () =>
             summary: 'Обновить настройки уведомлений',
             description: 'Частичное обновление настроек email и push уведомлений.',
         }),
-        ApiBody({ type: UpdateNotificationsDto }),
+        ApiBody({
+            type: UpdateNotificationsDto.Output,
+        }),
         ApiResponse({
             status: 200,
             description: 'Настройки успешно сохранены.',

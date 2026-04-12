@@ -14,9 +14,9 @@ services:
       - ../.env
     ports:
       - "3000:3000"
-    # depends_on:
-    # database:
-    #   condition: service_healthy
+    depends_on:
+      database:
+        condition: service_healthy
     networks:
       - backend
 
@@ -64,3 +64,4 @@ volumes:
 
 networks:
   backend:
+    name: task-tracker-gateway
