@@ -11,13 +11,22 @@ export function setupCors(app: NestFastifyApplication, origins: string[]) {
                     return callback(null, true);
                 }
 
-                const { hostname } = new URL(origin);
+                try {
+                    const { hostname } = new URL(origin);
+                    const allowedHostnames = origins.map((o) => new URL(o).hostname);
 
-                if (origins.some((o) => hostname === o || hostname.endsWith(`.${o}`))) {
-                    callback(null, origin);
+                    if (
+                        allowedHostnames.some(
+                            (allowed) => hostname === allowed || hostname.endsWith(`.${allowed}`),
+                        )
+                    ) {
+                        return callback(null, origin);
+                    }
+
+                    callback(new Error('Not allowed by CORS'), false);
+                } catch (e) {
+                    callback(new Error('Invalid origin format'), false);
                 }
-
-                callback(new Error('Not allowed by CORS'), false);
             },
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
