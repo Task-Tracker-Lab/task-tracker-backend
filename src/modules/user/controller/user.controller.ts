@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Get, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Get, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { UserService } from '../user.service';
 import {
     GetMeActivitySwagger,
@@ -8,10 +8,10 @@ import {
     PostMeAvatarSwagger,
 } from './user.swagger';
 import { UpdateNotificationsDto, UpdateProfileDto } from '../dtos';
-import { ApiBaseController, GetUserId } from '../../../shared/decorators';
+import { ApiBaseController, ExtractFastifyFile, GetUserId } from '../../../shared/decorators';
 import { BearerAuthGuard } from 'src/shared/guards';
 import { PaginationDto } from '../../../shared/dtos';
-import { FastifyRequest } from 'fastify';
+import { FileUploadDto } from '../../../shared/dtos/upload-avatar.dto';
 
 @ApiBaseController('users', 'Users')
 @UseGuards(BearerAuthGuard)
@@ -44,27 +44,11 @@ export class UserController {
 
     @Post('me/avatar')
     @PostMeAvatarSwagger()
-    async uploadAvatar(@Req() req: FastifyRequest, @GetUserId() userId: string) {
-        if (!req.isMultipart()) {
-            throw new BadRequestException('Request is not multipart');
-        }
-
-        const file = await req.file();
-        if (!file || file.fieldname !== 'file') {
-            throw new BadRequestException('Поле file не найдено');
-        }
-
-        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-        if (!allowedMimeTypes.includes(file.mimetype)) {
-            throw new BadRequestException('Недопустимый формат файла');
-        }
-
-        const buffer = await file.toBuffer();
-
-        return this.facade.uploadAvatar(userId, {
-            buffer,
-            filename: file.filename,
-            mimetype: file.mimetype,
-        });
+    async uploadAvatar(
+        @ExtractFastifyFile() fileDto: FileUploadDto,
+        @GetUserId()
+        userId: string,
+    ) {
+        return this.facade.uploadAvatar(userId, fileDto);
     }
 }

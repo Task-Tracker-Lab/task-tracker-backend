@@ -9,7 +9,7 @@ import { IUserRepository } from './repository/user.repository.interface';
 import { UpdateNotificationsDto, UpdateProfileDto } from './dtos';
 import { createId } from '@paralleldrive/cuid2';
 import { S3Service } from '@libs/s3';
-import { FileUploadDto } from '@libs/s3/dtos/upload-avatar.dto';
+import { FileUploadDto } from '../../shared/dtos';
 
 @Injectable()
 export class UserService {
@@ -149,7 +149,8 @@ export class UserService {
             });
         }
 
-        await this.userRepo.updateAvatar(userId, avatarUrl);
+        const isUpdated = await this.userRepo.updateAvatar(userId, avatarUrl);
+        if (!isUpdated) this.throwUserNotFound();
 
         await this.userRepo.logActivity({
             id: createId(),
