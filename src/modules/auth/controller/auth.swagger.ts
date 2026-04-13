@@ -3,12 +3,23 @@ import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import {
     ApiBadRequest,
     ApiConflict,
+    ApiErrorResponse,
     ApiForbidden,
     ApiNotFound,
     ApiUnauthorized,
     ApiValidationError,
 } from 'src/shared/error';
-import { ChangePasswordDto, Confirm2FaDto, Disable2FaDto, SignInDto, SignUpDto } from '../dtos';
+import {
+    ChangePasswordDto,
+    Confirm2FaDto,
+    Disable2FaDto,
+    PasswordResetConfirmDto,
+    ResetPasswordDto,
+    SignInDto,
+    SignUpDto,
+    VerifyDto,
+    VerifyResetCodeDto,
+} from '../dtos';
 import { ActionResponse } from 'src/shared/dtos';
 
 export const PostRegisterSwagger = () =>
@@ -79,6 +90,90 @@ export const PostLogoutSwagger = () =>
         }),
         ApiResponse({ status: 200, description: 'Успешный выход.', type: ActionResponse.Output }),
         ApiUnauthorized(),
+    );
+
+export const PostSignUpConfirmSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Подтверждение регистрации по коду',
+            description:
+                'Проверяет OTP из письма, создаёт аккаунт, выдаёт access-токен в теле ответа и устанавливает refresh в httpOnly cookie.',
+        }),
+        ApiBody({ type: VerifyDto.Output }),
+        ApiResponse({
+            status: 201,
+            description: 'Аккаунт подтверждён, сессия создана.',
+            schema: {
+                example: {
+                    success: true,
+                    message: 'Аккаунт успешно подтвержден',
+                    token: 'eyJhbGciOiJIUzI1NiIsInR5c...',
+                },
+            },
+        }),
+        ApiValidationError('Ошибка валидации (неверный формат email или длина кода)'),
+        ApiBadRequest('Срок регистрации истёк или сессия не найдена'),
+        ApiBadRequest('Неверный или истёкший код подтверждения'),
+    );
+
+export const PostPasswordResetSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Запрос кода восстановления пароля',
+            description: 'Отправляет одноразовый код на email, если пользователь существует.',
+        }),
+        ApiBody({ type: ResetPasswordDto.Output }),
+        ApiResponse({
+            status: 201,
+            description: 'Код отправлен на почту (при успешной обработке запроса).',
+            type: ActionResponse.Output,
+        }),
+        ApiValidationError('Некорректный формат email'),
+        ApiErrorResponse(
+            422,
+            'INVALID_EMAIL_FORMAT',
+            'Указанный email адрес имеет некорректный формат',
+        ),
+        ApiNotFound('Пользователь с таким email не найден'),
+    );
+
+export const PostPasswordResetVerifySwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Проверка кода восстановления пароля',
+            description: 'Проверяет код из письма и помечает сессию сброса как подтверждённую.',
+        }),
+        ApiBody({ type: VerifyResetCodeDto.Output }),
+        ApiResponse({
+            status: 201,
+            description: 'Код подтверждён, можно задать новый пароль.',
+            type: ActionResponse.Output,
+        }),
+        ApiValidationError('Ошибка валидации (email или формат кода)'),
+        ApiBadRequest('Время подтверждения истекло или запрос не найден'),
+        ApiBadRequest('Неверный или истёкший код подтверждения'),
+    );
+
+export const PostPasswordResetConfirmSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Установка нового пароля после сброса',
+            description: 'Доступно только после успешной проверки кода на шаге verify.',
+        }),
+        ApiBody({ type: PasswordResetConfirmDto.Output }),
+        ApiResponse({
+            status: 201,
+            description: 'Пароль успешно изменён.',
+            type: ActionResponse.Output,
+        }),
+        ApiValidationError('Ошибка валидации (пароли не совпадают или неверная длина)'),
+        ApiBadRequest('Сессия восстановления не найдена или истекла'),
+        ApiForbidden(),
+        ApiErrorResponse(
+            500,
+            'PASSWORD_UPDATE_FAILED',
+            'Не удалось обновить пароль. Попробуйте позже.',
+        ),
     );
 
 export const GetSessionsSwagger = () =>
