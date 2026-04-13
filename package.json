@@ -32,6 +32,7 @@
         "@fastify/compress": "^8.3.1",
         "@fastify/cookie": "^11.0.2",
         "@fastify/cors": "^11.2.0",
+        "@fastify/multipart": "^10.0.0",
         "@fastify/static": "^9.1.0",
         "@nestjs-modules/ioredis": "^2.2.1",
         "@nestjs/bullmq": "^11.0.4",
