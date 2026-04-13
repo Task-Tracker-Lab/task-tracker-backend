@@ -9,6 +9,7 @@ import { IUserRepository } from './repository/user.repository.interface';
 import { UpdateNotificationsDto, UpdateProfileDto } from './dtos';
 import { createId } from '@paralleldrive/cuid2';
 import { S3Service } from '@libs/s3';
+import { FileUploadDto } from '@libs/s3/dtos/upload-avatar.dto';
 
 @Injectable()
 export class UserService {
@@ -132,25 +133,34 @@ export class UserService {
         };
     };
 
-    public uploadAvatar = async (id: string, avatarUrl: string) => {
+    public uploadAvatar = async (userId: string, fileDto: FileUploadDto) => {
+        const avatarUrl = await this.s3.uploadPublicFile(
+            fileDto.buffer,
+            fileDto.filename,
+            fileDto.mimetype,
+        );
+
         try {
             new URL(avatarUrl);
         } catch {
             throw new BadRequestException({
                 code: 'INVALID_AVATAR_URL',
-                message: 'Предоставлен некорректный URL аватара',
+                message: 'Провайдер хранилища вернул некорректный URL',
             });
         }
 
-        await this.userRepo.updateAvatar(id, avatarUrl);
+        await this.userRepo.updateAvatar(userId, avatarUrl);
 
         await this.userRepo.logActivity({
             id: createId(),
-            userId: id,
+            userId,
             eventType: 'AVATAR_CHANGED',
             metadata: { url: avatarUrl },
         });
 
-        return { success: true, message: '' };
+        return {
+            success: true,
+            avatarUrl,
+        };
     };
 }
