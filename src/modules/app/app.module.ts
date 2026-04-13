@@ -17,6 +17,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { MailAdapter } from 'src/shared/adapters/mail';
 import { S3Module } from '@libs/s3';
 import { MigrationService } from 'src/shared/migration';
+import { TeamModule } from '../teams';
 
 @Module({
     imports: [
@@ -68,6 +69,7 @@ import { MigrationService } from 'src/shared/migration';
         }),
         AuthModule,
         UserModule,
+        TeamModule,
         BullBoardModule.forRoot({
             route: '/queues',
             adapter: FastifyAdapter,
