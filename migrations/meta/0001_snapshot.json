@@ -1,0 +1,369 @@
+{
+    "id": "c5575cbf-cbee-46d8-af83-95b96a2afceb",
+    "prevId": "a40dfb7f-7d44-4721-bf37-a197b5f1e479",
+    "version": "7",
+    "dialect": "postgresql",
+    "tables": {
+        "base.user_activity": {
+            "name": "user_activity",
+            "schema": "base",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "text",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "event_type": {
+                    "name": "event_type",
+                    "type": "varchar(50)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "entity_id": {
+                    "name": "entity_id",
+                    "type": "varchar",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "metadata": {
+                    "name": "metadata",
+                    "type": "jsonb",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "user_activity_user_id_users_id_fk": {
+                    "name": "user_activity_user_id_users_id_fk",
+                    "tableFrom": "user_activity",
+                    "tableTo": "users",
+                    "schemaTo": "base",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "cascade",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "base.user_notifications": {
+            "name": "user_notifications",
+            "schema": "base",
+            "columns": {
+                "user_id": {
+                    "name": "user_id",
+                    "type": "text",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "settings": {
+                    "name": "settings",
+                    "type": "jsonb",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "'{\"email\":{\"task_assigned\":true,\"mentions\":true,\"daily_summary\":false},\"push\":{\"task_assigned\":true,\"reminders\":true}}'::jsonb"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "user_notifications_user_id_users_id_fk": {
+                    "name": "user_notifications_user_id_users_id_fk",
+                    "tableFrom": "user_notifications",
+                    "tableTo": "users",
+                    "schemaTo": "base",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "cascade",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "base.user_security": {
+            "name": "user_security",
+            "schema": "base",
+            "columns": {
+                "user_id": {
+                    "name": "user_id",
+                    "type": "text",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "password_hash": {
+                    "name": "password_hash",
+                    "type": "varchar(255)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "is_2fa_enabled": {
+                    "name": "is_2fa_enabled",
+                    "type": "boolean",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": false
+                },
+                "two_factor_secret": {
+                    "name": "two_factor_secret",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "last_password_change": {
+                    "name": "last_password_change",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "user_security_user_id_users_id_fk": {
+                    "name": "user_security_user_id_users_id_fk",
+                    "tableFrom": "user_security",
+                    "tableTo": "users",
+                    "schemaTo": "base",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "cascade",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "base.users": {
+            "name": "users",
+            "schema": "base",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "text",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "first_name": {
+                    "name": "first_name",
+                    "type": "varchar(50)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "last_name": {
+                    "name": "last_name",
+                    "type": "varchar(50)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "middle_name": {
+                    "name": "middle_name",
+                    "type": "varchar(50)",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "email": {
+                    "name": "email",
+                    "type": "varchar(255)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "bio": {
+                    "name": "bio",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "avatar_url": {
+                    "name": "avatar_url",
+                    "type": "varchar(512)",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "timezone": {
+                    "name": "timezone",
+                    "type": "varchar(50)",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "'UTC'"
+                },
+                "language": {
+                    "name": "language",
+                    "type": "varchar(5)",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "'ru'"
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {
+                "users_email_unique": {
+                    "name": "users_email_unique",
+                    "nullsNotDistinct": false,
+                    "columns": ["email"]
+                }
+            },
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "base.sessions": {
+            "name": "sessions",
+            "schema": "base",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "text",
+                    "primaryKey": true,
+                    "notNull": true
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "device_type": {
+                    "name": "device_type",
+                    "type": "varchar(20)",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "browser": {
+                    "name": "browser",
+                    "type": "varchar(50)",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "os": {
+                    "name": "os",
+                    "type": "varchar(50)",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "user_agent": {
+                    "name": "user_agent",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "ip": {
+                    "name": "ip",
+                    "type": "varchar(45)",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "city": {
+                    "name": "city",
+                    "type": "varchar(100)",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "country_code": {
+                    "name": "country_code",
+                    "type": "varchar(5)",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "expires_at": {
+                    "name": "expires_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "is_revoked": {
+                    "name": "is_revoked",
+                    "type": "boolean",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "sessions_user_id_users_id_fk": {
+                    "name": "sessions_user_id_users_id_fk",
+                    "tableFrom": "sessions",
+                    "tableTo": "users",
+                    "schemaTo": "base",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "cascade",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        }
+    },
+    "enums": {},
+    "schemas": {
+        "base": "base"
+    },
+    "sequences": {},
+    "roles": {},
+    "policies": {},
+    "views": {},
+    "_meta": {
+        "columns": {},
+        "schemas": {},
+        "tables": {}
+    }
+}

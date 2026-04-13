@@ -8,6 +8,7 @@ import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fa
 import type { BootstrapOptions } from './interfaces/options.interface';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCompress from '@fastify/compress';
+import fastifyMultipart from '@fastify/multipart';
 
 export async function bootstrapApp(options: BootstrapOptions) {
     const adapter = new FastifyAdapter();
@@ -45,6 +46,12 @@ export async function bootstrapApp(options: BootstrapOptions) {
     await app.register(fastifyCompress, {
         global: true,
         threshold: 1024,
+    });
+
+    await app.register(fastifyMultipart, {
+        limits: {
+            fileSize: 5 * 1024 * 1024,
+        },
     });
 
     if (apiPrefix) app.setGlobalPrefix(apiPrefix);
