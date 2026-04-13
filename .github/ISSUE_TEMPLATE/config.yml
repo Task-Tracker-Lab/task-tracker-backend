@@ -1,10 +1,10 @@
 blank_issues_enabled: false
 
 contact_links:
-  - name: "❓ Вопросы по использованию"
-    url: "https://github.com/Task-Tracker-Lab/task-tracker-backend/discussions/new?category=q-a"
-    about: "Если вы не уверены, баг это или нет, или вам нужна помощь в настройке — спросите здесь."
+    - name: '❓ Вопросы по использованию'
+      url: 'https://github.com/Task-Tracker-Lab/task-tracker-backend/discussions/new?category=q-a'
+      about: 'Если вы не уверены, баг это или нет, или вам нужна помощь в настройке — спросите здесь.'
 
-  - name: "💡 Идеи и предложения"
-    url: "https://github.com/Task-Tracker-Lab/task-tracker-backend/discussions/new?category=ideas"
-    about: "Хотите обсудить новую крутую фичу перед тем, как заводить задачу? Вам сюда."
+    - name: '💡 Идеи и предложения'
+      url: 'https://github.com/Task-Tracker-Lab/task-tracker-backend/discussions/new?category=ideas'
+      about: 'Хотите обсудить новую крутую фичу перед тем, как заводить задачу? Вам сюда.'

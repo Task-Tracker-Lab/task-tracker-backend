@@ -47,6 +47,7 @@ import { MigrationService } from 'src/shared/migration';
                 connection: {
                     bucket: cfg.getOrThrow('S3_BUCKET_NAME'),
                     endpoint: cfg.getOrThrow('S3_ENDPOINT'),
+                    region: cfg.getOrThrow('S3_REGION'),
                     credentials: {
                         accessKeyId: cfg.getOrThrow('S3_ACCESS_KEY'),
                         secretAccessKey: cfg.getOrThrow('S3_SECRET_KEY'),
