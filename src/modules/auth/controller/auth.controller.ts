@@ -4,8 +4,12 @@ import { AuthService } from '../services/auth.service';
 import {
     PostLoginSwagger,
     PostLogoutSwagger,
+    PostPasswordResetConfirmSwagger,
+    PostPasswordResetSwagger,
+    PostPasswordResetVerifySwagger,
     PostRefreshSwagger,
     PostRegisterSwagger,
+    PostSignUpConfirmSwagger,
 } from './auth.swagger';
 import {
     PasswordResetConfirmDto,
@@ -31,6 +35,7 @@ export class AuthController {
     }
 
     @Post('sign-up/confirm')
+    @PostSignUpConfirmSwagger()
     @HttpCode(201)
     async verify(
         @Res({ passthrough: true }) res: FastifyReply,
@@ -102,16 +107,19 @@ export class AuthController {
     }
 
     @Post('password/reset')
+    @PostPasswordResetSwagger()
     async resetPasswordRequest(@Body() dto: ResetPasswordDto) {
         return this.facade.resetPass(dto);
     }
 
     @Post('password/reset/verify')
+    @PostPasswordResetVerifySwagger()
     async verifyResetCode(@Body() dto: VerifyResetCodeDto) {
         return this.facade.verifyResetPassword(dto);
     }
 
     @Post('password/reset/confirm')
+    @PostPasswordResetConfirmSwagger()
     async confirmPasswordReset(@Body() dto: PasswordResetConfirmDto) {
         return this.facade.confirmResetPass(dto);
     }
