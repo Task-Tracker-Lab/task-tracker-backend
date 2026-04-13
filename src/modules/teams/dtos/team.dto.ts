@@ -1,5 +1,6 @@
 import { z } from 'zod/v4';
 import { createZodDto } from 'nestjs-zod';
+import { createPaginationSchema } from '../../../shared/schemas';
 
 export const CreateTeamSchema = z.object({
     name: z.string().min(2).max(100).describe('Название команды, отображаемое в интерфейсе'),
@@ -35,14 +36,16 @@ export const SyncTagsSchema = z.object({
 
 const FindTagsQuerySchema = z.object({
     search: z.string().optional().describe('Поисковый запрос для фильтрации тегов по названию'),
-    limit: z
-        .preprocess(
-            (val) => (val ? parseInt(val as string, 10) : 20),
-            z.number().min(1).max(100).default(20),
-        )
+    page: z.coerce.number().int().min(1).default(1).describe('Номер страницы (от 1)'),
+    limit: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .default(20)
         .describe('Количество возвращаемых результатов (1-100)'),
 });
 
-export class TagResponse extends createZodDto(TagSchema) {}
+export class TagsResponse extends createZodDto(createPaginationSchema(TagSchema)) {}
 export class SyncTagsDto extends createZodDto(SyncTagsSchema) {}
 export class FindTagsQuery extends createZodDto(FindTagsQuerySchema) {}

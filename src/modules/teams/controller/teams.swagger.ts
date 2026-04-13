@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { ActionResponse } from 'src/shared/dtos';
 import {
     ApiConflict,
@@ -8,7 +8,7 @@ import {
     ApiUnauthorized,
     ApiValidationError,
 } from 'src/shared/error';
-import { CreateTeamDto, InviteMemberDto, SyncTagsDto, TagResponse, UpdateTeamDto } from '../dtos';
+import { CreateTeamDto, InviteMemberDto, SyncTagsDto, UpdateTeamDto, TagsResponse } from '../dtos';
 
 export const CreateTeamSwagger = () =>
     applyDecorators(
@@ -91,14 +91,14 @@ export const SyncTeamTagsSwagger = () =>
 export const GetAllTagsSwagger = () =>
     applyDecorators(
         ApiOperation({
-            summary: 'Получить список всех тегов',
-            description: 'Используется для поиска и автокомплита при создании команд.',
+            summary: 'Получить список всех тегов с пагинацией',
+            description:
+                'Возвращает список всех тегов в системе с пагинацией. Используется для поиска и автокомплита при создании/редактировании команд.',
         }),
-        ApiQuery({ name: 'search', required: false, description: 'Поиск по названию тега' }),
         ApiResponse({
             status: 200,
             description: 'Список тегов успешно получен',
-            type: [TagResponse.Output],
+            type: TagsResponse.Output,
         }),
         ApiUnauthorized(),
     );

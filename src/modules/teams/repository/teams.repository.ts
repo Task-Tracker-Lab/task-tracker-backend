@@ -2,6 +2,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { ITeamsRepository } from './teams.repository.interface';
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
 import * as schema from '../entities';
+import { asc, count, eq, ilike, inArray } from 'drizzle-orm';
 
 export class TeamsRepository implements ITeamsRepository {
     private logger = new Logger(TeamsRepository.name);
@@ -29,9 +30,30 @@ export class TeamsRepository implements ITeamsRepository {
         return [];
     };
 
-    public findAllTags = async (search?: string) => {
-        this.logger.log(search);
-        return [];
+    public findAllTags = async (options: { search?: string; limit?: number; offset?: number }) => {
+        const cleanSearch = options.search?.trim();
+        const escapedSearch = cleanSearch?.replace(/([%_\\])/g, '\\$1');
+
+        const whereCondition = escapedSearch
+            ? ilike(schema.tags.name, `%${escapedSearch}%`)
+            : undefined;
+
+        const [data, [{ total }]] = await Promise.all([
+            this.db
+                .select()
+                .from(schema.tags)
+                .where(whereCondition)
+                .limit(options.limit)
+                .offset(options.offset)
+                .orderBy(asc(schema.tags.name)),
+
+            this.db.select({ total: count() }).from(schema.tags).where(whereCondition),
+        ]);
+
+        return {
+            data,
+            total: Number(total ?? 0),
+        };
     };
 
     public findBySlug = async (slug: string) => {
@@ -49,9 +71,30 @@ export class TeamsRepository implements ITeamsRepository {
         return Promise.resolve(true);
     };
 
-    public syncTags = async (teamId: string, tags: string[]) => {
-        this.logger.log(teamId, tags);
-        return Promise.resolve(true);
+    public syncTags = async (teamId: string, tagNames: string[]) => {
+        await this.db.transaction(async (tx) => {
+            await tx.delete(schema.teamsToTags).where(eq(schema.teamsToTags.teamId, teamId));
+
+            if (tagNames.length === 0) {
+                return;
+            }
+
+            await tx
+                .insert(schema.tags)
+                .values(tagNames.map((name) => ({ name })))
+                .onConflictDoNothing({ target: schema.tags.name });
+
+            const existingTags = await tx
+                .select({ id: schema.tags.id })
+                .from(schema.tags)
+                .where(inArray(schema.tags.name, tagNames));
+
+            await tx
+                .insert(schema.teamsToTags)
+                .values(existingTags.map((tag) => ({ teamId, tagId: tag.id })));
+        });
+
+        return true;
     };
 
     public update = async (id: string, dto: Partial<schema.Team>) => {

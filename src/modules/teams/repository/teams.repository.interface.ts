@@ -12,7 +12,11 @@ export interface ITeamsRepository {
         pagination: { search?: string; limit?: number; offset?: number },
     ): Promise<Team[]>;
 
-    findAllTags(search?: string): Promise<Tag[]>;
+    findAllTags(options: {
+        search?: string;
+        limit?: number;
+        offset?: number;
+    }): Promise<{ data: Tag[]; total: number }>;
     syncTags(teamId: string, tagNames: string[]): Promise<boolean>;
 
     addMember(dto: NewTeamMember): Promise<TeamMember>;

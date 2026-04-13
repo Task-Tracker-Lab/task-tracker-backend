@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiBaseController, GetUserId } from 'src/shared/decorators';
 import { TeamsService } from '../services';
+import { FindTagsQuery, SyncTagsDto } from '../dtos';
 import {
     CreateTeamSwagger,
     FindAllTeamsSwagger,
@@ -38,6 +39,12 @@ export class TeamsController {
         return this.facade.getAll(userId, query);
     }
 
+    @Get('tags/all')
+    @GetAllTagsSwagger()
+    async getAllTags(@Query() query: FindTagsQuery) {
+        return this.facade.getAllTags(query);
+    }
+
     @Get(':slug')
     @FindOneTeamSwagger()
     async findOne(@Param('slug') slug: string) {
@@ -59,13 +66,7 @@ export class TeamsController {
 
     @Put(':slug/tags')
     @SyncTeamTagsSwagger()
-    async syncTags(@Param('slug') slug: string, @Body('tags') tags: string[]) {
-        return this.facade.syncTags(slug, tags);
-    }
-
-    @Get('tags/all')
-    @GetAllTagsSwagger()
-    async getAllTags(@Query('search') search?: string) {
-        return this.facade.getAllTags(search);
+    async syncTags(@Param('slug') slug: string, @Body() dto: SyncTagsDto) {
+        return this.facade.syncTags(slug, dto.tags);
     }
 }
