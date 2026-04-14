@@ -19,6 +19,9 @@ export interface ITeamsRepository {
     }): Promise<{ data: Tag[]; total: number }>;
     syncTags(teamId: string, tagNames: string[]): Promise<boolean>;
 
+    updateTeamAvatar(teamId: string, url: string): Promise<boolean>;
+    updateTeamBanner(teamId: string, url: string): Promise<boolean>;
+
     addMember(dto: NewTeamMember): Promise<TeamMember>;
     updateMember(teamId: string, userId: string, dto: Partial<TeamMember>): Promise<boolean>;
     removeMember(teamId: string, userId: string): Promise<boolean>;

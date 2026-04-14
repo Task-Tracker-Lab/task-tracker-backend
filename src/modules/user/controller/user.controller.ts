@@ -11,7 +11,7 @@ import { UpdateNotificationsDto, UpdateProfileDto } from '../dtos';
 import { ApiBaseController, ExtractFastifyFile, GetUserId } from '../../../shared/decorators';
 import { BearerAuthGuard } from 'src/shared/guards';
 import { PaginationDto } from '../../../shared/dtos';
-import { FileUploadDto } from '../../../shared/dtos/upload-avatar.dto';
+import { FileUploadDto } from '../../media/dtos';
 
 @ApiBaseController('users', 'Users')
 @UseGuards(BearerAuthGuard)

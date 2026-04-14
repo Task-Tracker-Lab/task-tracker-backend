@@ -110,4 +110,20 @@ export class TeamsRepository implements ITeamsRepository {
         this.logger.log(teamId, userId, dto);
         return Promise.resolve(true);
     };
+
+    public async updateTeamAvatar(teamId: string, url: string): Promise<boolean> {
+        const { rowCount } = await this.db
+            .update(schema.teams)
+            .set({ avatarUrl: url, updatedAt: new Date() })
+            .where(eq(schema.teams.id, teamId));
+        return (rowCount ?? 0) > 0;
+    }
+
+    public async updateTeamBanner(teamId: string, url: string): Promise<boolean> {
+        const { rowCount } = await this.db
+            .update(schema.teams)
+            .set({ coverUrl: url, updatedAt: new Date() })
+            .where(eq(schema.teams.id, teamId));
+        return (rowCount ?? 0) > 0;
+    }
 }

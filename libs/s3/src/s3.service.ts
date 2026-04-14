@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { S3_OPTIONS } from './s3.constants';
 import { S3ModuleOptions } from './interfaces';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
@@ -28,13 +28,31 @@ export class S3Service {
         });
     }
 
-    async uploadPublicFile(
+    async deleteFile(fileUrl: string): Promise<void> {
+        try {
+            const url = new URL(fileUrl);
+            const pathParts = url.pathname.split('/');
+            const key = pathParts.slice(2).join('/');
+
+            await this.s3Client.send(
+                new DeleteObjectCommand({
+                    Bucket: this.bucket,
+                    Key: key,
+                }),
+            );
+        } catch (error) {
+            console.error('S3 Rollback failed:', error);
+        }
+    }
+
+    async uploadFile(
         fileBuffer: Buffer,
         originalName: string,
         mimetype: string,
+        folder: string,
     ): Promise<string> {
         const extension = extname(originalName);
-        const fileName = `${randomUUID()}${extension}`;
+        const fileName = `${folder}/${randomUUID()}${extension}`;
 
         const command = new PutObjectCommand({
             Bucket: this.bucket,

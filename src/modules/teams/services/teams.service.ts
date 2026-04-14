@@ -6,12 +6,16 @@ import {
 } from '@nestjs/common';
 import { ITeamsRepository } from '../repository';
 import { FindTagsQuery } from '../dtos';
+import { ITeamMedia, TEAM_MEDIA_TOKEN } from '../../media/interfaces/team-media.interface';
+import { FileUploadDto } from '../../media/dtos';
 
 @Injectable()
 export class TeamsService {
     constructor(
         @Inject('ITeamsRepository')
         private readonly teamsRepo: ITeamsRepository,
+        @Inject(TEAM_MEDIA_TOKEN)
+        private readonly mediaService: ITeamMedia,
     ) {}
 
     public create = (userId: string, dto: any) => {
@@ -95,5 +99,33 @@ export class TeamsService {
 
     public removeMember = (slug: string, userId: string) => {
         return { slug, userId };
+    };
+
+    public updateTeamAvatar = async (slug: string, fileDto: FileUploadDto) => {
+        const team = await this.teamsRepo.findBySlug(slug);
+        if (!team) {
+            throw new NotFoundException({
+                code: 'TEAM_NOT_FOUND',
+                message: 'Команда не найдена',
+            });
+        }
+
+        return this.mediaService.uploadTeamAvatar(team.id, fileDto, (url) =>
+            this.teamsRepo.updateTeamAvatar(team.id, url),
+        );
+    };
+
+    public updateTeamBanner = async (slug: string, fileDto: FileUploadDto) => {
+        const team = await this.teamsRepo.findBySlug(slug);
+        if (!team) {
+            throw new NotFoundException({
+                code: 'TEAM_NOT_FOUND',
+                message: 'Команда не найдена',
+            });
+        }
+
+        return this.mediaService.uploadTeamBanner(team.id, fileDto, (url) =>
+            this.teamsRepo.updateTeamBanner(team.id, url),
+        );
     };
 }

@@ -1,7 +1,8 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiConsumes } from '@nestjs/swagger';
 import { ActionResponse } from 'src/shared/dtos';
 import {
+    ApiBadRequest,
     ApiConflict,
     ApiForbidden,
     ApiNotFound,
@@ -9,6 +10,7 @@ import {
     ApiValidationError,
 } from 'src/shared/error';
 import { CreateTeamDto, InviteMemberDto, SyncTagsDto, UpdateTeamDto, TagsResponse } from '../dtos';
+import { FileUploadResponse } from '../../media/dtos';
 
 export const CreateTeamSwagger = () =>
     applyDecorators(
@@ -153,6 +155,64 @@ export const RemoveMemberSwagger = () =>
             description: 'Участник успешно удален',
         }),
         ApiNotFound(),
+        ApiUnauthorized(),
+        ApiForbidden(),
+    );
+
+export const PatchTeamAvatarSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Обновить аватар команды',
+            description: 'Загрузка файла изображения для профиля команды.',
+        }),
+        ApiConsumes('multipart/form-data'),
+        ApiBody({
+            schema: {
+                type: 'object',
+                properties: {
+                    file: {
+                        type: 'string',
+                        format: 'binary',
+                    },
+                },
+            },
+        }),
+        ApiResponse({
+            status: 200,
+            description: 'Аватар команды успешно обновлен.',
+            type: FileUploadResponse.Output,
+        }),
+        ApiBadRequest('Файл не передан или имеет неверный формат'),
+        ApiNotFound('Команда не найдена'),
+        ApiUnauthorized(),
+        ApiForbidden(),
+    );
+
+export const PatchTeamBannerSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Обновить баннер команды',
+            description: 'Загрузка файла изображения для обложки (баннера) команды.',
+        }),
+        ApiConsumes('multipart/form-data'),
+        ApiBody({
+            schema: {
+                type: 'object',
+                properties: {
+                    file: {
+                        type: 'string',
+                        format: 'binary',
+                    },
+                },
+            },
+        }),
+        ApiResponse({
+            status: 200,
+            description: 'Баннер команды успешно обновлен.',
+            type: FileUploadResponse.Output,
+        }),
+        ApiBadRequest('Файл не передан или имеет неверный формат'),
+        ApiNotFound('Команда не найдена'),
         ApiUnauthorized(),
         ApiForbidden(),
     );

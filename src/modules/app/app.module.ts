@@ -15,7 +15,6 @@ import { FastifyAdapter } from '@bull-board/fastify';
 import { MailProcessor } from 'src/shared/workers';
 import { BullModule } from '@nestjs/bullmq';
 import { MailAdapter } from 'src/shared/adapters/mail';
-import { S3Module } from '@libs/s3';
 import { MigrationService } from 'src/shared/migration';
 import { TeamsModule } from '../teams';
 
@@ -40,23 +39,6 @@ import { TeamsModule } from '../teams';
                     logging: true,
                 };
             },
-        }),
-        S3Module.registerAsync({
-            inject: [ConfigService],
-            global: true,
-            useFactory: (cfg: ConfigService) => ({
-                connection: {
-                    bucket: cfg.getOrThrow('S3_BUCKET_NAME'),
-                    endpoint: cfg.getOrThrow('S3_ENDPOINT'),
-                    region: cfg.getOrThrow('S3_REGION'),
-                    credentials: {
-                        accessKeyId: cfg.getOrThrow('S3_ACCESS_KEY'),
-                        secretAccessKey: cfg.getOrThrow('S3_SECRET_KEY'),
-                    },
-                },
-                // FOR MINIO COMPARTABLE
-                config: { forcePathStyle: true },
-            }),
         }),
         BullModule.forRootAsync({
             inject: [ConfigService],

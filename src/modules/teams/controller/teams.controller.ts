@@ -10,7 +10,7 @@ import {
     Put,
     Query,
 } from '@nestjs/common';
-import { ApiBaseController, GetUserId } from 'src/shared/decorators';
+import { ApiBaseController, ExtractFastifyFile, GetUserId } from 'src/shared/decorators';
 import { TeamsService } from '../services';
 import { FindTagsQuery, SyncTagsDto } from '../dtos';
 import {
@@ -21,7 +21,10 @@ import {
     RemoveTeamSwagger,
     SyncTeamTagsSwagger,
     UpdateTeamSwagger,
+    PatchTeamAvatarSwagger,
+    PatchTeamBannerSwagger,
 } from './teams.swagger';
+import { FileUploadDto } from '../../media/dtos';
 
 @ApiBaseController('teams', 'Teams', true)
 export class TeamsController {
@@ -68,5 +71,25 @@ export class TeamsController {
     @SyncTeamTagsSwagger()
     async syncTags(@Param('slug') slug: string, @Body() dto: SyncTagsDto) {
         return this.facade.syncTags(slug, dto.tags);
+    }
+
+    // UseGuards(RolesGuard) - team owner
+    @Patch(':slug/avatar')
+    @PatchTeamAvatarSwagger()
+    async updateTeamAvatar(
+        @ExtractFastifyFile() fileDto: FileUploadDto,
+        @Param('slug') slug: string,
+    ) {
+        return this.facade.updateTeamAvatar(slug, fileDto);
+    }
+
+    // UseGuards(RolesGuard) - team owner
+    @Patch(':slug/banner')
+    @PatchTeamBannerSwagger()
+    async updateTeamBanner(
+        @ExtractFastifyFile() fileDto: FileUploadDto,
+        @Param('slug') slug: string,
+    ) {
+        return this.facade.updateTeamBanner(slug, fileDto);
     }
 }
