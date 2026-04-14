@@ -5,6 +5,10 @@ import { TeamsService, MembersService } from './services';
 import { TeamsRepository } from './repository';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { Queues } from 'src/shared/workers';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 
 const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
 
@@ -29,6 +33,13 @@ const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
                     },
                 };
             },
+        }),
+        BullModule.registerQueue({
+            name: Queues.MAIL,
+        }),
+        BullBoardModule.forFeature({
+            name: Queues.MAIL,
+            adapter: BullMQAdapter,
         }),
     ],
     controllers: [TeamsController, MembersController],

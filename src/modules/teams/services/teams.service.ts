@@ -12,6 +12,9 @@ import { ITeamMedia, TEAM_MEDIA_TOKEN } from '../../media/interfaces/team-media.
 import type { FileUploadDto } from '../../media/dtos';
 import type { CreateTeamDto, UpdateTeamDto } from '../dtos';
 import { slugify } from 'transliteration';
+import { TeamMemberMapper } from '../mappers';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 @Injectable()
 export class TeamsService {
@@ -20,7 +23,26 @@ export class TeamsService {
         private readonly teamsRepo: ITeamsRepository,
         @Inject(TEAM_MEDIA_TOKEN)
         private readonly mediaService: ITeamMedia,
+        @InjectRedis()
+        private readonly redis: Redis,
     ) {}
+
+    public checkSlug = async (slug: string) => {
+        const available = await this.teamsRepo.isSlugAvailable(slug);
+        return { available };
+    };
+
+    public getMyInvites = async (email: string) => {
+        const codes = await this.redis.smembers(`user:invites:${email}`);
+
+        if (!codes.length) return [];
+
+        const results = await this.redis.mget(codes.map((c) => `inv:code:${c}`));
+
+        return results
+            .map((raw, i) => TeamMemberMapper.toPublicInvite(raw, codes[i]))
+            .filter(Boolean);
+    };
 
     public updateTeamAvatar = async (slug: string, fileDto: FileUploadDto) => {
         const team = await this.teamsRepo.findBySlug(slug);
@@ -182,8 +204,9 @@ export class TeamsService {
         };
     };
 
-    public getAll = (userId: string, pagination: Record<string, string>) => {
-        return this.teamsRepo.findByUser(userId, pagination);
+    public getAll = async (userId: string, pagination: Record<string, string>) => {
+        const teams = await this.teamsRepo.findByUser(userId, pagination);
+        return teams.map((t) => TeamMemberMapper.toUserTeam(t));
     };
 
     public getOne = async (slug: string) => {

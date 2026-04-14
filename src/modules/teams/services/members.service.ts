@@ -5,12 +5,21 @@ import {
     Inject,
     Injectable,
     NotFoundException,
+    UnprocessableEntityException,
 } from '@nestjs/common';
 import { ITeamsRepository } from '../repository';
 import { ROLE_PRIORITY } from '../entities';
 import { generateSecret } from 'otplib';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
+import { InjectQueue } from '@nestjs/bullmq';
+import { MailJobs, Queues } from 'src/shared/workers';
+import { Queue } from 'bullmq';
+import { validate } from 'email-validator';
+import { TeamInvitationEvent } from 'src/shared/workers/events';
+import type { InviteMemberDto, UpdateMemberDto } from '../dtos';
+import { ConfigService } from '@nestjs/config';
+import { TeamMemberMapper } from '../mappers';
 
 @Injectable()
 export class MembersService {
@@ -19,6 +28,9 @@ export class MembersService {
         private readonly teamsRepo: ITeamsRepository,
         @InjectRedis()
         private readonly redis: Redis,
+        @InjectQueue(Queues.MAIL)
+        private readonly mailQueue: Queue,
+        private readonly cfg: ConfigService,
     ) {}
 
     public getMembers = async (slug: string) => {
@@ -28,32 +40,21 @@ export class MembersService {
             throw new NotFoundException(`Команда ${slug} не найдена`);
         }
 
-        return this.teamsRepo.findMembers(team.id);
+        const members = await this.teamsRepo.findMembers(team.id);
+        return TeamMemberMapper.toList(members);
     };
 
-    public getMyInvites = async (email: string) => {
-        const codes = await this.redis.smembers(`user:invites:${email}`);
+    public invite = async (slug: string, inviterId: string, dto: InviteMemberDto) => {
+        const isValidEmail = validate(dto.email);
 
-        if (!codes.length) return [];
+        if (!isValidEmail) {
+            throw new UnprocessableEntityException({
+                code: 'INVALID_EMAIL_FORMAT',
+                message: 'Указанный email адрес имеет некорректный формат',
+                details: { email: dto.email },
+            });
+        }
 
-        const keys = codes.map((code) => `inv:code:${code}`);
-        const results = await this.redis.mget(keys);
-
-        const invites = results
-            .map((data, index) => {
-                if (!data) return null;
-
-                return {
-                    ...JSON.parse(data),
-                    code: codes[index],
-                };
-            })
-            .filter(Boolean);
-
-        return invites;
-    };
-
-    public invite = async (slug: string, inviterId: string, dto: any) => {
         const team = await this.teamsRepo.findBySlug(slug);
         if (!team) throw new NotFoundException('Команда не найдена');
 
@@ -64,19 +65,49 @@ export class MembersService {
 
         const code = generateSecret({ length: 8 });
 
+        const INVITE_TTL = 86400;
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + INVITE_TTL * 1000);
+
         const inviteData = {
             teamId: team.id,
             teamName: team.name,
+            teamAvatar: team.avatarUrl,
             email: dto.email,
             role: dto.role || 'member',
             inviterId,
+            inviterName: inviter.firstName,
+            createdAt: new Date().toISOString(),
+            expiresAt: expiresAt.toISOString(),
         };
 
         const multi = this.redis.multi();
-        multi.set(`inv:code:${code}`, JSON.stringify(inviteData), 'EX', 86400); // 24 часа
+        multi.set(`inv:code:${code}`, JSON.stringify(inviteData), 'EX', INVITE_TTL);
         multi.sadd(`team:invites:${team.id}`, code);
         multi.sadd(`user:invites:${dto.email}`, code);
         await multi.exec();
+
+        const origins = this.cfg.get('CORS_ALLOWED_ORIGINS');
+        const FRONTEND_URL = origins[0];
+
+        /**
+         * Человек кликает: ttopen.ru/invites/accept?code=...
+         * Фронт видит, что токена нет -> Редирект на /signup?inviteCode=...
+         * Юзер регистрируется.
+         * После успешного входа фронт видит inviteCode в URL или стейте и автоматом завершает процесс вступления.
+         */
+        const event = new TeamInvitationEvent(
+            dto.email,
+            team.name,
+            `${FRONTEND_URL}/invites/accept?code=${code}`,
+        );
+        await this.mailQueue.add(MailJobs.SEND_TEAM_INVITATION, event, {
+            attempts: 3,
+            backoff: {
+                type: 'exponential',
+                delay: 5000,
+            },
+        });
 
         return {
             success: true,
@@ -93,17 +124,20 @@ export class MembersService {
 
         const invite = JSON.parse(inviteRaw);
 
-        if (invite.email !== email) {
+        if (invite.email.toLowerCase() !== email.toLowerCase()) {
             throw new ForbiddenException('Этот инвайт предназначен для другого почтового адреса');
         }
 
         const member = await this.teamsRepo.findMember(invite.teamId, userId);
-        if (member.status === 'banned') {
-            throw new ForbiddenException('Вы заблокированы в этой команде');
-        }
 
-        if (member.status === 'active') {
-            throw new BadRequestException('Вы уже являетесь участником этой команды');
+        if (member) {
+            if (member.status === 'banned') {
+                throw new ForbiddenException('Вы заблокированы в этой команде');
+            }
+
+            if (member.status === 'active') {
+                throw new BadRequestException('Вы уже являетесь участником этой команды');
+            }
         }
 
         await this.teamsRepo.addMember({
@@ -122,7 +156,6 @@ export class MembersService {
 
         return {
             success: true,
-            teamId: invite.teamId,
             message: 'Вы успешно присоединились к команде',
         };
     };
@@ -131,7 +164,7 @@ export class MembersService {
         slug: string,
         currentUserId: string,
         targetUserId: string,
-        dto: any,
+        dto: UpdateMemberDto,
     ) => {
         const team = await this.teamsRepo.findBySlug(slug);
         if (!team) throw new NotFoundException('Команда не найдена');
@@ -217,8 +250,8 @@ export class MembersService {
         return {
             success: result,
             message: isSelfRemoval
-                ? `Вы успешно покинули команду "${team.name}"`
-                : `Участник успешно исключен из команды "${team.name}"`,
+                ? `Вы успешно покинули команду ${team.name}`
+                : `Участник успешно исключен из команды ${team.name}`,
         };
     };
 }

@@ -13,6 +13,15 @@ export class TeamsRepository implements ITeamsRepository {
         private readonly db: DatabaseService<typeof schema>,
     ) {}
 
+    public isSlugAvailable = async (slug: string) => {
+        const result = await this.db
+            .select({ id: schema.teams.id })
+            .from(schema.teams)
+            .where(eq(schema.teams.slug, slug));
+
+        return result.length === 0;
+    };
+
     public addMember = async (dto: schema.NewTeamMember) => {
         const { rowCount } = await this.db
             .insert(schema.teamMembers)
@@ -105,32 +114,17 @@ export class TeamsRepository implements ITeamsRepository {
     };
 
     public findMember = async (teamId: string, userId: string) => {
-        const [member] = await this.db
-            .select()
-            .from(schema.teamMembers)
-            .where(
-                and(eq(schema.teamMembers.teamId, teamId), eq(schema.teamMembers.userId, userId)),
-            );
+        const [member] = await this.membersQuery.where(
+            and(eq(schema.teamMembers.teamId, teamId), eq(schema.teamMembers.userId, userId)),
+        );
 
-        if (!member) return null;
-
-        return member;
+        return member || null;
     };
 
     public findMembers = async (teamId: string) => {
-        return this.db
-            .select({
-                userId: schema.teamMembers.userId,
-                role: schema.teamMembers.role,
-                status: schema.teamMembers.status,
-                joinedAt: schema.teamMembers.joinedAt,
-                firstName: scUsers.users.firstName,
-                lastName: scUsers.users.lastName,
-                avatarUrl: scUsers.users.avatarUrl,
-            })
-            .from(schema.teamMembers)
-            .innerJoin(scUsers.users, eq(schema.teamMembers.userId, scUsers.users.id))
-            .where(eq(schema.teamMembers.teamId, teamId));
+        return this.membersQuery
+            .where(eq(schema.teamMembers.teamId, teamId))
+            .orderBy(desc(schema.teamMembers.joinedAt));
     };
 
     public findByUser = async (
@@ -138,6 +132,16 @@ export class TeamsRepository implements ITeamsRepository {
         pagination: { search?: string; limit?: number; offset?: number },
     ) => {
         const { search, limit = 10, offset = 0 } = pagination;
+
+        const filters = [
+            eq(schema.teamMembers.userId, userId),
+            eq(schema.teamMembers.status, 'active'),
+            isNull(schema.teams.deletedAt),
+        ];
+
+        if (search) {
+            filters.push(ilike(schema.teams.name, `%${search}%`));
+        }
 
         const query = this.db
             .select({
@@ -147,19 +151,12 @@ export class TeamsRepository implements ITeamsRepository {
                 description: schema.teams.description,
                 avatarUrl: schema.teams.avatarUrl,
                 role: schema.teamMembers.role,
-                createdAt: schema.teams.createdAt,
+                joinedAt: schema.teamMembers.joinedAt,
             })
             .from(schema.teamMembers)
             .innerJoin(schema.teams, eq(schema.teams.id, schema.teamMembers.teamId))
-            .where(
-                and(
-                    eq(schema.teamMembers.userId, userId),
-                    eq(schema.teamMembers.status, 'active'),
-                    isNull(schema.teams.deletedAt),
-                    search ? ilike(schema.teams.name, `%${search}%`) : undefined,
-                ),
-            )
-            .orderBy(desc(schema.teamMembers.joinedAt), desc(schema.teamMembers.createdAt))
+            .where(and(...filters))
+            .orderBy(desc(schema.teamMembers.joinedAt))
             .limit(limit)
             .offset(offset);
 
@@ -239,9 +236,11 @@ export class TeamsRepository implements ITeamsRepository {
         userId: string,
         dto: Partial<schema.TeamMember>,
     ) => {
+        const { role, status } = dto;
+
         const data = {
-            ...dto,
-            ...(dto.status === 'active' ? { joinedAt: new Date() } : {}),
+            role,
+            ...(status === 'active' ? { joinedAt: new Date() } : {}),
         };
 
         const result = await this.db
@@ -268,5 +267,26 @@ export class TeamsRepository implements ITeamsRepository {
             .set({ coverUrl: url, updatedAt: new Date() })
             .where(eq(schema.teams.id, teamId));
         return (rowCount ?? 0) > 0;
+    }
+
+    private get memberSelection() {
+        return {
+            userId: schema.teamMembers.userId,
+            role: schema.teamMembers.role,
+            status: schema.teamMembers.status,
+            joinedAt: schema.teamMembers.joinedAt,
+            firstName: scUsers.users.firstName,
+            lastName: scUsers.users.lastName,
+            middleName: scUsers.users.middleName,
+            avatarUrl: scUsers.users.avatarUrl,
+            email: scUsers.users.email,
+        };
+    }
+
+    private get membersQuery() {
+        return this.db
+            .select(this.memberSelection)
+            .from(schema.teamMembers)
+            .innerJoin(scUsers.users, eq(schema.teamMembers.userId, scUsers.users.id));
     }
 }
