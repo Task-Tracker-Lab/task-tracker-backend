@@ -11,7 +11,7 @@ bootstrapApp({
         title: 'Task Tracker API',
         description: 'API бэкенда таск-трекера',
         version: '0.1.0',
-        path: 'ui',
+        path: 'docs',
     },
     useCors: true,
     useCookieParser: true,
