@@ -48,6 +48,17 @@ export class AuthService {
     ) {}
 
     public signUp = async (dto: SignUpDto) => {
+        const redisKey = `reg:${dto.email}`;
+
+        const cachedData = await this.redis.get(redisKey);
+
+        if (cachedData) {
+            throw new BadRequestException({
+                code: 'REGISTRATION_IN_PROGRESS',
+                message: 'Код уже был отправлен. Проверьте почту или подождите 15 минут.',
+            });
+        }
+
         const isValidEmail = validate(dto.email);
 
         if (!isValidEmail) {
@@ -116,6 +127,7 @@ export class AuthService {
 
         const userData = JSON.parse(cachedData);
 
+        // TODO: APPORCH WINDOW STEP INLIGHT
         const verifyResult = await verifyOTP({
             token: dto.code,
             secret: userData.otp.secret,
@@ -123,6 +135,7 @@ export class AuthService {
             digits: 6,
             period: 900,
             strategy: 'totp',
+            afterTimeStep: 1,
         });
 
         if (!verifyResult.valid) {

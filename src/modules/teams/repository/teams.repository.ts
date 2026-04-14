@@ -2,7 +2,8 @@ import { Inject, Logger } from '@nestjs/common';
 import { ITeamsRepository } from './teams.repository.interface';
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
 import * as schema from '../entities';
-import { asc, count, eq, ilike, inArray } from 'drizzle-orm';
+import * as scUsers from 'src/modules/user/entities';
+import { and, asc, count, desc, eq, ilike, inArray, isNull, sql } from 'drizzle-orm';
 
 export class TeamsRepository implements ITeamsRepository {
     private logger = new Logger(TeamsRepository.name);
@@ -13,21 +14,156 @@ export class TeamsRepository implements ITeamsRepository {
     ) {}
 
     public addMember = async (dto: schema.NewTeamMember) => {
-        this.logger.log(dto);
-        return null;
+        const { rowCount } = await this.db
+            .insert(schema.teamMembers)
+            .values(dto)
+            .onConflictDoNothing({
+                target: [schema.teamMembers.teamId, schema.teamMembers.userId],
+            });
+
+        return (rowCount ?? 0) > 0;
     };
 
-    public create = async (ownerId: string, dto: schema.NewTeam) => {
-        this.logger.log(ownerId, dto);
-        return null;
+    public create = async (ownerId: string, dto: schema.NewTeam, tags?: string[]) => {
+        return this.db.transaction(async (tx) => {
+            const [{ teamId }] = await tx
+                .insert(schema.teams)
+                .values({ ...dto, ownerId })
+                .returning({ teamId: schema.teams.id });
+
+            let insertedTagsCount = 0;
+
+            if (tags?.length) {
+                const insertedTags = await tx
+                    .insert(schema.tags)
+                    .values(tags.map((name) => ({ name })))
+                    .onConflictDoUpdate({
+                        target: schema.tags.name,
+                        set: { name: sql`${schema.tags.name}` },
+                    })
+                    .returning({ id: schema.tags.id });
+
+                if (insertedTags.length > 0) {
+                    await tx.insert(schema.teamsToTags).values(
+                        insertedTags.map((tag) => ({
+                            teamId,
+                            tagId: tag.id,
+                        })),
+                    );
+
+                    insertedTagsCount = insertedTags.length;
+                }
+            }
+
+            await tx.insert(schema.teamMembers).values({
+                teamId,
+                userId: ownerId,
+                role: 'owner',
+                status: 'active',
+                joinedAt: new Date(),
+            });
+
+            return {
+                success: true,
+                teamId,
+                tags: insertedTagsCount,
+            };
+        });
     };
 
-    public findAll = async (
+    public update = async (id: string, dto: Partial<schema.Team>, tags?: string[]) => {
+        return this.db.transaction(async (tx) => {
+            const [{ teamId }] = await tx
+                .update(schema.teams)
+                .set(dto)
+                .where(eq(schema.teams.id, id))
+                .returning({ teamId: schema.teams.id });
+
+            if (tags?.length) {
+            }
+
+            return {
+                success: true,
+                teamId,
+                tags: 0,
+            };
+        });
+    };
+
+    public remove = async (teamId: string, userId) => {
+        const suffix = Date.now().toString();
+
+        const { rowCount } = await this.db
+            .update(schema.teams)
+            .set({
+                deletedAt: new Date(),
+                slug: sql`${schema.teams.slug} || '-' || ${suffix}`,
+            })
+            .where(and(eq(schema.teams.id, teamId), eq(schema.teams.ownerId, userId)));
+
+        return (rowCount ?? 0) > 0;
+    };
+
+    public findMember = async (teamId: string, userId: string) => {
+        const [member] = await this.db
+            .select()
+            .from(schema.teamMembers)
+            .where(
+                and(eq(schema.teamMembers.teamId, teamId), eq(schema.teamMembers.userId, userId)),
+            );
+
+        if (!member) return null;
+
+        return member;
+    };
+
+    public findMembers = async (teamId: string) => {
+        return this.db
+            .select({
+                userId: schema.teamMembers.userId,
+                role: schema.teamMembers.role,
+                status: schema.teamMembers.status,
+                joinedAt: schema.teamMembers.joinedAt,
+                firstName: scUsers.users.firstName,
+                lastName: scUsers.users.lastName,
+                avatarUrl: scUsers.users.avatarUrl,
+            })
+            .from(schema.teamMembers)
+            .innerJoin(scUsers.users, eq(schema.teamMembers.userId, scUsers.users.id))
+            .where(eq(schema.teamMembers.teamId, teamId));
+    };
+
+    public findByUser = async (
         userId: string,
         pagination: { search?: string; limit?: number; offset?: number },
     ) => {
-        this.logger.log(userId, pagination);
-        return [];
+        const { search, limit = 10, offset = 0 } = pagination;
+
+        const query = this.db
+            .select({
+                id: schema.teams.id,
+                name: schema.teams.name,
+                slug: schema.teams.slug,
+                description: schema.teams.description,
+                avatarUrl: schema.teams.avatarUrl,
+                role: schema.teamMembers.role,
+                createdAt: schema.teams.createdAt,
+            })
+            .from(schema.teamMembers)
+            .innerJoin(schema.teams, eq(schema.teams.id, schema.teamMembers.teamId))
+            .where(
+                and(
+                    eq(schema.teamMembers.userId, userId),
+                    eq(schema.teamMembers.status, 'active'),
+                    isNull(schema.teams.deletedAt),
+                    search ? ilike(schema.teams.name, `%${search}%`) : undefined,
+                ),
+            )
+            .orderBy(desc(schema.teamMembers.joinedAt), desc(schema.teamMembers.createdAt))
+            .limit(limit)
+            .offset(offset);
+
+        return query;
     };
 
     public findAllTags = async (options: { search?: string; limit?: number; offset?: number }) => {
@@ -57,18 +193,19 @@ export class TeamsRepository implements ITeamsRepository {
     };
 
     public findBySlug = async (slug: string) => {
-        this.logger.log(slug);
-        return null;
-    };
-
-    public remove = async (id: string) => {
-        this.logger.log(id);
-        return Promise.resolve(true);
+        const [team] = await this.db.select().from(schema.teams).where(eq(schema.teams.slug, slug));
+        if (!team) return null;
+        return team;
     };
 
     public removeMember = async (teamId: string, userId: string) => {
-        this.logger.log(teamId, userId);
-        return Promise.resolve(true);
+        const result = await this.db
+            .delete(schema.teamMembers)
+            .where(
+                and(eq(schema.teamMembers.teamId, teamId), eq(schema.teamMembers.userId, userId)),
+            );
+
+        return (result.rowCount ?? 0) > 0;
     };
 
     public syncTags = async (teamId: string, tagNames: string[]) => {
@@ -97,18 +234,24 @@ export class TeamsRepository implements ITeamsRepository {
         return true;
     };
 
-    public update = async (id: string, dto: Partial<schema.Team>) => {
-        this.logger.log(id, dto);
-        return Promise.resolve(true);
-    };
-
     public updateMember = async (
         teamId: string,
         userId: string,
         dto: Partial<schema.TeamMember>,
     ) => {
-        this.logger.log(teamId, userId, dto);
-        return Promise.resolve(true);
+        const data = {
+            ...dto,
+            ...(dto.status === 'active' ? { joinedAt: new Date() } : {}),
+        };
+
+        const result = await this.db
+            .update(schema.teamMembers)
+            .set(data)
+            .where(
+                and(eq(schema.teamMembers.teamId, teamId), eq(schema.teamMembers.userId, userId)),
+            );
+
+        return (result.rowCount ?? 0) > 0;
     };
 
     public async updateTeamAvatar(teamId: string, url: string): Promise<boolean> {

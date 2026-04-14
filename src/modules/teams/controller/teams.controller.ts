@@ -1,23 +1,10 @@
-import {
-    Body,
-    Delete,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    Patch,
-    Post,
-    Put,
-    Query,
-} from '@nestjs/common';
+import { Body, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiBaseController, ExtractFastifyFile, GetUserId } from 'src/shared/decorators';
 import { TeamsService } from '../services';
-import { FindTagsQuery, SyncTagsDto } from '../dtos';
 import {
     CreateTeamSwagger,
-    FindAllTeamsSwagger,
+    // FindAllTeamsSwagger,
     FindOneTeamSwagger,
-    GetAllTagsSwagger,
     RemoveTeamSwagger,
     SyncTeamTagsSwagger,
     UpdateTeamSwagger,
@@ -25,6 +12,7 @@ import {
     PatchTeamBannerSwagger,
 } from './teams.swagger';
 import { FileUploadDto } from '../../media/dtos';
+import { CreateTeamDto, SyncTagsDto } from '../dtos';
 
 @ApiBaseController('teams', 'Teams', true)
 export class TeamsController {
@@ -32,21 +20,21 @@ export class TeamsController {
 
     @Post()
     @CreateTeamSwagger()
-    async create(@Body() dto: any, @GetUserId() userId: string) {
+    async create(@GetUserId() userId: string, @Body() dto: CreateTeamDto) {
         return this.facade.create(userId, dto);
     }
 
-    @Get()
-    @FindAllTeamsSwagger()
-    async findAll(@GetUserId() userId: string, @Query() query: any) {
-        return this.facade.getAll(userId, query);
-    }
+    // @Get('my')
+    // @FindAllTeamsSwagger()
+    // async findAll(@GetUserId() userId: string, @Query() query: any) {
+    //     return this.facade.getAll(userId, query);
+    // }
 
-    @Get('tags/all')
-    @GetAllTagsSwagger()
-    async getAllTags(@Query() query: FindTagsQuery) {
-        return this.facade.getAllTags(query);
-    }
+    // @Get('my/invites')
+    // @FindAllTeamsSwagger()
+    // async findAllInvites(@GetUserId() userId: string, @Query() query: any) {
+    //     return this.facade.getAllInvites(userId, query);
+    // }
 
     @Get(':slug')
     @FindOneTeamSwagger()
@@ -56,15 +44,15 @@ export class TeamsController {
 
     @Patch(':slug')
     @UpdateTeamSwagger()
-    async update(@Param('slug') slug: string, @Body() dto: any) {
-        return this.facade.update(slug, dto);
+    async update(@Param('slug') slug: string, @GetUserId() userId: string, @Body() dto: any) {
+        return this.facade.update(slug, userId, dto);
     }
 
     @Delete(':slug')
     @RemoveTeamSwagger()
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async remove(@Param('slug') slug: string) {
-        return this.facade.remove(slug);
+    @HttpCode(HttpStatus.OK)
+    async remove(@Param('slug') slug: string, @GetUserId() userId: string) {
+        return this.facade.remove(slug, userId);
     }
 
     @Put(':slug/tags')

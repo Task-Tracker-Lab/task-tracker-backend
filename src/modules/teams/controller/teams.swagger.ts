@@ -9,7 +9,7 @@ import {
     ApiUnauthorized,
     ApiValidationError,
 } from 'src/shared/error';
-import { CreateTeamDto, InviteMemberDto, SyncTagsDto, UpdateTeamDto, TagsResponse } from '../dtos';
+import { CreateTeamDto, InviteMemberDto, SyncTagsDto, UpdateTeamDto, TagResponse } from '../dtos';
 import { FileUploadResponse } from '../../media/dtos';
 
 export const CreateTeamSwagger = () =>
@@ -100,7 +100,7 @@ export const GetAllTagsSwagger = () =>
         ApiResponse({
             status: 200,
             description: 'Список тегов успешно получен',
-            type: TagsResponse.Output,
+            type: TagResponse.Output,
         }),
         ApiUnauthorized(),
     );

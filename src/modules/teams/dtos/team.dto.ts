@@ -9,7 +9,7 @@ export const CreateTeamSchema = z.object({
         .max(500)
         .optional()
         .describe('Краткое описание деятельности или целей команды'),
-    avatarUrl: z.string().url().optional().describe('Ссылка на изображение профиля команды'),
+    slug: z.string().optional().describe('Уникальная ссылка на изображение команду'),
     tags: z
         .array(z.string())
         .optional()
@@ -46,6 +46,6 @@ const FindTagsQuerySchema = z.object({
         .describe('Количество возвращаемых результатов (1-100)'),
 });
 
-export class TagsResponse extends createZodDto(createPaginationSchema(TagSchema)) {}
+export class TagResponse extends createZodDto(createPaginationSchema(TagSchema)) {}
 export class SyncTagsDto extends createZodDto(SyncTagsSchema) {}
 export class FindTagsQuery extends createZodDto(FindTagsQuerySchema) {}
