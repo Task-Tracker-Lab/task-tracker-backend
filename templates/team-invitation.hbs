@@ -8,22 +8,18 @@
     .header h1 { color: #FFFFFF; margin: 0; font-size: 24px; letter-spacing: -1px; }
     .content { padding: 40px; background-color: #ffffff; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; text-align: center; }
     .content h2 { font-size: 22px; margin-bottom: 24px; color: #1f2937; }
-    .content p { margin: 10px 0; line-height: 1.5; }
+    .content p { margin: 10px 0; line-height: 1.5; font-size: 16px; }
 
-    .code-wrapper { margin: 30px 0; }
-    .digit {
+    .button {
       display: inline-block;
-      width: 45px;
-      height: 55px;
-      line-height: 55px;
-      background-color: #f3f4f6;
-      border: 1px solid #e5e7eb;
+      margin: 30px 0;
+      padding: 14px 28px;
+      background-color: #0B99FF;
+      color: #ffffff !important;
+      text-decoration: none;
       border-radius: 8px;
-      font-size: 28px;
+      font-size: 16px;
       font-weight: bold;
-      color: #374151;
-      margin: 0 4px;
-      text-align: center;
     }
 
     .footer { font-size: 13px; color: #9ca3af; text-align: center; margin-top: 20px; }
@@ -36,17 +32,21 @@
     <h1>Task Tracker</h1>
   </div>
   <div class="content">
-    <h2>Сброс пароля</h2>
-    <p>Здравствуйте!</p>
-    <p>Мы получили запрос на восстановление пароля для вашего аккаунта.<br>Ваш одноразовый код для сброса:</p>
+    <h2>Приглашение в команду</h2>
+    <p>Вас пригласили присоединиться к команде <b>{{teamName}}</b>!</p>
 
-    <div class="code-wrapper">{{#each codeArray}}<div class="digit">{{this}}</div>{{/each}}</div>
+    <a href="{{inviteUrl}}" class="button">Присоединиться к команде</a>
 
-    <p style="font-size: 14px; color: #6b7280;">Никому не сообщайте этот код. Если вы не запрашивали сброс пароля, немедленно обратитесь в поддержку.</p>
+    <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+      Если кнопка не работает, скопируйте и вставьте эту ссылку в браузер:<br>
+      <a href="{{inviteUrl}}" style="color: #0B99FF;">{{inviteUrl}}</a>
+    </p>
   </div>
   <div class="footer">
-    <p>&copy; {{year}} Task Tracker Security Team</p>
+    <p>&copy; {{year}} Task Tracker Team</p>
+    <p>Если вы не ждали этого письма, просто проигнорируйте его.</p>
   </div>
 </div>
 </body>
 </html>
+
