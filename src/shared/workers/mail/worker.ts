@@ -3,7 +3,7 @@ import { MailJobs, Queues } from '../enum';
 import type { Job } from 'bullmq';
 import { IMailPort } from 'src/shared/adapters/mail';
 import { Inject } from '@nestjs/common';
-import type { RegisterCodeEvent, ResetPasswordEvent } from '../events';
+import { RegisterCodeEvent, ResetPasswordEvent, TeamInvitationEvent } from '../events';
 
 @Processor(Queues.MAIL)
 export class MailProcessor extends WorkerHost {
@@ -16,6 +16,7 @@ export class MailProcessor extends WorkerHost {
 
     async process(job: Job<RegisterCodeEvent>): Promise<void>;
     async process(job: Job<ResetPasswordEvent>): Promise<void>;
+    async process(job: Job<TeamInvitationEvent>): Promise<void>;
     async process(job: Job<any>): Promise<void> {
         await job.log(`[START] Job ID: ${job.id} | Type: ${job.name}`);
 
@@ -26,6 +27,9 @@ export class MailProcessor extends WorkerHost {
                     break;
                 case MailJobs.SEND_RESET_PASSWORD:
                     await this.sendResetPassCode(job);
+                    break;
+                case MailJobs.SEND_TEAM_INVITATION:
+                    await this.sendTeamInvitation(job);
                     break;
                 default:
                     await job.log(`[WRN] No handler for job: ${job.name}`);
@@ -67,6 +71,18 @@ export class MailProcessor extends WorkerHost {
         await this.mailAdapter.sendResetPasswordCode(email, otp);
 
         await job.log(`Reset link delivered to ${email}`);
+        await job.updateProgress(100);
+    };
+
+    private sendTeamInvitation = async (job: Job<TeamInvitationEvent>) => {
+        const { email, teamName, inviteUrl } = job.data;
+
+        await job.log(`Sending team(${teamName}) invitation link to: ${email}`);
+        await job.updateProgress(30);
+
+        await this.mailAdapter.sendTeamInvitation(email, teamName, inviteUrl);
+
+        await job.log(`Team invitation link delivered to ${email}`);
         await job.updateProgress(100);
     };
 }
