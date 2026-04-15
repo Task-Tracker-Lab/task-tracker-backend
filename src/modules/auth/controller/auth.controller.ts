@@ -1,6 +1,6 @@
 import { ApiBaseController } from '../../../shared/decorators';
 import { Body, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services';
 import {
     PostLoginSwagger,
     PostLogoutSwagger,

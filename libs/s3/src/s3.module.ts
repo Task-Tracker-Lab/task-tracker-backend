@@ -3,10 +3,7 @@ import type { S3ModuleOptions, S3ModuleAsyncOptions } from './interfaces';
 import { S3Service } from './s3.service';
 import { S3_OPTIONS } from './s3.constants';
 
-@Module({
-    providers: [S3Service],
-    exports: [S3Service],
-})
+@Module({})
 export class S3Module {
     static register(options: S3ModuleOptions): DynamicModule {
         const { global, ...config } = options;
@@ -20,10 +17,9 @@ export class S3Module {
     }
 
     static registerAsync(options: S3ModuleAsyncOptions): DynamicModule {
-        const { global, imports } = options;
+        const { imports } = options;
 
         return {
-            global,
             module: S3Module,
             imports: imports || [],
             providers: [this.createAsyncOptionsProvider(options), S3Service],

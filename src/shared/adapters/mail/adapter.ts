@@ -26,8 +26,13 @@ export class MailAdapter implements IMailPort {
         const templatePath = path.join(process.cwd(), 'templates', `${templateName}.hbs`);
         const templateSource = fs.readFileSync(templatePath, 'utf8');
 
+        const contextWithYear = {
+            ...context,
+            year: new Date().getFullYear(),
+        };
+
         const template = hbs.compile(templateSource);
-        const html = template(context);
+        const html = template(contextWithYear);
 
         return await this.transporter.sendMail({
             from: `"${this.cfg.get('MAIL_FROM_NAME')}" <${this.cfg.get('MAIL_FROM_EMAIL')}>`,
@@ -51,6 +56,13 @@ export class MailAdapter implements IMailPort {
 
         return this.sendMail(email, 'Восстановление пароля', 'reset-password', {
             codeArray,
+        });
+    }
+
+    async sendTeamInvitation(email: string, teamName: string, inviteUrl: string) {
+        return this.sendMail(email, `Приглашение в команду ${teamName}`, 'team-invitation', {
+            teamName,
+            inviteUrl,
         });
     }
 }

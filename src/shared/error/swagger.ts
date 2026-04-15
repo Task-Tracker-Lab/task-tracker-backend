@@ -7,8 +7,8 @@ export const ApiErrorResponse = (
     bizCode: string,
     description: string,
     details?: { field: string; message: string; code: string }[],
-) => {
-    return ApiResponse({
+) =>
+    ApiResponse({
         status,
         description,
         schema: {
@@ -28,7 +28,6 @@ export const ApiErrorResponse = (
             },
         },
     });
-};
 
 export const ApiBadRequest = (description: string = 'Некорректный запрос') =>
     applyDecorators(ApiErrorResponse(400, 'BAD_REQUEST', description));

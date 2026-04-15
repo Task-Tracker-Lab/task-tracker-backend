@@ -1,5 +1,4 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
-import { createId } from '@paralleldrive/cuid2';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -29,7 +28,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             details = res.details || [];
         }
 
-        const requestId = request.headers['x-request-id'] || createId();
+        const requestId = request.id ?? request.headers['x-request-id'];
 
         const errorResponse = {
             code,

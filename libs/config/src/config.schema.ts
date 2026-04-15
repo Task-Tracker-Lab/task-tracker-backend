@@ -8,6 +8,7 @@ const timeStringSchema = z.string().regex(/^[0-9]+[smhdw]$/, {
 export const ConfigSchema = z.object({
     PORT: z.coerce.number().default(3000),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    COOKIE_SECRET: z.string({ error: 'COOKIE_SECRET is missing' }),
     DB_USERNAME: z.string({ error: 'DB_USERNAME is missing' }),
     DB_PASSWORD: z.string({ error: 'DB_PASSWORD is missing' }),
     DB_DATABASE: z.string({ error: 'DB_DATABASE is missing' }),

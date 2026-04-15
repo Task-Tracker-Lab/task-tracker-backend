@@ -32,6 +32,9 @@ importers:
       '@fastify/cors':
         specifier: ^11.2.0
         version: 11.2.0
+      '@fastify/csrf-protection':
+        specifier: ^7.1.0
+        version: 7.1.0
       '@fastify/multipart':
         specifier: ^10.0.0
         version: 10.0.0
@@ -125,6 +128,9 @@ importers:
       rxjs:
         specifier: ^7.8.1
         version: 7.8.2
+      transliteration:
+        specifier: ^2.6.1
+        version: 2.6.1
       ua-parser-js:
         specifier: ^2.0.9
         version: 2.0.9
@@ -1063,6 +1069,12 @@ packages:
 
   '@fastify/cors@11.2.0':
     resolution: {integrity: sha512-LbLHBuSAdGdSFZYTLVA3+Ch2t+sA6nq3Ejc6XLAKiQ6ViS2qFnvicpj0htsx03FyYeLs04HfRNBsz/a8SvbcUw==}
+
+  '@fastify/csrf-protection@7.1.0':
+    resolution: {integrity: sha512-I2TDd4SRRYQivKCMHdB/8py+CPO9DT0e63lh4DO8MDCJh8NROq8HD/iO0IjYtwhsD3bZhr0cBXsFdfPvyTmzNw==}
+
+  '@fastify/csrf@8.0.1':
+    resolution: {integrity: sha512-dAmCrdfJ3CV/A/hHHK/rRBjjLRRSIltgJB0BxiVfbhr/31G6fgF8l2I8evtH8mjS5kTIvd0JOh7MOA3HA6eYDw==}
 
   '@fastify/deepmerge@3.2.1':
     resolution: {integrity: sha512-N5Oqvltoa2r9z1tbx4xjky0oRR60v+T47Ic4J1ukoVQcptLOrIdRnCSdTGmOmajZuHVKlTnfcmrjyqsGEW1ztA==}
@@ -4348,6 +4360,11 @@ packages:
     resolution: {integrity: sha512-dRXchy+C0IgK8WPC6xvCHFRIWYUbqqdEIKPaKo/AcTUNzwLTK6AH7RjdLWsEZcAN/TBdtfUw3PYEgPr5VPr6ww==}
     engines: {node: '>=14.16'}
 
+  transliteration@2.6.1:
+    resolution: {integrity: sha512-hJ9BhrQAOnNTbpOr1MxsNjZISkn7ppvF5TKUeFmTE1mG4ZPD/XVxF0L0LUoIUCWmQyxH0gJpVtfYLAWf298U9w==}
+    engines: {node: '>=20.0.0'}
+    hasBin: true
+
   ts-api-utils@1.4.3:
     resolution: {integrity: sha512-i3eMG77UTMD0hZhgRS562pv83RC6ukSAC2GMNWc+9dieh/+jDM5u5YG+NHX6VNDRHQcHwmsTHctP9LhbC3WxVw==}
     engines: {node: '>=16'}
@@ -5648,6 +5665,14 @@ snapshots:
     dependencies:
       fastify-plugin: 5.1.0
       toad-cache: 3.7.0
+
+  '@fastify/csrf-protection@7.1.0':
+    dependencies:
+      '@fastify/csrf': 8.0.1
+      '@fastify/error': 4.2.0
+      fastify-plugin: 5.1.0
+
+  '@fastify/csrf@8.0.1': {}
 
   '@fastify/deepmerge@3.2.1': {}
 
@@ -8993,6 +9018,8 @@ snapshots:
       '@borewit/text-codec': 0.2.2
       '@tokenizer/token': 0.3.0
       ieee754: 1.2.1
+
+  transliteration@2.6.1: {}
 
   ts-api-utils@1.4.3(typescript@5.9.3):
     dependencies:

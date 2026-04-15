@@ -9,9 +9,17 @@ import type { BootstrapOptions } from './interfaces/options.interface';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCompress from '@fastify/compress';
 import fastifyMultipart from '@fastify/multipart';
+import fastifyCsrf from '@fastify/csrf-protection';
+import { createId } from '@paralleldrive/cuid2';
 
 export async function bootstrapApp(options: BootstrapOptions) {
-    const adapter = new FastifyAdapter();
+    const startTime = performance.now();
+    const adapter = new FastifyAdapter({
+        requestIdHeader: 'x-request-id',
+        genReqId: (req) => {
+            return (req.headers['x-request-id'] as string) || createId();
+        },
+    });
 
     const {
         appModule,
@@ -28,7 +36,7 @@ export async function bootstrapApp(options: BootstrapOptions) {
 
     let rootModule = appModule;
 
-    // TODO: Improve merging modules (in case of multiple features needed)
+    // TODO: Improve merging modules (in case of multiple features needed) or migrate to fastify throttle
     if (throttlerOptions) {
         rootModule = setupThrottler(rootModule, throttlerOptions);
     }
@@ -74,15 +82,36 @@ export async function bootstrapApp(options: BootstrapOptions) {
 
         await setupSwagger(app, fullOptions);
     }
-    if (useCookieParser) app.register(fastifyCookie, { secret: 'SAME-SECRET' });
+    if (useCookieParser) {
+        const secret = configService.getOrThrow('COOKIE_SECRET');
+        await app.register(fastifyCookie, { secret });
+        await app.register(fastifyCsrf, {
+            cookieOpts: {
+                signed: true,
+                httpOnly: true,
+                sameSite: 'strict',
+                secure: configService.getOrThrow('NODE_ENV') === 'production',
+            },
+        });
+    }
     if (setupApp) setupApp(app);
 
     await app.listen(port, '0.0.0.0', (_err, address) => {
+        const baseUrl = `${address}${apiPrefix ? '/' + apiPrefix : ''}`;
+
         if (_err) {
             logger.error(_err);
             process.exit(1);
         }
 
-        logger.verbose(`Application is running on: ${address}${apiPrefix ? '/' + apiPrefix : ''}`);
+        const startupTime = (performance.now() - startTime).toFixed(2);
+        logger.verbose(`Environment:     ${process.env.NODE_ENV || 'development'}`);
+        logger.verbose(`API Endpoint:    ${baseUrl}`);
+        logger.verbose(`Health Check:    ${baseUrl}/health`);
+        logger.verbose(`Swagger UI:      ${baseUrl}/${swaggerOptions?.path ?? 'docs'}`);
+        logger.verbose(
+            `OpenAPI (Specs): ${baseUrl}/${swaggerOptions?.path ?? 'docs'}/s/{json,yaml}`,
+        );
+        logger.verbose(`Boot Time:       ${startupTime}ms`);
     });
 }

@@ -1,0 +1,48 @@
+import { Module } from '@nestjs/common';
+import { MembersController, TeamsController } from './controller';
+import { MediaModule } from '../media/media.module';
+import { TeamsService, MembersService } from './services';
+import { TeamsRepository } from './repository';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { Queues } from 'src/shared/workers';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+
+const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
+
+@Module({
+    imports: [
+        MediaModule,
+        RedisModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: async (cfg: ConfigService) => {
+                const host = cfg.getOrThrow('REDIS_HOST', { infer: true });
+                const port = cfg.get('REDIS_PORT');
+                const url = `redis://${host}${port ? `:${port}` : ''}`;
+
+                return {
+                    type: 'single',
+                    url,
+                    options: {
+                        retryStrategy(times) {
+                            return Math.min(times * 50, 2000);
+                        },
+                        commandTimeout: 3000,
+                    },
+                };
+            },
+        }),
+        BullModule.registerQueue({
+            name: Queues.MAIL,
+        }),
+        BullBoardModule.forFeature({
+            name: Queues.MAIL,
+            adapter: BullMQAdapter,
+        }),
+    ],
+    controllers: [TeamsController, MembersController],
+    providers: [REPOSITORY, TeamsService, MembersService],
+})
+export class TeamsModule {}

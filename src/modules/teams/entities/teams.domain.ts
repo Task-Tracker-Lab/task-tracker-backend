@@ -1,0 +1,31 @@
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import { teams, teamMembers, tags, teamsToTags } from './teams.entity';
+
+export type Team = InferSelectModel<typeof teams>;
+export type NewTeam = InferInsertModel<typeof teams>;
+
+export type TeamMember = InferSelectModel<typeof teamMembers>;
+export type NewTeamMember = InferInsertModel<typeof teamMembers>;
+
+export type Tag = InferSelectModel<typeof tags>;
+export type NewTag = InferInsertModel<typeof tags>;
+
+export type TeamToTag = InferSelectModel<typeof teamsToTags>;
+export type NewTeamToTag = InferInsertModel<typeof teamsToTags>;
+
+export type TeamWithMembers = Team & {
+    members: TeamMember[];
+};
+
+export type TeamWithTags = Team & {
+    tags: Tag[];
+};
+
+// TODO: ADD TO GLOBAL
+export const ROLE_PRIORITY: Record<string, number> = {
+    owner: 4,
+    admin: 3,
+    moderator: 2,
+    member: 1,
+    viewer: 0,
+};
