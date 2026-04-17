@@ -1,7 +1,19 @@
 import { Module } from '@nestjs/common';
-import { MembersController, TeamsController } from './controller';
+import {
+    TeamsInvitationsController,
+    TeamsSettingsController,
+    TeamsMembersController,
+    TeamsController,
+    MeController,
+} from './controller';
 import { MediaModule } from '../media/media.module';
-import { TeamsService, MembersService } from './services';
+import {
+    MeService,
+    TeamsService,
+    TeamMembersService,
+    TeamsSettingsService,
+    TeamInvitationsService,
+} from './services';
 import { TeamsRepository } from './repository';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
@@ -42,7 +54,20 @@ const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
             adapter: BullMQAdapter,
         }),
     ],
-    controllers: [TeamsController, MembersController],
-    providers: [REPOSITORY, TeamsService, MembersService],
+    controllers: [
+        TeamsInvitationsController,
+        TeamsSettingsController,
+        TeamsMembersController,
+        TeamsController,
+        MeController,
+    ],
+    providers: [
+        REPOSITORY,
+        MeService,
+        TeamsService,
+        TeamMembersService,
+        TeamsSettingsService,
+        TeamInvitationsService,
+    ],
 })
 export class TeamsModule {}

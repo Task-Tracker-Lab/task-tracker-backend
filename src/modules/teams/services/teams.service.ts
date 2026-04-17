@@ -1,15 +1,12 @@
 import {
     Inject,
     Injectable,
-    InternalServerErrorException,
     ConflictException,
     ForbiddenException,
     NotFoundException,
 } from '@nestjs/common';
 import { ITeamsRepository } from '../repository';
 import { FindTagsQuery } from '../dtos';
-import { ITeamMedia, TEAM_MEDIA_TOKEN } from '../../media/interfaces/team-media.interface';
-import type { FileUploadDto } from '../../media/dtos';
 import type { CreateTeamDto, UpdateTeamDto } from '../dtos';
 import { slugify } from 'transliteration';
 import { TeamMemberMapper } from '../mappers';
@@ -21,8 +18,6 @@ export class TeamsService {
     constructor(
         @Inject('ITeamsRepository')
         private readonly teamsRepo: ITeamsRepository,
-        @Inject(TEAM_MEDIA_TOKEN)
-        private readonly mediaService: ITeamMedia,
         @InjectRedis()
         private readonly redis: Redis,
     ) {}
@@ -42,34 +37,6 @@ export class TeamsService {
         return results
             .map((raw, i) => TeamMemberMapper.toPublicInvite(raw, codes[i]))
             .filter(Boolean);
-    };
-
-    public updateTeamAvatar = async (slug: string, fileDto: FileUploadDto) => {
-        const team = await this.teamsRepo.findBySlug(slug);
-        if (!team) {
-            throw new NotFoundException({
-                code: 'TEAM_NOT_FOUND',
-                message: 'Команда не найдена',
-            });
-        }
-
-        return this.mediaService.uploadTeamAvatar(team.id, fileDto, (url) =>
-            this.teamsRepo.updateTeamAvatar(team.id, url),
-        );
-    };
-
-    public updateTeamBanner = async (slug: string, fileDto: FileUploadDto) => {
-        const team = await this.teamsRepo.findBySlug(slug);
-        if (!team) {
-            throw new NotFoundException({
-                code: 'TEAM_NOT_FOUND',
-                message: 'Команда не найдена',
-            });
-        }
-
-        return this.mediaService.uploadTeamBanner(team.id, fileDto, (url) =>
-            this.teamsRepo.updateTeamBanner(team.id, url),
-        );
     };
 
     public create = async (userId: string, dto: CreateTeamDto) => {
@@ -155,28 +122,6 @@ export class TeamsService {
         } catch (error) {
             throw error;
         }
-    };
-
-    public syncTags = async (slug: string, tags: string[]) => {
-        const team = await this.teamsRepo.findBySlug(slug);
-        if (!team) {
-            throw new NotFoundException({
-                code: 'TEAM_NOT_FOUND',
-                message: 'Команда не найдена',
-            });
-        }
-
-        const normalizedTags = [...new Set(tags.map((tag) => tag.trim()).filter(Boolean))];
-        const isSynced = await this.teamsRepo.syncTags(team.id, normalizedTags);
-
-        if (!isSynced) {
-            throw new InternalServerErrorException('Не удалось обновить теги команды');
-        }
-
-        return {
-            success: true,
-            message: 'Теги команды обновлены',
-        };
     };
 
     public getAllTags = async (query: FindTagsQuery) => {
