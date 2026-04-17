@@ -1,1 +1,1 @@
-export {} from './projects.dto';
+export { CreateProjectDto, UpdateProjectDto } from './projects.dto';
