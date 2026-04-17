@@ -7,7 +7,6 @@ import {
     InternalServerErrorException,
     NotFoundException,
     UnauthorizedException,
-    UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
@@ -19,7 +18,6 @@ import {
     VerifyDto,
     VerifyResetCodeDto,
 } from '../dtos';
-import { validate } from 'email-validator';
 import { generate, generateSecret, verify as verifyOTP } from 'otplib';
 import * as argon from 'argon2';
 import { CreateUserCommand, FindOneUserCommand, UpdatePassUserCommand } from '../../user';
@@ -27,10 +25,10 @@ import { TokenService } from './token.service';
 import { ISessionRepository } from '../repository';
 import { DeviceMetadata } from '../helpers';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Queues, RegisterCodeEvent } from 'src/shared/workers';
+import { Queues, RegisterCodeEvent } from '@shared/workers';
 import type { Queue } from 'bullmq';
-import { MailJobs } from 'src/shared/workers/enum';
-import { ResetPasswordEvent } from 'src/shared/workers/events';
+import { MailJobs } from '@shared/workers/enum';
+import { ResetPasswordEvent } from '@shared/workers/events';
 
 @Injectable()
 export class AuthService {
@@ -56,16 +54,6 @@ export class AuthService {
             throw new BadRequestException({
                 code: 'REGISTRATION_IN_PROGRESS',
                 message: 'Код уже был отправлен. Проверьте почту или подождите 15 минут.',
-            });
-        }
-
-        const isValidEmail = validate(dto.email);
-
-        if (!isValidEmail) {
-            throw new UnprocessableEntityException({
-                code: 'INVALID_EMAIL_FORMAT',
-                message: 'Указанный email адрес имеет некорректный формат',
-                details: { email: dto.email },
             });
         }
 
@@ -271,16 +259,6 @@ export class AuthService {
     };
 
     public resetPass = async (dto: ResetPasswordDto) => {
-        const isValidEmail = validate(dto.email);
-
-        if (!isValidEmail) {
-            throw new UnprocessableEntityException({
-                code: 'INVALID_EMAIL_FORMAT',
-                message: 'Указанный email адрес имеет некорректный формат',
-                details: { email: dto.email },
-            });
-        }
-
         const { user } = await this.findUserCommand.execute({ email: dto.email });
 
         if (!user) {

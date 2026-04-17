@@ -1,4 +1,4 @@
-import { baseSchema } from 'src/shared/entities';
+import { baseSchema } from '@shared/entities';
 
 export const projectStatusEnum = baseSchema.enum('project_status', [
     'active',

@@ -10,7 +10,7 @@ import {
     Put,
     Query,
 } from '@nestjs/common';
-import { ApiBaseController, ExtractFastifyFile, GetUser, GetUserId } from 'src/shared/decorators';
+import { ApiBaseController, ExtractFastifyFile, GetUser, GetUserId } from '@shared/decorators';
 import { TeamsService } from '../services';
 import {
     CreateTeamSwagger,
@@ -26,7 +26,7 @@ import {
 } from './teams.swagger';
 import type { FileUploadDto } from '../../media/dtos';
 import type { CreateTeamDto, SyncTagsDto } from '../dtos';
-import type { JwtPayload } from 'src/modules/auth/types';
+import type { JwtPayload } from '@core/modules/auth/types';
 
 @ApiBaseController('teams', 'Teams', true)
 export class TeamsController {

@@ -8,14 +8,14 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { HealthModule } from '@libs/health';
 import { UserModule } from '../user';
-import { GlobalExceptionFilter } from 'src/shared/error';
+import { GlobalExceptionFilter } from '@shared/error';
 import { AuthModule } from '../auth';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { FastifyAdapter } from '@bull-board/fastify';
-import { MailProcessor } from 'src/shared/workers';
+import { MailProcessor } from '@shared/workers';
 import { BullModule } from '@nestjs/bullmq';
-import { MailAdapter } from 'src/shared/adapters/mail';
-import { MigrationService } from 'src/shared/migration';
+import { MailAdapter } from '@shared/adapters/mail';
+import { MigrationService } from '@shared/migration';
 import { TeamsModule } from '../teams';
 import { ProjectsModule } from '../projects';
 
@@ -26,7 +26,7 @@ import { ProjectsModule } from '../projects';
             useFactory: () => ({
                 path: 'dump',
                 defaultMetrics: {
-                    enabled: true,
+                    enabled: process.env.NODE_ENV !== 'test',
                 },
             }),
         }),

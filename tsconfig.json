@@ -27,9 +27,10 @@
             "@libs/health": ["./libs/health/src"],
             "@libs/health/*": ["./libs/health/src/*"],
             "@libs/s3": ["./libs/s3/src"],
-            "@libs/s3/*": ["./libs/s3/src/*"]
-        },
-        "baseUrl": "./"
+            "@libs/s3/*": ["./libs/s3/src/*"],
+            "@shared/*": ["./src/shared/*"],
+            "@core/*": ["./src/*"]
+        }
     },
     "include": [
         "src/**/*",

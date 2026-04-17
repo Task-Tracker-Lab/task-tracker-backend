@@ -1,7 +1,7 @@
 import { primaryKey, timestamp, text, varchar, index } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 import { roleEnum, statusEnum } from './enums';
-import { baseSchema, users } from 'src/shared/entities';
+import { baseSchema, users } from '@shared/entities';
 import { uniqueIndex } from 'drizzle-orm/pg-core';
 import { isNull } from 'drizzle-orm';
 

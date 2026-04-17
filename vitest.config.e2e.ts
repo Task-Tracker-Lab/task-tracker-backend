@@ -1,22 +1,14 @@
-import swc from 'unplugin-swc';
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+import { mergeConfig, defineConfig } from 'vitest/config';
+import baseConfig from './vitest.config';
 
-export default defineConfig({
-    test: {
-        globals: true,
-        root: './',
-        environment: 'node',
-        include: ['test/**/*.e2e-spec.ts'],
-        alias: {
-            '@libs/config': path.resolve(__dirname, './libs/config/src'),
-            '@libs/database': path.resolve(__dirname, './libs/database/src'),
-            '@src': path.resolve(__dirname, './src'),
+export default mergeConfig(
+    baseConfig,
+    defineConfig({
+        test: {
+            include: ['test/**/*.e2e-spec.ts'],
+            exclude: [],
+            pool: 'forks',
+            isolate: true,
         },
-    },
-    plugins: [
-        swc.vite({
-            module: { type: 'es6' },
-        }),
-    ],
-});
+    }),
+);

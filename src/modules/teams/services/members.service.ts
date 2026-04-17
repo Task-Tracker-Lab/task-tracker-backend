@@ -5,7 +5,6 @@ import {
     Inject,
     Injectable,
     NotFoundException,
-    UnprocessableEntityException,
 } from '@nestjs/common';
 import { ITeamsRepository } from '../repository';
 import { ROLE_PRIORITY } from '../entities';
@@ -13,10 +12,9 @@ import { generateSecret } from 'otplib';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { InjectQueue } from '@nestjs/bullmq';
-import { MailJobs, Queues } from 'src/shared/workers';
+import { MailJobs, Queues } from '@shared/workers';
 import { Queue } from 'bullmq';
-import { validate } from 'email-validator';
-import { TeamInvitationEvent } from 'src/shared/workers/events';
+import { TeamInvitationEvent } from '@shared/workers/events';
 import type { InviteMemberDto, UpdateMemberDto } from '../dtos';
 import { ConfigService } from '@nestjs/config';
 import { TeamMemberMapper } from '../mappers';
@@ -45,16 +43,6 @@ export class MembersService {
     };
 
     public invite = async (slug: string, inviterId: string, dto: InviteMemberDto) => {
-        const isValidEmail = validate(dto.email);
-
-        if (!isValidEmail) {
-            throw new UnprocessableEntityException({
-                code: 'INVALID_EMAIL_FORMAT',
-                message: 'Указанный email адрес имеет некорректный формат',
-                details: { email: dto.email },
-            });
-        }
-
         const team = await this.teamsRepo.findBySlug(slug);
         if (!team) throw new NotFoundException('Команда не найдена');
 

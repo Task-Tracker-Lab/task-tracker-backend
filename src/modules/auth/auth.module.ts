@@ -8,7 +8,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 import { SessionRepository } from './repository';
 import { BearerStrategy, CookieStrategy } from './strategies';
 import { BullModule } from '@nestjs/bullmq';
-import { Queues } from 'src/shared/workers';
+import { Queues } from '@shared/workers';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 

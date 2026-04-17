@@ -1,5 +1,5 @@
 import { Body, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiBaseController, GetUser, GetUserId } from 'src/shared/decorators';
+import { ApiBaseController, GetUser, GetUserId } from '@shared/decorators';
 import { MembersService } from '../services';
 import {
     AcceptInviteSwagger,
@@ -8,7 +8,7 @@ import {
     RemoveMemberSwagger,
     UpdateMemberSwagger,
 } from './teams.swagger';
-import type { JwtPayload } from 'src/modules/auth/types';
+import type { JwtPayload } from '@core/modules/auth/types';
 import type { UpdateMemberDto } from '../dtos/member.dto';
 
 @ApiBaseController('teams/:slug', 'Teams', true)

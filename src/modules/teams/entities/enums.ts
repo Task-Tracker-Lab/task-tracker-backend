@@ -1,4 +1,4 @@
-import { baseSchema } from 'src/shared/entities';
+import { baseSchema } from '@shared/entities';
 
 export const roleEnum = baseSchema.enum('team_role', [
     'owner',

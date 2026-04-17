@@ -8,7 +8,7 @@ import {
     uniqueIndex,
     index,
 } from 'drizzle-orm/pg-core';
-import { baseSchema, teams, users } from 'src/shared/entities';
+import { baseSchema, teams, users } from '@shared/entities';
 import { createId } from '@paralleldrive/cuid2';
 import { isNull } from 'drizzle-orm';
 import { projectStatusEnum, projectVisibilityEnum } from './enums';

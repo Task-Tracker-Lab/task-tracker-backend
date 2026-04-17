@@ -8,8 +8,8 @@ import {
 } from '@nestjs/swagger';
 import { UpdateNotificationsDto, UpdateProfileDto, UserResponse } from '../dtos';
 import { applyDecorators } from '@nestjs/common';
-import { ApiBadRequest, ApiUnauthorized, ApiValidationError } from 'src/shared/error';
-import { ActionResponse } from 'src/shared/dtos';
+import { ApiBadRequest, ApiUnauthorized, ApiValidationError } from '@shared/error';
+import { ActionResponse } from '@shared/dtos';
 
 export const GetMeSwagger = () =>
     applyDecorators(

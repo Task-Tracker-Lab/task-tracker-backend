@@ -6,7 +6,7 @@ module.exports = {
         sourceType: 'module',
     },
     plugins: ['@typescript-eslint/eslint-plugin'],
-    extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
+    extends: ['plugin:@typescript-eslint/recommended'],
     root: true,
     env: {
         node: true,
@@ -19,8 +19,17 @@ module.exports = {
         afterEach: 'readonly',
         vi: 'readonly',
     },
-    ignorePatterns: ['.eslintrc.js', 'dist', 'node_modules'],
+    ignorePatterns: [
+        '.eslintrc.js',
+        '*.config.{js,ts}',
+        'migrations',
+        'infra',
+        '.github',
+        'dist',
+        'node_modules',
+    ],
     rules: {
+        'prettier/prettier': 'off',
         '@typescript-eslint/interface-name-prefix': 'off',
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/explicit-module-boundary-types': 'off',

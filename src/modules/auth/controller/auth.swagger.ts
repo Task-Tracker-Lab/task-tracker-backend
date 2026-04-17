@@ -8,7 +8,7 @@ import {
     ApiNotFound,
     ApiUnauthorized,
     ApiValidationError,
-} from 'src/shared/error';
+} from '@shared/error';
 import {
     ChangePasswordDto,
     Confirm2FaDto,
@@ -20,7 +20,7 @@ import {
     VerifyDto,
     VerifyResetCodeDto,
 } from '../dtos';
-import { ActionResponse } from 'src/shared/dtos';
+import { ActionResponse } from '@shared/dtos';
 
 export const PostRegisterSwagger = () =>
     applyDecorators(

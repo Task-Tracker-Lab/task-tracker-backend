@@ -9,7 +9,7 @@ import {
 } from './user.swagger';
 import { UpdateNotificationsDto, UpdateProfileDto } from '../dtos';
 import { ApiBaseController, ExtractFastifyFile, GetUserId } from '../../../shared/decorators';
-import { BearerAuthGuard } from 'src/shared/guards';
+import { BearerAuthGuard } from '@shared/guards';
 import { PaginationDto } from '../../../shared/dtos';
 import { FileUploadDto } from '../../media/dtos';
 

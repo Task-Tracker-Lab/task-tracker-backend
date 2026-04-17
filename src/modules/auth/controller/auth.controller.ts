@@ -21,7 +21,7 @@ import {
 } from '../dtos';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDeviceMeta } from '../helpers';
-import { BearerAuthGuard, CookieAuthGuard } from 'src/shared/guards';
+import { BearerAuthGuard, CookieAuthGuard } from '@shared/guards';
 
 @ApiBaseController('auth', 'Auth')
 export class AuthController {
