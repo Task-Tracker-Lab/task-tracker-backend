@@ -4,7 +4,7 @@ import { Get, Query } from '@nestjs/common';
 import { FindInvitesSwagger, FindTeamsSwagger } from './teams.swagger';
 import type { JwtPayload } from '@core/modules/auth/types';
 
-@ApiBaseController('users/me', 'User Context in Teams', true)
+@ApiBaseController('users/me', 'Account Teams', true)
 export class MeController {
     constructor(private readonly facade: MeService) {}
 

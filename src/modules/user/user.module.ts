@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { UserController } from './controller';
-import { UserService } from './user.service';
+import { UserController, UserSettingsController } from './controller';
+import { UserService } from './services/user.service';
 import { UserRepository } from './repository/user.repository';
 import { CreateUserCommand, FindOneUserCommand, UpdatePassUserCommand } from './commands';
 import { MediaModule } from '../media/media.module';
+import { UserSettingsService } from './services';
 
 const REPOSITORY = {
     provide: 'IUserRepository',
@@ -14,8 +15,8 @@ const COMMANDS = [CreateUserCommand, FindOneUserCommand, UpdatePassUserCommand];
 
 @Module({
     imports: [MediaModule],
-    controllers: [UserController],
-    providers: [...COMMANDS, REPOSITORY, UserService],
+    controllers: [UserController, UserSettingsController],
+    providers: [...COMMANDS, REPOSITORY, UserService, UserSettingsService],
     exports: [...COMMANDS],
 })
 export class UserModule {}

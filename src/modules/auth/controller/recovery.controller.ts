@@ -1,6 +1,6 @@
 import { ApiBaseController } from '../../../shared/decorators';
 import { Body, Post } from '@nestjs/common';
-import { AuthService } from '../services';
+import { AuthRecoveryService } from '../services';
 import {
     PostPasswordResetConfirmSwagger,
     PostPasswordResetSwagger,
@@ -10,7 +10,7 @@ import { PasswordResetConfirmDto, ResetPasswordDto, VerifyResetCodeDto } from '.
 
 @ApiBaseController('auth', 'Auth Recovery')
 export class AuthRecoveryController {
-    constructor(private readonly facade: AuthService) {}
+    constructor(private readonly facade: AuthRecoveryService) {}
 
     @Post('password/reset')
     @PostPasswordResetSwagger()
