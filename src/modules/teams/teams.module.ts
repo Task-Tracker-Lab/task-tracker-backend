@@ -6,7 +6,7 @@ import {
     TeamsController,
     MeController,
 } from './controller';
-import { MediaModule } from '../media/media.module';
+import { MediaModule } from '../media';
 import {
     MeService,
     TeamsService,

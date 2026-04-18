@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { S3Service } from '@libs/s3';
-import { FileUploadDto, FileUploadResponseDto } from './dtos';
+import type { FileUploadDto, FileUploadResponseDto } from './dtos';
 import { IUserMedia } from './interfaces/user-media.interface';
 import { ITeamMedia } from './interfaces/team-media.interface';
 
@@ -24,9 +24,11 @@ export class MediaService implements IUserMedia, ITeamMedia {
 
             return { success: true, url };
         } catch (error) {
+            const isHttpException = error instanceof HttpException;
+
             await this.s3.deleteFile(url);
 
-            if (error.message === 'ENTITY_NOT_FOUND') {
+            if (isHttpException && error.message === 'ENTITY_NOT_FOUND') {
                 throw new BadRequestException('Сущность не найдена, обновление отменено');
             }
 

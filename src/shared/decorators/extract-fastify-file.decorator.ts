@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext, BadRequestException } from '@nestjs/common';
-import { FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 import { IMAGE_MIME_TYPES } from '../constants';
-import { FileUploadDto } from '../../modules/media/dtos';
+import type { FileUploadDto } from '../../modules/media';
 
 export const ExtractFastifyFile = createParamDecorator(
     async (

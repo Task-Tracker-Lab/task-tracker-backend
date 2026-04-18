@@ -5,8 +5,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { ITeamsRepository } from '../repository';
-import { ITeamMedia, TEAM_MEDIA_TOKEN } from '../../media/interfaces/team-media.interface';
-import type { FileUploadDto } from '../../media/dtos';
+import { ITeamMedia, TEAM_MEDIA_TOKEN, type FileUploadDto } from '../../media';
 
 @Injectable()
 export class TeamsSettingsService {

@@ -3,7 +3,7 @@ import { UserController, UserSettingsController } from './controller';
 import { UserService } from './services/user.service';
 import { UserRepository } from './repository/user.repository';
 import { CreateUserCommand, FindOneUserCommand, UpdatePassUserCommand } from './commands';
-import { MediaModule } from '../media/media.module';
+import { MediaModule } from '../media';
 import { UserSettingsService } from './services';
 
 const REPOSITORY = {

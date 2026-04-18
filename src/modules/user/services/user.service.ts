@@ -7,8 +7,7 @@ import {
 import { IUserRepository } from '../repository/user.repository.interface';
 import type { UpdateProfileDto } from '../dtos';
 import { createId } from '@paralleldrive/cuid2';
-import { IUserMedia, USER_MEDIA_TOKEN } from '../../media/interfaces/user-media.interface';
-import type { FileUploadDto } from '../../media/dtos';
+import { IUserMedia, USER_MEDIA_TOKEN, type FileUploadDto } from '../../media';
 
 @Injectable()
 export class UserService {

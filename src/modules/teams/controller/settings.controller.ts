@@ -6,7 +6,7 @@ import {
     PatchTeamAvatarSwagger,
     PatchTeamBannerSwagger,
 } from './teams.swagger';
-import type { FileUploadDto } from '../../media/dtos';
+import type { FileUploadDto } from '../../media';
 import type { SyncTagsDto } from '../dtos';
 
 @ApiBaseController('teams/:slug', 'Teams Settings', true)

@@ -10,7 +10,7 @@ import type { UpdateProfileDto } from '../dtos';
 import { ApiBaseController, ExtractFastifyFile, GetUserId } from '../../../shared/decorators';
 import { BearerAuthGuard } from '@shared/guards';
 import type { PaginationDto } from '../../../shared/dtos';
-import type { FileUploadDto } from '../../media/dtos';
+import type { FileUploadDto } from '../../media';
 
 @ApiBaseController('users/me', 'Account Profile')
 @UseGuards(BearerAuthGuard)
