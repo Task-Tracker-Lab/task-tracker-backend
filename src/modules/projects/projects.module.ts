@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ProjectsService } from './services';
+import { NestedProjectsService, ProjectsService } from './services';
 import { NestedProjectsController, ProjectsController } from './controller';
 import { ProjectsRepository } from './repository';
 
@@ -11,6 +11,6 @@ const REPOSITORY = {
 @Module({
     imports: [],
     controllers: [ProjectsController, NestedProjectsController],
-    providers: [REPOSITORY, ProjectsService],
+    providers: [REPOSITORY, NestedProjectsService, ProjectsService],
 })
 export class ProjectsModule {}
