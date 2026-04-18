@@ -25,8 +25,8 @@ export class NestedProjectsService {
     public findOne = async (id: string, userId: string) => {
         return { userId, id };
     };
-    public findByToken = async (token: string) => {
-        return { token };
+    public findByTeam = async (slug: string, userId: string) => {
+        return { slug, userId };
     };
     public setStatus = async (id: string, userId: string, status: string) => {
         return { id, status };

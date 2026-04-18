@@ -4,21 +4,11 @@ import { AuthService } from '../services';
 import {
     PostLoginSwagger,
     PostLogoutSwagger,
-    PostPasswordResetConfirmSwagger,
-    PostPasswordResetSwagger,
-    PostPasswordResetVerifySwagger,
     PostRefreshSwagger,
     PostRegisterSwagger,
     PostSignUpConfirmSwagger,
 } from './auth.swagger';
-import {
-    PasswordResetConfirmDto,
-    ResetPasswordDto,
-    SignInDto,
-    SignUpDto,
-    VerifyDto,
-    VerifyResetCodeDto,
-} from '../dtos';
+import { SignInDto, SignUpDto, VerifyDto } from '../dtos';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDeviceMeta } from '../helpers';
 import { BearerAuthGuard, CookieAuthGuard } from '@shared/guards';
@@ -104,23 +94,5 @@ export class AuthController {
         });
 
         return { token: tokens.access, ...response };
-    }
-
-    @Post('password/reset')
-    @PostPasswordResetSwagger()
-    async resetPasswordRequest(@Body() dto: ResetPasswordDto) {
-        return this.facade.resetPass(dto);
-    }
-
-    @Post('password/reset/verify')
-    @PostPasswordResetVerifySwagger()
-    async verifyResetCode(@Body() dto: VerifyResetCodeDto) {
-        return this.facade.verifyResetPassword(dto);
-    }
-
-    @Post('password/reset/confirm')
-    @PostPasswordResetConfirmSwagger()
-    async confirmPasswordReset(@Body() dto: PasswordResetConfirmDto) {
-        return this.facade.confirmResetPass(dto);
     }
 }
