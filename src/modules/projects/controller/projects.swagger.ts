@@ -2,7 +2,12 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiOperation, ApiBody, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ActionResponse } from '@shared/dtos';
 import { ApiValidationError, ApiUnauthorized, ApiForbidden, ApiNotFound } from '@shared/error';
-import { CreateProjectDto, UpdateProjectDto } from '../dtos';
+import {
+    CreateProjectDto,
+    CreateProjectResponse,
+    CreateShareTokenDto,
+    UpdateProjectDto,
+} from '../dtos';
 
 export const CreateProjectSwagger = () =>
     applyDecorators(
@@ -12,7 +17,7 @@ export const CreateProjectSwagger = () =>
         ApiResponse({
             status: 201,
             description: 'Проект успешно создан',
-            type: ActionResponse.Output,
+            type: CreateProjectResponse.Output,
         }),
         ApiValidationError(),
         ApiUnauthorized(),
@@ -94,4 +99,37 @@ export const GetProjectByTokenSwagger = () =>
         ApiParam({ name: 'token', description: 'Токен доступа', type: 'string' }),
         ApiResponse({ status: 200, type: Object }),
         ApiNotFound('Токен недействителен'),
+    );
+
+export const CreateShareTokenSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Сгенерировать публичную ссылку',
+            description:
+                'Создает защищенный токен доступа к проекту. Если expiresAt не указан, по умолчанию ставится доступ на 3 месяца.',
+        }),
+        ApiParam({
+            name: 'slug',
+            description: 'Slug команды',
+            type: 'string',
+        }),
+        ApiParam({
+            name: 'id',
+            description: 'CUID проекта',
+            type: 'string',
+            example: 'clv123456',
+        }),
+        ApiBody({
+            type: CreateShareTokenDto.Output,
+            description: 'Настройки срока действия ссылки',
+        }),
+        ApiResponse({
+            status: 201,
+            description: 'Токен успешно создан',
+            type: ActionResponse.Output,
+        }),
+        ApiNotFound('Проект не найден в этой команде'),
+        ApiValidationError('Некорректная дата или параметры'),
+        ApiUnauthorized(),
+        ApiForbidden('У вас нет прав для создания ссылки для этого проекта'),
     );

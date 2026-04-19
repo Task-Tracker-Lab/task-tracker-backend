@@ -21,6 +21,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Queues } from '@shared/workers';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { FindTeamCommand, FindTeamMemberCommand } from './commands';
 
 const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
 
@@ -68,6 +69,9 @@ const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
         TeamMembersService,
         TeamsSettingsService,
         TeamInvitationsService,
+        FindTeamCommand,
+        FindTeamMemberCommand,
     ],
+    exports: [FindTeamCommand, FindTeamMemberCommand],
 })
 export class TeamsModule {}

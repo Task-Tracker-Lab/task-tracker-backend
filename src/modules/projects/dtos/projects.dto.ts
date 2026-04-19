@@ -1,6 +1,7 @@
 import { z } from 'zod/v4';
 import { createZodDto } from 'nestjs-zod';
-import { ProjectStatus, ProjectVisibility } from '../entities';
+import { ProjectStatus } from '../entities';
+import { ActionResponseSchema } from '@shared/dtos';
 
 export const CreateProjectSchema = z.object({
     name: z
@@ -13,7 +14,7 @@ export const CreateProjectSchema = z.object({
         .max(10)
         .regex(/^[A-Z0-9]+$/, 'Ключ должен содержать только заглавные латинские буквы и цифры'),
     description: z.string().max(2000, 'Описание слишком длинное').optional().nullable(),
-    icon: z.string().url().optional().nullable(),
+    icon: z.string().optional().nullable(),
     color: z
         .string()
         .regex(/^#[A-Fa-f0-9]{6}$/, 'Цвет должен быть в формате HEX (например, #FFFFFF)')
@@ -23,23 +24,31 @@ export const CreateProjectSchema = z.object({
 
 export class CreateProjectDto extends createZodDto(CreateProjectSchema) {}
 
-export const UpdateProjectSchema = z.object({
-    name: z
-        .string()
-        .min(1, 'Название не может быть пустым')
-        .max(100, 'Название до 100 символов')
-        .optional(),
-    description: z.string().max(2000, 'Описание до 2000 символов').nullable().optional(),
-    icon: z.string().url('Некорректная ссылка на иконку').optional().nullable(),
-    color: z
-        .string()
-        .regex(/^#([A-Fa-f0-9]{6})$/, 'Цвет должен быть HEX (например, #FFFFFF)')
-        .optional(),
+export const UpdateProjectSchema = CreateProjectSchema.extend({
     status: z.enum([ProjectStatus.Active, ProjectStatus.Archived]).optional(),
-    visibility: z.enum([ProjectVisibility.Public, ProjectVisibility.Private]).optional(),
-    isPubliclyViewable: z.boolean().optional(),
-    // TODO: AT FEATURE RESOLVE WITH SETTINGS
-    settings: z.record(z.string(), z.string()).optional(),
-});
+    isPublic: z.boolean().optional(),
+})
+    .partial()
+    .refine((data) => Object.keys(data).length > 0, {
+        error: 'Необходимо передать хотя бы одно поле для обновления',
+        abort: true,
+    });
 
 export class UpdateProjectDto extends createZodDto(UpdateProjectSchema) {}
+
+const CreateProjectsResponseSchema = ActionResponseSchema.extend({
+    projectId: z.string().describe('Уникальный идентификатор проекта в системе'),
+});
+
+export class CreateProjectResponse extends createZodDto(CreateProjectsResponseSchema) {}
+
+export const CreateShareTokenSchema = z.object({
+    ttl: z
+        .string()
+        .datetime()
+        .optional()
+        .nullable()
+        .describe('Дата истечения ссылки. Если не указана — ставится дефолт 3 месяца'),
+});
+
+export class CreateShareTokenDto extends createZodDto(CreateShareTokenSchema) {}

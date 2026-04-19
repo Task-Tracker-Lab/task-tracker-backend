@@ -103,7 +103,6 @@ export class AuthService {
 
         const userData = JSON.parse(cachedData);
 
-        // TODO: APPORCH WINDOW STEP INLIGHT
         const verifyResult = await verifyOTP({
             token: dto.code,
             secret: userData.otp.secret,

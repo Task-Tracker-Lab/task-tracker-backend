@@ -1,13 +1,4 @@
-import {
-    text,
-    varchar,
-    boolean,
-    timestamp,
-    jsonb,
-    integer,
-    uniqueIndex,
-    index,
-} from 'drizzle-orm/pg-core';
+import { text, varchar, timestamp, jsonb, integer, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { baseSchema, teams, users } from '@shared/entities';
 import { createId } from '@paralleldrive/cuid2';
 import { isNull } from 'drizzle-orm';
@@ -31,8 +22,6 @@ export const projects = baseSchema.table(
         taskSequence: integer('task_sequence').default(0).notNull(),
         ownerId: text('owner_id').references(() => users.id, { onDelete: 'set null' }),
         visibility: projectVisibilityEnum('visibility').default('public').notNull(),
-        isPubliclyViewable: boolean('is_publicly_viewable').default(false).notNull(),
-        shareToken: varchar('share_token', { length: 64 }).unique(),
         settings: jsonb('settings').default({}),
         createdAt: timestamp('created_at').defaultNow().notNull(),
         updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -42,8 +31,30 @@ export const projects = baseSchema.table(
         uniqueTeamKey: uniqueIndex('project_team_key_idx')
             .on(t.teamId, t.key)
             .where(isNull(t.deletedAt)),
+        uniqueTeamName: uniqueIndex('project_team_name_idx')
+            .on(t.teamId, t.name)
+            .where(isNull(t.deletedAt)),
         ownerIdx: index('project_owner_id_idx').on(t.ownerId),
         teamIdx: index('project_team_id_idx').on(t.teamId),
-        shareTokenIdx: index('project_share_token_idx').on(t.shareToken),
+    }),
+);
+
+export const projectShares = baseSchema.table(
+    'project_shares',
+    {
+        id: text('id')
+            .primaryKey()
+            .$defaultFn(() => createId()),
+        projectId: text('project_id')
+            .notNull()
+            .references(() => projects.id, { onDelete: 'cascade' }),
+        token: text('token').notNull().unique(),
+        expiresAt: timestamp('expires_at', { withTimezone: true }),
+        createdBy: text('created_by').notNull(),
+        createdAt: timestamp('created_at').defaultNow().notNull(),
+    },
+    (table) => ({
+        tokenIdx: index('token_idx').on(table.token),
+        projectIdx: index('project_share_project_id_idx').on(table.projectId),
     }),
 );

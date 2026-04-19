@@ -1,7 +1,9 @@
-import { Module } from '@nestjs/common';
-import { NestedProjectsService, ProjectsService } from './services';
-import { NestedProjectsController, ProjectsController } from './controller';
+import { forwardRef, Module } from '@nestjs/common';
+import { ProjectsService } from './services';
+import { ProjectsController } from './controller';
 import { ProjectsRepository } from './repository';
+import { TeamsModule } from '../teams';
+import { FindProjectCommand } from './commands';
 
 const REPOSITORY = {
     provide: 'IProjectsRepository',
@@ -9,8 +11,9 @@ const REPOSITORY = {
 };
 
 @Module({
-    imports: [],
-    controllers: [ProjectsController, NestedProjectsController],
-    providers: [REPOSITORY, NestedProjectsService, ProjectsService],
+    imports: [forwardRef(() => TeamsModule)],
+    controllers: [ProjectsController],
+    providers: [REPOSITORY, FindProjectCommand, ProjectsService],
+    exports: [FindProjectCommand],
 })
 export class ProjectsModule {}

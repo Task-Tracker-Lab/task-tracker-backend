@@ -35,10 +35,8 @@ export const ApiBadRequest = (description: string = 'Некорректный з
 export const ApiUnauthorized = (description: string = 'Сессия истекла или токен не валиден') =>
     applyDecorators(ApiErrorResponse(401, 'AUTH_REQUIRED', description));
 
-export const ApiForbidden = () =>
-    applyDecorators(
-        ApiErrorResponse(403, 'ACCESS_DENIED', 'У вас недостаточно прав для этого действия'),
-    );
+export const ApiForbidden = (description: string = 'У вас недостаточно прав для этого действия') =>
+    applyDecorators(ApiErrorResponse(403, 'ACCESS_DENIED', description));
 
 export const ApiNotFound = (description: string = 'Ресурс не найден') =>
     applyDecorators(ApiErrorResponse(404, 'NOT_FOUND', description));
