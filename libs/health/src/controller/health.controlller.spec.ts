@@ -15,20 +15,21 @@ describe('HealthController', () => {
         vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     });
 
-    describe('checkHealth', () => {
-        it('should return "healthy" when service status is "up"', async () => {
-            healthServiceMock.getHealthData.mockResolvedValue({ status: 'up' });
+    it('should throw SERVICE_UNAVAILABLE when service status is "down"', async () => {
+        healthServiceMock.getHealthData.mockResolvedValue({ status: 'down' });
 
-            await expect(controller.checkHealth()).resolves.toBe('healthy');
-        });
-
-        it('should throw SERVICE_UNAVAILABLE when service status is "down"', async () => {
-            healthServiceMock.getHealthData.mockResolvedValue({ status: 'down' });
-
-            await expect(controller.checkHealth()).rejects.toMatchObject({
-                status: HttpStatus.SERVICE_UNAVAILABLE,
-                response: `${SERVICE_NAME} service is unhealthy.`,
-            });
+        await expect(controller.checkHealth()).rejects.toMatchObject({
+            status: HttpStatus.SERVICE_UNAVAILABLE,
+            response: {
+                code: 'SERVICE_UNHEALTHY',
+                message: expect.stringContaining(SERVICE_NAME),
+                details: expect.arrayContaining([
+                    expect.objectContaining({
+                        status: 'down',
+                        target: SERVICE_NAME,
+                    }),
+                ]),
+            },
         });
     });
 
