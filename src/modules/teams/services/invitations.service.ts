@@ -1,11 +1,4 @@
-import {
-    BadRequestException,
-    ForbiddenException,
-    GoneException,
-    Inject,
-    Injectable,
-    NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ITeamsRepository } from '../repository';
 import { generateSecret } from 'otplib';
 import { InjectRedis } from '@nestjs-modules/ioredis';
@@ -16,6 +9,7 @@ import { Queue } from 'bullmq';
 import { TeamInvitationEvent } from '@shared/workers/events';
 import type { InviteMemberDto } from '../dtos';
 import { ConfigService } from '@nestjs/config';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class TeamInvitationsService {
@@ -31,11 +25,25 @@ export class TeamInvitationsService {
 
     public invite = async (slug: string, inviterId: string, dto: InviteMemberDto) => {
         const team = await this.teamsRepo.findBySlug(slug);
-        if (!team) throw new NotFoundException('Команда не найдена');
+        if (!team) {
+            throw new BaseException(
+                {
+                    code: 'TEAM_NOT_FOUND',
+                    message: 'Команда не найдена',
+                },
+                HttpStatus.NOT_FOUND,
+            );
+        }
 
         const inviter = await this.teamsRepo.findMember(team.id, inviterId);
         if (!inviter || (inviter.role !== 'owner' && inviter.role !== 'admin')) {
-            throw new ForbiddenException('У вас нет прав приглашать новых участников');
+            throw new BaseException(
+                {
+                    code: 'INSUFFICIENT_PERMISSIONS',
+                    message: 'У вас нет прав приглашать новых участников',
+                },
+                HttpStatus.FORBIDDEN,
+            );
         }
 
         const code = generateSecret({ length: 8 });
@@ -56,11 +64,21 @@ export class TeamInvitationsService {
             expiresAt: expiresAt.toISOString(),
         };
 
-        const multi = this.redis.multi();
-        multi.set(`inv:code:${code}`, JSON.stringify(inviteData), 'EX', INVITE_TTL);
-        multi.sadd(`team:invites:${team.id}`, code);
-        multi.sadd(`user:invites:${dto.email}`, code);
-        await multi.exec();
+        try {
+            const multi = this.redis.multi();
+            multi.set(`inv:code:${code}`, JSON.stringify(inviteData), 'EX', INVITE_TTL);
+            multi.sadd(`team:invites:${team.id}`, code);
+            multi.sadd(`user:invites:${dto.email.toLowerCase()}`, code);
+            await multi.exec();
+        } catch (error) {
+            throw new BaseException(
+                {
+                    code: 'REDIS_TRANSACTION_FAILED',
+                    message: 'Не удалось создать приглашение в системе',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
 
         const origins = this.cfg.get('CORS_ALLOWED_ORIGINS');
         const FRONTEND_URL = origins[0];
@@ -94,44 +112,80 @@ export class TeamInvitationsService {
     public acceptInvite = async (code: string, userId: string, email: string) => {
         const inviteRaw = await this.redis.get(`inv:code:${code}`);
         if (!inviteRaw) {
-            throw new GoneException('Срок действия приглашения истек или код неверен');
+            throw new BaseException(
+                {
+                    code: 'INVITE_EXPIRED_OR_INVALID',
+                    message: 'Срок действия приглашения истек или код неверен',
+                },
+                HttpStatus.GONE,
+            );
         }
 
         const invite = JSON.parse(inviteRaw);
 
         if (invite.email.toLowerCase() !== email.toLowerCase()) {
-            throw new ForbiddenException('Этот инвайт предназначен для другого почтового адреса');
+            throw new BaseException(
+                {
+                    code: 'INVITE_EMAIL_MISMATCH',
+                    message: 'Этот инвайт предназначен для другого почтового адреса',
+                    details: [{ target: 'email', expected: invite.email, actual: email }],
+                },
+                HttpStatus.FORBIDDEN,
+            );
         }
 
         const member = await this.teamsRepo.findMember(invite.teamId, userId);
 
         if (member) {
             if (member.status === 'banned') {
-                throw new ForbiddenException('Вы заблокированы в этой команде');
+                throw new BaseException(
+                    {
+                        code: 'MEMBER_BANNED',
+                        message: 'Вы заблокированы в этой команде',
+                    },
+                    HttpStatus.FORBIDDEN,
+                );
             }
 
             if (member.status === 'active') {
-                throw new BadRequestException('Вы уже являетесь участником этой команды');
+                throw new BaseException(
+                    {
+                        code: 'ALREADY_MEMBER',
+                        message: 'Вы уже являетесь участником этой команды',
+                    },
+                    HttpStatus.BAD_REQUEST,
+                );
             }
         }
 
-        await this.teamsRepo.addMember({
-            teamId: invite.teamId,
-            userId,
-            role: invite.role,
-            status: 'active',
-            joinedAt: new Date(),
-        });
+        try {
+            await this.teamsRepo.addMember({
+                teamId: invite.teamId,
+                userId,
+                role: invite.role,
+                status: 'active',
+                joinedAt: new Date(),
+            });
 
-        const multi = this.redis.multi();
-        multi.del(`inv:code:${code}`);
-        multi.srem(`team:invites:${invite.teamId}`, code);
-        multi.srem(`user:invites:${email}`, code);
-        await multi.exec();
+            const multi = this.redis.multi();
+            multi.del(`inv:code:${code}`);
+            multi.srem(`team:invites:${invite.teamId}`, code);
+            multi.srem(`user:invites:${email.toLowerCase()}`, code);
+            await multi.exec();
 
-        return {
-            success: true,
-            message: 'Вы успешно присоединились к команде',
-        };
+            return {
+                success: true,
+                message: 'Вы успешно присоединились к команде',
+            };
+        } catch (error) {
+            throw new BaseException(
+                {
+                    code: 'ACCEPT_INVITE_FAILED',
+                    message: 'Ошибка при вступлении в команду',
+                    details: [{ reason: error instanceof Error ? error.message : 'DB Error' }],
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
     };
 }

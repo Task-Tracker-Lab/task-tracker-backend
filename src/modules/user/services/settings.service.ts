@@ -1,12 +1,8 @@
-import {
-    Inject,
-    Injectable,
-    InternalServerErrorException,
-    NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { IUserRepository } from '../repository/user.repository.interface';
 import type { UpdateNotificationsDto } from '../dtos';
 import { createId } from '@paralleldrive/cuid2';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class UserSettingsService {
@@ -16,21 +12,16 @@ export class UserSettingsService {
     ) {}
 
     private throwUserNotFound() {
-        throw new NotFoundException({
-            code: 'USER_NOT_FOUND',
-            message: 'Пользователь не найден в системе',
-        });
+        throw new BaseException(
+            {
+                code: 'USER_NOT_FOUND',
+                message: 'Пользователь не найден в системе',
+            },
+            HttpStatus.NOT_FOUND,
+        );
     }
 
     public updateNotifications = async (id: string, dto: UpdateNotificationsDto) => {
-        const keysToUpdate = Object.keys(dto);
-        if (keysToUpdate.length === 0) {
-            return {
-                success: true,
-                message: 'Изменений не обнаружено',
-            };
-        }
-
         const user = await this.userRepo.findById(id);
         if (!user) this.throwUserNotFound();
 
@@ -41,8 +32,12 @@ export class UserSettingsService {
             });
 
             if (!isUpdated) {
-                throw new InternalServerErrorException(
-                    'Ошибка при сохранении настроек уведомлений',
+                throw new BaseException(
+                    {
+                        code: 'NOTIFICATIONS_UPDATE_FAILED',
+                        message: 'Не удалось обновить настройки уведомлений',
+                    },
+                    HttpStatus.INTERNAL_SERVER_ERROR,
                 );
             }
 
@@ -57,7 +52,23 @@ export class UserSettingsService {
                 message: 'Настройки уведомлений обновлены',
             };
         } catch (error) {
-            throw error;
+            if (error instanceof BaseException) {
+                throw error;
+            }
+
+            throw new BaseException(
+                {
+                    code: 'USER_SETTINGS_ERROR',
+                    message: 'Ошибка при сохранении настроек пользователя',
+                    details: [
+                        {
+                            reason:
+                                error instanceof Error ? error.message : 'Unknown database error',
+                        },
+                    ],
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     };
 }

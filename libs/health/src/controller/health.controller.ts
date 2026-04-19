@@ -1,8 +1,9 @@
-import { Controller, Get, HttpException, HttpStatus, Inject, Logger } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { HealthService } from '../health.service';
 import { GetHealthSwagger, GetPingSwagger } from './health.swagger';
 import { ApiTags } from '@nestjs/swagger';
+import { BaseException } from '@shared/error';
 
 @SkipThrottle()
 @Controller()
@@ -22,8 +23,18 @@ export class HealthController {
 
         if (pingData.status !== 'up') {
             this.logger.error(`${this.serviceName} is unhealthy!`);
-            throw new HttpException(
-                `${this.serviceName} service is unhealthy.`,
+            throw new BaseException(
+                {
+                    code: 'SERVICE_UNHEALTHY',
+                    message: `Сервис ${this.serviceName} временно недоступен или работает некорректно`,
+                    details: [
+                        {
+                            target: this.serviceName,
+                            status: pingData.status,
+                            timestamp: new Date().toISOString(),
+                        },
+                    ],
+                },
                 HttpStatus.SERVICE_UNAVAILABLE,
             );
         }

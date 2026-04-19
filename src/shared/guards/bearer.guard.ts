@@ -1,8 +1,9 @@
-import type { JwtPayload } from '@core/modules/auth/types';
-import { type ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { type ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from '@shared/decorators';
+import { BaseException } from '@shared/error';
+import type { JwtPayload } from '@shared/types';
 import type { FastifyRequest } from 'fastify';
 
 @Injectable()
@@ -26,7 +27,7 @@ export class BearerAuthGuard extends AuthGuard('bearer') {
     handleRequest<TUser = JwtPayload>(
         err: unknown,
         user: TUser,
-        _info: unknown,
+        info: unknown,
         context: ExecutionContext,
     ): TUser {
         if (user) {
@@ -37,7 +38,14 @@ export class BearerAuthGuard extends AuthGuard('bearer') {
             return null;
         }
 
-        throw err || new UnauthorizedException();
+        throw new BaseException(
+            {
+                code: 'AUTH_FAILED',
+                message: 'Доступ запрещен: требуется валидный токен авторизации',
+                details: this.getAuthDetails(err, info),
+            },
+            HttpStatus.UNAUTHORIZED,
+        );
     }
 
     private isPublicOrHasToken(context: ExecutionContext): boolean {
@@ -51,5 +59,11 @@ export class BearerAuthGuard extends AuthGuard('bearer') {
         ]);
 
         return !!(isPublic || query.token);
+    }
+
+    private getAuthDetails(err: unknown, info: any) {
+        const message = info?.message || (err instanceof Error ? err.message : null);
+
+        return message ? [{ target: 'auth', reason: message }] : [];
     }
 }

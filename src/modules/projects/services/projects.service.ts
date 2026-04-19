@@ -1,19 +1,12 @@
-import {
-    BadRequestException,
-    ForbiddenException,
-    Inject,
-    Injectable,
-    InternalServerErrorException,
-    NotFoundException,
-    UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { IProjectsRepository } from '../repository';
 import type { CreateProjectDto, CreateShareTokenDto, UpdateProjectDto } from '../dtos';
 import { FindTeamCommand, FindTeamMemberCommand } from '@core/modules/teams';
-import { ROLE_PRIORITY } from '../../teams/entities/teams.domain';
+import { ROLE_PRIORITY } from '@shared/constants';
 import { ProjectStatus } from '../entities';
 import { ProjectsMapper } from '../mappers';
 import { createHash, randomBytes } from 'crypto';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class ProjectsService {
@@ -25,21 +18,7 @@ export class ProjectsService {
     ) {}
 
     public create = async (userId: string, slug: string, dto: CreateProjectDto) => {
-        const team = await this.findTeamCommand.execute(slug);
-        if (!team) {
-            throw new NotFoundException('Команда не найдена');
-        }
-
-        const member = await this.findTeamMemberCommand.execute(team.id, userId);
-        if (!member) {
-            throw new ForbiddenException('Вы не являетесь участником этой команды');
-        }
-
-        if (ROLE_PRIORITY[member.role] < ROLE_PRIORITY.admin) {
-            throw new ForbiddenException(
-                'Только администраторы и владельцы могут создавать проекты',
-            );
-        }
+        const { team } = await this.ensureTeamAccess(slug, userId, 'admin');
 
         const data = {
             ...dto,
@@ -49,18 +28,13 @@ export class ProjectsService {
             status: ProjectStatus.Active,
         };
 
-        try {
-            const { result, id } = await this.projectsRepo.create(data);
+        const { result, id } = await this.projectsRepo.create(data);
 
-            // TODO: RESOLVE AT ACTION RESPONSE EXTEND WITH PROJECT ID
-            return {
-                success: result,
-                message: `Проект ${dto.name} успешно создан`,
-                projectId: id,
-            };
-        } catch (error) {
-            throw error;
-        }
+        return {
+            success: result,
+            message: `Проект ${dto.name} успешно создан`,
+            projectId: id,
+        };
     };
 
     public generateToken = async (
@@ -77,10 +51,16 @@ export class ProjectsService {
             expiresAt = new Date(dto.ttl);
 
             if (expiresAt <= new Date()) {
-                throw new BadRequestException({
-                    code: 'INVALID_EXPIRATION',
-                    message: 'Дата истечения не может быть в прошлом',
-                });
+                throw new BaseException(
+                    {
+                        code: 'INVALID_EXPIRATION',
+                        message: 'Дата истечения не может быть в прошлом',
+                        details: [
+                            { target: 'ttl', message: 'Expiration date is behind current time' },
+                        ],
+                    },
+                    HttpStatus.BAD_REQUEST,
+                );
             }
         } else {
             expiresAt = new Date();
@@ -97,11 +77,13 @@ export class ProjectsService {
         });
 
         if (!isSaved) {
-            throw new InternalServerErrorException({
-                code: 'SHARE_CREATE_FAILED',
-                message: 'Не удалось сгенерировать ссылку доступа',
-                service: 'pg',
-            });
+            throw new BaseException(
+                {
+                    code: 'SHARE_CREATE_FAILED',
+                    message: 'Не удалось сгенерировать ссылку доступа',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
 
         const durationMsg = dto.ttl
@@ -123,6 +105,16 @@ export class ProjectsService {
         const project = await this.validateAccess(id, slug, userId);
         const result = await this.projectsRepo.delete(project.id);
 
+        if (!result) {
+            throw new BaseException(
+                {
+                    code: 'DELETE_FAILED',
+                    message: 'Не удалось удалить проект',
+                },
+                HttpStatus.SERVICE_UNAVAILABLE,
+            );
+        }
+
         return {
             success: result,
             message: result
@@ -143,6 +135,17 @@ export class ProjectsService {
             }),
         });
 
+        if (!result) {
+            throw new BaseException(
+                {
+                    code: 'UPDATE_FAILED',
+                    message:
+                        'Изменения не были применены. Возможно, данные идентичны текущим или проект недоступен',
+                },
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+
         return {
             success: result,
             message: result ? 'Настройки проекта успешно обновлены' : 'Изменения не были применены',
@@ -153,7 +156,13 @@ export class ProjectsService {
         const project = await this.projectsRepo.findOne(id);
 
         if (!project) {
-            throw new NotFoundException('Проект не найден');
+            throw new BaseException(
+                {
+                    code: 'PROJECT_NOT_FOUND',
+                    message: 'Проект не найден',
+                },
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         if (token) {
@@ -164,43 +173,39 @@ export class ProjectsService {
             );
 
             if (!isValidAccess) {
-                throw new NotFoundException('Ссылка недействительна или срок её действия истек');
+                throw new BaseException(
+                    {
+                        code: 'INVALID_TOKEN',
+                        message: 'Ссылка недействительна или срок её действия истек',
+                    },
+                    HttpStatus.GONE,
+                );
             }
 
             return ProjectsMapper.toDetailResponse(project, null, token);
         }
 
-        let member = null;
-
         if (!userId) {
-            throw new UnauthorizedException('Требуется авторизация');
+            throw new BaseException(
+                { code: 'AUTH_REQUIRED', message: 'Требуется авторизация' },
+                HttpStatus.UNAUTHORIZED,
+            );
         }
 
-        const team = await this.findTeamCommand.execute(slug);
-        if (!team || team.id !== project.teamId) {
-            throw new NotFoundException('Команда не найдена или проект к ней не относится');
-        }
+        const { member, team } = await this.ensureTeamAccess(slug, userId, 'viewer');
 
-        member = await this.findTeamMemberCommand.execute(team.id, userId);
-        if (!member) {
-            throw new ForbiddenException('У вас нет доступа к этой команде');
+        if (team.id !== project.teamId) {
+            throw new BaseException(
+                { code: 'PROJECT_MISMATCH', message: 'Проект не принадлежит этой команде' },
+                HttpStatus.BAD_REQUEST,
+            );
         }
 
         return ProjectsMapper.toDetailResponse(project, member);
     };
 
     public findByTeam = async (slug: string, userId: string) => {
-        const team = await this.findTeamCommand.execute(slug);
-
-        if (!team) {
-            throw new NotFoundException('Команда не найдена');
-        }
-
-        const member = await this.findTeamMemberCommand.execute(team.id, userId);
-        if (!member) {
-            throw new ForbiddenException('У вас нет доступа к этой команде');
-        }
-
+        const { team, member } = await this.ensureTeamAccess(slug, userId, 'viewer');
         const projects = await this.projectsRepo.findByTeam(team.id);
 
         return {
@@ -221,6 +226,17 @@ export class ProjectsService {
         const project = await this.validateAccess(id, slug, userId);
         const result = await this.projectsRepo.update(project.id, { status });
 
+        if (!result) {
+            throw new BaseException(
+                {
+                    code: 'STATUS_UPDATE_FAILED',
+                    message: 'Не удалось обновить статус проекта',
+                    details: [{ target: 'status', value: status }],
+                },
+                HttpStatus.SERVICE_UNAVAILABLE,
+            );
+        }
+
         const messages: Record<ProjectStatus, string> = {
             archived: `Проект «${project.name}» успешно архивирован`,
             active: `Проект «${project.name}» теперь активен`,
@@ -233,20 +249,69 @@ export class ProjectsService {
         };
     };
 
-    private async validateAccess(id: string, slug: string, userId: string, minRole = 'admin') {
+    private async ensureTeamAccess(
+        slug: string,
+        userId: string,
+        minRole: keyof typeof ROLE_PRIORITY = 'viewer',
+    ) {
         const team = await this.findTeamCommand.execute(slug);
         if (!team) {
-            throw new NotFoundException('Team not found');
+            throw new BaseException(
+                {
+                    code: 'TEAM_NOT_FOUND',
+                    message: 'Команда не найдена',
+                },
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         const member = await this.findTeamMemberCommand.execute(team.id, userId);
-        if (!member || ROLE_PRIORITY[member.role] < ROLE_PRIORITY[minRole]) {
-            throw new ForbiddenException(`You need at least ${minRole} role to manage projects`);
+        if (!member) {
+            throw new BaseException(
+                {
+                    code: 'NOT_TEAM_MEMBER',
+                    message: 'Вы не являетесь участником этой команды',
+                },
+                HttpStatus.FORBIDDEN,
+            );
         }
+
+        if (ROLE_PRIORITY[member.role] < ROLE_PRIORITY[minRole]) {
+            throw new BaseException(
+                {
+                    code: 'INSUFFICIENT_PERMISSIONS',
+                    message: `Только ${minRole} и выше могут выполнять это действие`,
+                    details: [
+                        {
+                            target: 'role',
+                            message: `Current role: ${member.role}, Required: ${minRole}`,
+                        },
+                    ],
+                },
+                HttpStatus.FORBIDDEN,
+            );
+        }
+
+        return { team, member };
+    }
+
+    private async validateAccess(
+        id: string,
+        slug: string,
+        userId: string,
+        minRole: keyof typeof ROLE_PRIORITY = 'admin',
+    ) {
+        const { team } = await this.ensureTeamAccess(slug, userId, minRole);
 
         const project = await this.projectsRepo.findOne(id);
         if (!project || project.teamId !== team.id) {
-            throw new NotFoundException('Project not found in this team');
+            throw new BaseException(
+                {
+                    code: 'PROJECT_NOT_FOUND',
+                    message: 'Проект не найден в этой команде',
+                },
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         return project;

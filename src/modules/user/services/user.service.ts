@@ -1,13 +1,9 @@
-import {
-    Inject,
-    Injectable,
-    InternalServerErrorException,
-    NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { IUserRepository } from '../repository/user.repository.interface';
 import type { UpdateProfileDto } from '../dtos';
 import { createId } from '@paralleldrive/cuid2';
 import { IUserMedia, USER_MEDIA_TOKEN, type FileUploadDto } from '../../media';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class UserService {
@@ -19,10 +15,13 @@ export class UserService {
     ) {}
 
     private throwUserNotFound() {
-        throw new NotFoundException({
-            code: 'USER_NOT_FOUND',
-            message: 'Пользователь не найден в системе',
-        });
+        throw new BaseException(
+            {
+                code: 'USER_NOT_FOUND',
+                message: 'Пользователь не найден в системе',
+            },
+            HttpStatus.NOT_FOUND,
+        );
     }
 
     public getProfile = async (userId: string) => {
@@ -40,28 +39,23 @@ export class UserService {
     };
 
     public updateProfile = async (id: string, dto: UpdateProfileDto) => {
-        const keysToUpdate = Object.keys(dto);
-        if (keysToUpdate.length === 0) {
-            return {
-                success: true,
-                message: 'Изменений не обнаружено',
-            };
-        }
-
         try {
             const isUpdated = await this.userRepo.updateProfile(id, dto);
 
             if (!isUpdated) {
-                throw new InternalServerErrorException('Не удалось обновить профиль');
+                throw new BaseException(
+                    {
+                        code: 'PROFILE_UPDATE_FAILED',
+                        message: 'Не удалось обновить данные профиля',
+                    },
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                );
             }
 
             await this.userRepo.logActivity({
                 id: createId(),
                 userId: id,
                 eventType: 'PROFILE_UPDATED',
-                metadata: {
-                    fields: keysToUpdate,
-                },
             });
 
             return {
@@ -69,7 +63,23 @@ export class UserService {
                 message: 'Профиль успешно обновлен',
             };
         } catch (error) {
-            throw error;
+            if (error instanceof BaseException) {
+                throw error;
+            }
+
+            throw new BaseException(
+                {
+                    code: 'PROFILE_SERVICE_ERROR',
+                    message: 'Произошла ошибка при обновлении профиля',
+                    details: [
+                        {
+                            reason:
+                                error instanceof Error ? error.message : 'Unknown database error',
+                        },
+                    ],
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     };
 

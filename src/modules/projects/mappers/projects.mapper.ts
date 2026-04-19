@@ -1,5 +1,6 @@
 import type { RawMemberRow } from '@core/modules/teams/repository';
-import { type Project, ROLE_PRIORITY } from '@shared/entities';
+import type { Project } from '@shared/entities';
+import { ROLE_PRIORITY } from '@shared/constants';
 
 export class ProjectsMapper {
     public static toDetailResponse(project: Project, member?: RawMemberRow, token?: string) {

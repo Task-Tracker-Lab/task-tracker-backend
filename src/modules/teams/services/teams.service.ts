@@ -1,10 +1,4 @@
-import {
-    Inject,
-    Injectable,
-    ConflictException,
-    ForbiddenException,
-    NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, HttpStatus } from '@nestjs/common';
 import { ITeamsRepository } from '../repository';
 import { FindTagsQuery } from '../dtos';
 import type { CreateTeamDto, UpdateTeamDto } from '../dtos';
@@ -12,6 +6,7 @@ import { slugify } from 'transliteration';
 import { TeamMemberMapper } from '../mappers';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class TeamsService {
@@ -44,7 +39,14 @@ export class TeamsService {
         const existingTeam = await this.teamsRepo.findBySlug(baseSlug);
 
         if (existingTeam) {
-            throw new ConflictException(`Команда со ссылкой "${baseSlug}" уже существует`);
+            throw new BaseException(
+                {
+                    code: 'SLUG_ALREADY_EXISTS',
+                    message: `Ссылка "${baseSlug}" уже занята другой командой`,
+                    details: [{ target: 'slug', value: baseSlug }],
+                },
+                HttpStatus.CONFLICT,
+            );
         }
 
         const { tags, ...teamData } = dto;
@@ -65,14 +67,27 @@ export class TeamsService {
                 message: 'Команда успешно создана',
             };
         } catch (error) {
-            throw error;
+            throw new BaseException(
+                {
+                    code: 'TEAM_CREATE_FAILED',
+                    message: 'Не удалось создать команду',
+                    details: [{ reason: error instanceof Error ? error.message : 'Unknown error' }],
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     };
 
     public update = async (slug: string, userId: string, dto: UpdateTeamDto) => {
         const team = await this.teamsRepo.findBySlug(slug);
         if (!team) {
-            throw new NotFoundException(`Команда ${slug} не найдена`);
+            throw new BaseException(
+                {
+                    code: 'TEAM_NOT_FOUND',
+                    message: `Команда ${slug} не найдена`,
+                },
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         const member = await this.teamsRepo.findMember(team.id, userId);
@@ -80,7 +95,14 @@ export class TeamsService {
         const canEdit = member?.role === 'admin' || member?.role === 'owner';
 
         if (!canEdit) {
-            throw new ForbiddenException('У вас нет прав для выполнения этой команды');
+            throw new BaseException(
+                {
+                    code: 'INSUFFICIENT_PERMISSIONS',
+                    message: 'У вас нет прав для редактирования этой команды',
+                    details: [{ target: 'role', value: member?.role }],
+                },
+                HttpStatus.FORBIDDEN,
+            );
         }
 
         const { tags, ...data } = dto;
@@ -93,7 +115,13 @@ export class TeamsService {
                 message: 'Данные команды успешно обновлены',
             };
         } catch (error) {
-            throw error;
+            throw new BaseException(
+                {
+                    code: 'TEAM_UPDATE_FAILED',
+                    message: 'Ошибка при обновлении данных команды',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     };
 
@@ -101,15 +129,27 @@ export class TeamsService {
         const team = await this.teamsRepo.findBySlug(slug);
 
         if (!team) {
-            throw new NotFoundException(`Команда ${slug} не найдена`);
+            throw new BaseException(
+                {
+                    code: 'TEAM_NOT_FOUND',
+                    message: `Команда ${slug} не найдена`,
+                },
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         const member = await this.teamsRepo.findMember(team.id, userId);
 
-        const canEdit = team.ownerId === userId || member?.role === 'owner';
+        const canDelete = team.ownerId === userId || member?.role === 'owner';
 
-        if (!canEdit) {
-            throw new ForbiddenException('У вас нет прав для выполнения этой команды');
+        if (!canDelete) {
+            throw new BaseException(
+                {
+                    code: 'ONLY_OWNER_CAN_DELETE',
+                    message: 'Только владелец может удалить команду',
+                },
+                HttpStatus.FORBIDDEN,
+            );
         }
 
         try {
@@ -120,7 +160,13 @@ export class TeamsService {
                 message: 'Данные команды успешно обновлены',
             };
         } catch (error) {
-            throw error;
+            throw new BaseException(
+                {
+                    code: 'TEAM_DELETE_FAILED',
+                    message: 'Не удалось удалить команду',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     };
 
@@ -157,7 +203,13 @@ export class TeamsService {
     public getOne = async (slug: string) => {
         const team = await this.teamsRepo.findBySlug(slug);
         if (!team) {
-            throw new NotFoundException(`Команда ${slug} не найдена`);
+            throw new BaseException(
+                {
+                    code: 'TEAM_NOT_FOUND',
+                    message: `Команда ${slug} не найдена`,
+                },
+                HttpStatus.NOT_FOUND,
+            );
         }
         return team;
     };
