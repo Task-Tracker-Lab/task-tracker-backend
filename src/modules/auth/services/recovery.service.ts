@@ -1,10 +1,4 @@
-import {
-    BadRequestException,
-    ForbiddenException,
-    Injectable,
-    InternalServerErrorException,
-    NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { PasswordResetConfirmDto, ResetPasswordDto, VerifyResetCodeDto } from '../dtos';
@@ -16,6 +10,7 @@ import { Queues } from '@shared/workers';
 import type { Queue } from 'bullmq';
 import { MailJobs } from '@shared/workers/enum';
 import { ResetPasswordEvent } from '@shared/workers/events';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class AuthRecoveryService {
@@ -32,11 +27,14 @@ export class AuthRecoveryService {
         const { user } = await this.findUserCommand.execute({ email: dto.email });
 
         if (!user) {
-            throw new NotFoundException({
-                code: 'USER_NOT_FOUND',
-                message: 'Пользователь с таким email не найден',
-                details: { email: dto.email },
-            });
+            throw new BaseException(
+                {
+                    code: 'USER_NOT_FOUND',
+                    message: 'Пользователь с таким email не найден',
+                    details: [{ target: 'email', value: dto.email }],
+                },
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         const secret = generateSecret();
@@ -75,10 +73,14 @@ export class AuthRecoveryService {
         const cachedData = await this.redis.get(redisKey);
 
         if (!cachedData) {
-            throw new BadRequestException({
-                code: 'RESET_SESSION_EXPIRED',
-                message: 'Время подтверждения истекло или запрос не найден. Запросите код снова.',
-            });
+            throw new BaseException(
+                {
+                    code: 'RESET_SESSION_EXPIRED',
+                    message:
+                        'Время подтверждения истекло или запрос не найден. Запросите код снова.',
+                },
+                HttpStatus.GONE,
+            );
         }
 
         const resetSession = JSON.parse(cachedData);
@@ -92,10 +94,14 @@ export class AuthRecoveryService {
         });
 
         if (!verifyResult.valid) {
-            throw new BadRequestException({
-                code: 'INVALID_VERIFICATION_CODE',
-                message: 'Неверный или истекший код подтверждения',
-            });
+            throw new BaseException(
+                {
+                    code: 'INVALID_VERIFICATION_CODE',
+                    message: 'Неверный или истекший код подтверждения',
+                    details: [{ target: 'code', message: 'The provided OTP is incorrect' }],
+                },
+                HttpStatus.BAD_REQUEST,
+            );
         }
 
         await this.redis.set(
@@ -116,29 +122,40 @@ export class AuthRecoveryService {
         const cachedData = await this.redis.get(redisKey);
 
         if (!cachedData) {
-            throw new BadRequestException({
-                code: 'RESET_SESSION_NOT_FOUND',
-                message: 'Сессия восстановления не найдена или истекла. Начните процесс заново.',
-            });
+            throw new BaseException(
+                {
+                    code: 'RESET_SESSION_NOT_FOUND',
+                    message:
+                        'Сессия восстановления не найдена или истекла. Начните процесс заново.',
+                },
+                HttpStatus.BAD_REQUEST,
+            );
         }
 
         const resetSession = JSON.parse(cachedData);
 
         if (!resetSession.isVerified) {
-            throw new ForbiddenException({
-                code: 'CODE_NOT_VERIFIED',
-                message: 'Код подтверждения еще не был верифицирован.',
-            });
+            throw new BaseException(
+                {
+                    code: 'CODE_NOT_VERIFIED',
+                    message: 'Код подтверждения еще не был верифицирован.',
+                    details: [{ target: 'isVerified', value: false }],
+                },
+                HttpStatus.FORBIDDEN,
+            );
         }
 
         const hashed = await argon.hash(dto.password);
         const isUpdated = await this.updateUserPass.execute(dto.email, hashed);
 
         if (!isUpdated) {
-            throw new InternalServerErrorException({
-                code: 'PASSWORD_UPDATE_FAILED',
-                message: 'Не удалось обновить пароль. Попробуйте позже.',
-            });
+            throw new BaseException(
+                {
+                    code: 'PASSWORD_UPDATE_FAILED',
+                    message: 'Не удалось обновить пароль. Попробуйте позже.',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
         await this.redis.del(redisKey);
 

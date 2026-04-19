@@ -11,10 +11,15 @@ export const InviteMemberSchema = z.object({
 
 export class InviteMemberDto extends createZodDto(InviteMemberSchema) {}
 
-const UpdateMemberDtoSchema = z.object({
-    role: z.string().optional().describe('Новая роль участника'),
-    status: z.string().optional().describe('Новый статус (active, blocked и т.д.)'),
-});
+const UpdateMemberDtoSchema = z
+    .object({
+        role: z.string().optional().describe('Новая роль участника'),
+        status: z.string().optional().describe('Новый статус (active, blocked и т.д.)'),
+    })
+    .refine((data) => Object.keys(data).length > 0, {
+        error: 'Необходимо передать хотя бы одно поле для обновления',
+        abort: true,
+    });
 
 export class UpdateMemberDto extends createZodDto(UpdateMemberDtoSchema) {}
 

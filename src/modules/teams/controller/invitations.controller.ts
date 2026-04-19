@@ -2,7 +2,7 @@ import { Body, Get, Param, Delete, Patch, Post } from '@nestjs/common';
 import { ApiBaseController, GetUser, GetUserId } from '@shared/decorators';
 import { TeamInvitationsService } from '../services';
 import { AcceptInviteSwagger, InviteMemberSwagger } from './teams.swagger';
-import type { JwtPayload } from '@core/modules/auth/types';
+import type { JwtPayload } from '@shared/types';
 import { ApiOperation } from '@nestjs/swagger';
 
 @ApiBaseController('teams/:slug/invitations', 'Teams Invitations', true)

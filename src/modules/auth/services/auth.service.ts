@@ -1,10 +1,4 @@
-import {
-    BadRequestException,
-    ConflictException,
-    Inject,
-    Injectable,
-    UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { SignInDto, SignUpDto, VerifyDto } from '../dtos';
@@ -18,6 +12,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queues, RegisterCodeEvent } from '@shared/workers';
 import type { Queue } from 'bullmq';
 import { MailJobs } from '@shared/workers/enum';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class AuthService {
@@ -39,20 +34,27 @@ export class AuthService {
         const cachedData = await this.redis.get(redisKey);
 
         if (cachedData) {
-            throw new BadRequestException({
-                code: 'REGISTRATION_IN_PROGRESS',
-                message: 'Код уже был отправлен. Проверьте почту или подождите 15 минут.',
-            });
+            throw new BaseException(
+                {
+                    code: 'REGISTRATION_IN_PROGRESS',
+                    message: 'Код уже был отправлен. Проверьте почту или подождите 15 минут.',
+                    details: [{ target: 'email', message: 'Verification code already sent' }],
+                },
+                HttpStatus.BAD_REQUEST,
+            );
         }
 
         const isExists = await this.findUserCommand.execute({ email: dto.email });
 
         if (isExists) {
-            throw new ConflictException({
-                code: 'USER_ALREADY_EXISTS',
-                message: 'Email уже занят другим аккаунтом',
-                details: { email: dto.email },
-            });
+            throw new BaseException(
+                {
+                    code: 'USER_ALREADY_EXISTS',
+                    message: 'Email уже занят другим аккаунтом',
+                    details: [{ target: 'email', value: dto.email }],
+                },
+                HttpStatus.CONFLICT,
+            );
         }
 
         const hashPass = await argon.hash(dto.password);
@@ -95,10 +97,13 @@ export class AuthService {
         const cachedData = await this.redis.get(redisKey);
 
         if (!cachedData) {
-            throw new BadRequestException({
-                code: 'REGISTRATION_EXPIRED',
-                message: 'Срок регистрации истек или email не найден. Попробуйте снова.',
-            });
+            throw new BaseException(
+                {
+                    code: 'REGISTRATION_EXPIRED',
+                    message: 'Срок регистрации истек или email не найден. Попробуйте снова.',
+                },
+                HttpStatus.GONE,
+            );
         }
 
         const userData = JSON.parse(cachedData);
@@ -114,10 +119,14 @@ export class AuthService {
         });
 
         if (!verifyResult.valid) {
-            throw new BadRequestException({
-                code: 'INVALID_OTP',
-                message: 'Неверный или истекший код подтверждения',
-            });
+            throw new BaseException(
+                {
+                    code: 'INVALID_OTP',
+                    message: 'Неверный или истекший код подтверждения',
+                    details: [{ target: 'code', message: 'OTP code is invalid or expired' }],
+                },
+                HttpStatus.BAD_REQUEST,
+            );
         }
 
         const user = await this.createUserCommand.execute({
@@ -145,19 +154,25 @@ export class AuthService {
         const { user, security } = await this.findUserCommand.execute({ email: dto.email });
 
         if (!user || !security) {
-            throw new UnauthorizedException({
-                code: 'INVALID_CREDENTIALS',
-                message: 'Неверный email или пароль',
-            });
+            throw new BaseException(
+                {
+                    code: 'INVALID_CREDENTIALS',
+                    message: 'Неверный email или пароль',
+                },
+                HttpStatus.UNAUTHORIZED,
+            );
         }
 
         const isPasswordValid = await argon.verify(security.passwordHash, dto.password);
 
         if (!isPasswordValid) {
-            throw new UnauthorizedException({
-                code: 'INVALID_CREDENTIALS',
-                message: 'Неверный email или пароль',
-            });
+            throw new BaseException(
+                {
+                    code: 'INVALID_CREDENTIALS',
+                    message: 'Неверный email или пароль',
+                },
+                HttpStatus.UNAUTHORIZED,
+            );
         }
 
         const { id } = await this.sessionRepo.create({
@@ -181,30 +196,39 @@ export class AuthService {
     public refresh = async (token: string, metadata: DeviceMetadata) => {
         const payload = await this.tokenService.validateToken(token, 'refresh');
 
-        if (!payload || !payload.jti) {
-            throw new UnauthorizedException({
-                code: 'INVALID_TOKEN',
-                message: 'Сессия недействительна или истекла',
-            });
+        if (!payload?.jti) {
+            throw new BaseException(
+                {
+                    code: 'INVALID_TOKEN',
+                    message: 'Сессия недействительна или истекла',
+                },
+                HttpStatus.UNAUTHORIZED,
+            );
         }
 
         const session = await this.sessionRepo.findById(payload.jti);
 
         if (!session || session.isRevoked) {
-            throw new UnauthorizedException({
-                code: 'SESSION_REVOKED',
-                message: 'Ваша сессия была отозвана или завершена',
-            });
+            throw new BaseException(
+                {
+                    code: 'SESSION_REVOKED',
+                    message: 'Ваша сессия была отозвана или завершена',
+                },
+                HttpStatus.UNAUTHORIZED,
+            );
         }
 
         const { user } = await this.findUserCommand.execute({ id: session.userId });
 
         if (!user) {
             await this.sessionRepo.revoke(session.id);
-            throw new UnauthorizedException({
-                code: 'USER_NOT_FOUND',
-                message: 'Аккаунт пользователя не найден',
-            });
+            throw new BaseException(
+                {
+                    code: 'USER_NOT_FOUND',
+                    message: 'Аккаунт пользователя не найден',
+                },
+                HttpStatus.UNAUTHORIZED,
+            );
         }
 
         await this.sessionRepo.revoke(session.id);
@@ -228,19 +252,31 @@ export class AuthService {
         const payload = await this.tokenService.validateToken(token, 'refresh');
 
         if (!payload?.jti) {
-            throw new UnauthorizedException({ code: 'SESSION_EXPIRED', message: 'Сессия истекла' });
+            throw new BaseException(
+                {
+                    code: 'SESSION_EXPIRED',
+                    message: 'Сессия уже истекла',
+                },
+                HttpStatus.UNAUTHORIZED,
+            );
         }
 
         const session = await this.sessionRepo.findById(payload.jti);
 
-        if (!session) {
-            throw new UnauthorizedException({
-                code: 'SESSION_NOT_FOUND',
-                message: 'Сессия не найдена',
-            });
-        }
+        if (session) {
+            const isRevoked = await this.sessionRepo.revoke(session.id);
 
-        await this.sessionRepo.revoke(session.id);
+            if (!isRevoked) {
+                throw new BaseException(
+                    {
+                        code: 'SIGNOUT_FAILED',
+                        message: 'Не удалось завершить сессию на сервере. Попробуйте позже.',
+                        details: [{ target: 'database', message: 'Session revocation failed' }],
+                    },
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                );
+            }
+        }
 
         return { success: true, message: 'Успешно вышли из системы!' };
     };

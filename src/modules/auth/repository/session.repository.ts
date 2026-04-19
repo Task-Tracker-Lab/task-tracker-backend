@@ -2,11 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { eq, and, ne, lt, desc } from 'drizzle-orm';
 import * as schema from '../entities';
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
-import {
-    ISessionRepository,
-    type SessionInsert,
-    SessionSelect,
-} from './session.repository.interface';
+import { ISessionRepository, type SessionInsert } from './session.repository.interface';
 
 @Injectable()
 export class SessionRepository implements ISessionRepository {
@@ -15,12 +11,12 @@ export class SessionRepository implements ISessionRepository {
         private readonly db: DatabaseService<typeof schema>,
     ) {}
 
-    async create(data: SessionInsert): Promise<SessionSelect> {
+    async create(data: SessionInsert) {
         const [result] = await this.db.insert(schema.sessions).values(data).returning();
         return result;
     }
 
-    async findById(id: string): Promise<SessionSelect | null> {
+    async findById(id: string) {
         const [result] = await this.db
             .select()
             .from(schema.sessions)
@@ -30,7 +26,7 @@ export class SessionRepository implements ISessionRepository {
         return result || null;
     }
 
-    async findAllByUserId(userId: string): Promise<SessionSelect[]> {
+    async findAllByUserId(userId: string) {
         return this.db
             .select()
             .from(schema.sessions)
@@ -38,14 +34,16 @@ export class SessionRepository implements ISessionRepository {
             .orderBy(desc(schema.sessions.createdAt));
     }
 
-    async revoke(id: string): Promise<void> {
-        await this.db
+    async revoke(id: string) {
+        const { rowCount } = await this.db
             .update(schema.sessions)
             .set({ isRevoked: true, updatedAt: new Date() })
             .where(eq(schema.sessions.id, id));
+
+        return (rowCount ?? 0) > 0;
     }
 
-    async revokeAllByUserId(userId: string, exceptSessionId?: string): Promise<void> {
+    async revokeAllByUserId(userId: string, exceptSessionId?: string) {
         const filters = [eq(schema.sessions.userId, userId)];
 
         if (exceptSessionId) {
@@ -58,7 +56,7 @@ export class SessionRepository implements ISessionRepository {
             .where(and(...filters));
     }
 
-    async deleteExpired(): Promise<number> {
+    async deleteExpired() {
         const result = await this.db
             .delete(schema.sessions)
             .where(lt(schema.sessions.expiresAt, new Date()));

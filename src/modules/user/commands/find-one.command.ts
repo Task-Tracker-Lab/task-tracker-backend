@@ -1,6 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { IUserRepository } from '../repository/user.repository.interface';
 import type { UserWithSecurity } from '../entities/user.domain';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class FindOneUserCommand {
@@ -22,6 +23,12 @@ export class FindOneUserCommand {
             return this.repository.findById(id);
         }
 
-        throw new Error('FindOneUserCommand: email or id must be provided');
+        throw new BaseException(
+            {
+                code: 'COMMAND_PARAMS_MISSING',
+                message: 'Критическая ошибка: не указаны параметры поиска пользователя',
+            },
+            HttpStatus.INTERNAL_SERVER_ERROR,
+        );
     }
 }

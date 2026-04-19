@@ -1,9 +1,10 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { FastifyRequest } from 'fastify';
-import type { JwtPayload } from '../types';
+import type { JwtPayload } from '@shared/types';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
@@ -21,10 +22,14 @@ export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
 
     validate(_req: FastifyRequest, payload: JwtPayload) {
         if (!payload || !payload.jti) {
-            throw new UnauthorizedException({
-                code: 'INVALID_REFRESH_TOKEN',
-                message: 'Refresh токен невалиден или протух',
-            });
+            throw new BaseException(
+                {
+                    code: 'INVALID_REFRESH_TOKEN',
+                    message: 'Refresh токен невалиден или протух',
+                    details: [{ target: 'auth', reason: 'Payload is missing or jti is invalid' }],
+                },
+                HttpStatus.UNAUTHORIZED,
+            );
         }
 
         return payload;

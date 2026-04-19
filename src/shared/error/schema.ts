@@ -1,56 +1,36 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
 
-const ErrorDetailSchema = z
-    .object({
-        field: z.string().describe('Путь к полю в формате dot-notation (например, "user.email")'),
-        message: z.string().describe('Человекочитаемое сообщение о конкретной ошибке в этом поле'),
-        code: z
-            .string()
-            .describe(
-                'Машиночитаемый код ошибки валидации (например, "invalid_email", "too_short")',
-            ),
-    })
-    .describe('Детальная информация о конкретном нарушении в запросе');
+const ErrorDetailSchema = z.object({
+    field: z.string().describe('Путь к полю (например, "user.email")'),
+    message: z.string().describe('Сообщение об ошибке'),
+    code: z.string().describe('Машиночитаемый код (например, "too_short")'),
+});
 
-const ErrorMetaSchema = z
-    .object({
-        requestId: z
-            .string()
-            .describe(
-                'Уникальный ID запроса (Trace ID). Используется для поиска логов в Sentry/ELK/Kibana',
-            ),
-        timestamp: z
-            .string()
-            .datetime()
-            .describe('Точное время возникновения ошибки в формате ISO 8601'),
-        path: z.string().describe('URL-путь эндпоинта, который вернул ошибку'),
-        method: z.string().describe('HTTP метод запроса (GET, POST, etc.)'),
-        service: z
-            .string()
-            .optional()
-            .describe(
-                'Имя микросервиса, в котором произошел сбой (полезно для будущего масштабирования)',
-            ),
-    })
-    .describe('Техническая мета-информация для мониторинга и отладки');
+const ErrorMetaSchema = z.object({
+    service: z.string().default('gateway').describe('Имя микросервиса'),
+    request: z.object({
+        requestId: z.string().describe('Trace ID для логов'),
+        path: z.string().describe('URL эндпоинта'),
+        method: z.string().describe('HTTP метод'),
+        ip: z.string().optional().describe('IP клиента'),
+    }),
+    timestamp: z.string().datetime().describe('Время ошибки ISO 8601'),
+    debug: z
+        .object({
+            stack: z.string().optional().describe('Стек вызовов (только в Dev)'),
+        })
+        .optional(),
+});
 
 export const GlobalErrorSchema = z.object({
-    code: z
-        .string()
-        .describe(
-            'Уникальный бизнес-код ошибки (например, "INSUFFICIENT_FUNDS", "TEAM_NOT_FOUND")',
-        ),
-    message: z.string().describe('Краткое описание ошибки для пользователя или разработчика'),
-    retryable: z
-        .boolean()
-        .describe(
-            'Флаг, указывающий клиенту, есть ли смысл повторять запрос без изменений (например, при 503 или Lock Timeout)',
-        ),
-    details: z
-        .array(ErrorDetailSchema)
-        .optional()
-        .describe('Список ошибок валидации (заполняется только для 400 ошибок)'),
+    success: z.literal(false).default(false),
+    error: z.object({
+        code: z.string().describe('Бизнес-код ошибки'),
+        message: z.string().describe('Описание для пользователя'),
+        retryable: z.boolean().describe('Флаг возможности повтора'),
+    }),
+    details: z.array(ErrorDetailSchema).optional(),
     meta: ErrorMetaSchema,
 });
 
