@@ -10,7 +10,6 @@ export const users = baseSchema.table('users', {
     firstName: varchar('first_name', { length: 50 }).notNull(),
     lastName: varchar('last_name', { length: 50 }).notNull(),
     middleName: varchar('middle_name', { length: 50 }),
-
     email: varchar('email', { length: 255 }).notNull().unique(),
     bio: text('bio'),
     avatarUrl: varchar('avatar_url', { length: 512 }),

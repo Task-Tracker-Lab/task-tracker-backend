@@ -6,12 +6,15 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 
 @Injectable()
 export class BearerStrategy extends PassportStrategy(Strategy, 'bearer') {
-    constructor(configService: ConfigService) {
+    constructor(cfg: ConfigService) {
+        const audConstraint = cfg.getOrThrow('JWT_AUDIENCE');
+        const audience = btoa(audConstraint);
+
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            secretOrKey: configService.get<string>('JWT_ACCESS_SECRET'),
-            issuer: configService.get<string>('JWT_ISSUER'),
-            audience: configService.get<string>('JWT_AUDIENCE'),
+            secretOrKey: cfg.get<string>('JWT_ACCESS_SECRET'),
+            issuer: cfg.get<string>('JWT_ISSUER'),
+            audience,
         });
     }
 

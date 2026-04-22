@@ -12,7 +12,8 @@ export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([
                 (request: FastifyRequest) => {
-                    return request?.cookies?.['refresh'];
+                    const token = request?.cookies?.['refresh'];
+                    return token;
                 },
             ]),
             secretOrKey: configService.get<string>('JWT_REFRESH_SECRET'),
@@ -21,6 +22,7 @@ export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
     }
 
     validate(_req: FastifyRequest, payload: JwtPayload) {
+        console.log(_req, payload);
         if (!payload || !payload.jti) {
             throw new BaseException(
                 {

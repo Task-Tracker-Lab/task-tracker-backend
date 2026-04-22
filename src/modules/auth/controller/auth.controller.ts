@@ -69,7 +69,7 @@ export class AuthController {
     @UseGuards(BearerAuthGuard)
     @PostLogoutSwagger()
     async logout(@Res({ passthrough: true }) res: FastifyReply, @Req() req: FastifyRequest) {
-        const session = req.cookies['refresh'];
+        const session = req.cookies?.['refresh'];
         const response = await this.facade.signOut(session);
 
         res.clearCookie('refresh', { path: '/' });
@@ -83,7 +83,7 @@ export class AuthController {
     @HttpCode(200)
     async refresh(@Res({ passthrough: true }) res: FastifyReply, @Req() req: FastifyRequest) {
         const meta = getDeviceMeta(req);
-        const session = req.cookies['refresh'];
+        const session = req.cookies?.['refresh'];
         const { tokens, ...response } = await this.facade.refresh(session, meta);
 
         res.setCookie('refresh', tokens.refresh, {
