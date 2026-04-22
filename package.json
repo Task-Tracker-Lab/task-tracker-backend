@@ -1,7 +1,7 @@
 {
     "name": "task-backend",
     "version": "0.0.1",
-    "description": "",
+    "description": "Основной API-сервис управления задачами (NestJS + Fastify + Drizzle ORM)",
     "author": "",
     "private": true,
     "license": "MIT",
@@ -19,8 +19,15 @@
         "test:e2e": "vitest run -c vitest.config.e2e.ts",
         "db:generate": "drizzle-kit generate",
         "db:migrate": "drizzle-kit migrate",
-        "db:studio": "drizzle-kit studio",
-        "prepare": "husky"
+        "prepare": "husky",
+        "k6:all": "pnpm --filter @project/performance-tests test:all",
+        "k6:auth": "pnpm --filter @project/performance-tests test:auth",
+        "k6:team": "pnpm --filter @project/performance-tests test:team",
+        "k6:projects": "pnpm --filter @project/performance-tests test:projects",
+        "k6:user": "pnpm --filter @project/performance-tests test:user",
+        "k6:board": "pnpm --filter @project/performance-tests test:board",
+        "k6:tasks": "pnpm --filter @project/performance-tests test:tasks",
+        "k6:smoke": "pnpm --filter @project/performance-tests k6:smoke"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1029.0",
