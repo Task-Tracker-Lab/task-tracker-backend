@@ -14,15 +14,21 @@ export const ApiErrorResponse = (
         schema: {
             allOf: [{ $ref: getSchemaPath(GlobalErrorResponse.Output) }],
             example: {
-                code: bizCode,
-                message: description,
-                retryable: status >= 500,
+                success: false,
+                error: {
+                    code: bizCode,
+                    message: description,
+                    retryable: status >= 500,
+                },
                 details: details || [],
                 meta: {
-                    requestId: 'req-clj1abc230000jk78',
+                    request: {
+                        requestId: 'req-clj1abc230000jk78',
+                        path: '/api/v1/...',
+                        method: 'POST',
+                        ip: '127.0.0.1',
+                    },
                     timestamp: new Date().toISOString(),
-                    path: '/api/v1/...',
-                    method: 'POST',
                     service: 'main-backend',
                 },
             },
