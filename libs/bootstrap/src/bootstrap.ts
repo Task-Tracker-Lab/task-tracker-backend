@@ -36,7 +36,6 @@ export async function bootstrapApp(options: BootstrapOptions) {
 
     let rootModule = appModule;
 
-    // TODO: Improve merging modules (in case of multiple features needed) or migrate to fastify throttle
     if (throttlerOptions) {
         rootModule = setupThrottler(rootModule, throttlerOptions);
     }

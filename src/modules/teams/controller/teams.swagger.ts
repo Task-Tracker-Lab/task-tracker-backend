@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiConsumes } from '@nestjs/swagger';
-import { ActionResponse } from 'src/shared/dtos';
+import { ActionResponse } from '@shared/dtos';
 import {
     ApiBadRequest,
     ApiConflict,
@@ -8,7 +8,7 @@ import {
     ApiNotFound,
     ApiUnauthorized,
     ApiValidationError,
-} from 'src/shared/error';
+} from '@shared/error';
 import {
     CreateTeamDto,
     InviteMemberDto,

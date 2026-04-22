@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { S3Service } from '@libs/s3';
-import { FileUploadDto, FileUploadResponseDto } from './dtos';
+import type { FileUploadDto, FileUploadResponseDto } from './dtos';
 import { IUserMedia } from './interfaces/user-media.interface';
 import { ITeamMedia } from './interfaces/team-media.interface';
+import { BaseException } from '@shared/error';
 
 @Injectable()
 export class MediaService implements IUserMedia, ITeamMedia {
@@ -19,18 +20,42 @@ export class MediaService implements IUserMedia, ITeamMedia {
             const isUpdated = await updateDbFn(url);
 
             if (!isUpdated) {
-                throw new Error('ENTITY_NOT_FOUND');
+                throw new BaseException(
+                    {
+                        code: 'ENTITY_NOT_FOUND',
+                        message: 'Сущность не найдена, обновление отменено',
+                        details: [
+                            {
+                                target: 'id',
+                                message: 'Record with provided ID does not exist in database',
+                            },
+                        ],
+                    },
+                    HttpStatus.NOT_FOUND,
+                );
             }
 
             return { success: true, url };
         } catch (error) {
             await this.s3.deleteFile(url);
 
-            if (error.message === 'ENTITY_NOT_FOUND') {
-                throw new BadRequestException('Сущность не найдена, обновление отменено');
+            if (error instanceof BaseException) {
+                throw error;
             }
 
-            throw new BadRequestException('Ошибка при сохранении медиа-данных');
+            throw new BaseException(
+                {
+                    code: 'MEDIA_SAVE_FAILED',
+                    message: 'Ошибка при сохранении медиа-данных',
+                    details: [
+                        {
+                            reason:
+                                error instanceof Error ? error.message : 'Unknown database error',
+                        },
+                    ],
+                },
+                HttpStatus.BAD_REQUEST,
+            );
         }
     }
 

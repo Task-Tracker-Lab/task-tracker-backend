@@ -1,16 +1,21 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { UserModule } from '../user';
-import { AuthController } from './controller';
-import { AuthService, TokenService } from './services';
+import { AuthController, AuthRecoveryController } from './controller';
+import { AuthRecoveryService, AuthService, TokenService } from './services';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { SessionRepository } from './repository';
 import { BearerStrategy, CookieStrategy } from './strategies';
 import { BullModule } from '@nestjs/bullmq';
-import { Queues } from 'src/shared/workers';
+import { Queues } from '@shared/workers';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+
+const REPOSITORY = {
+    provide: 'ISessionRepository',
+    useClass: SessionRepository,
+};
 
 @Module({
     imports: [
@@ -62,13 +67,14 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
         }),
         forwardRef(() => UserModule),
     ],
-    controllers: [AuthController],
+    controllers: [AuthController, AuthRecoveryController],
     providers: [
+        REPOSITORY,
         AuthService,
         TokenService,
         CookieStrategy,
         BearerStrategy,
-        { provide: 'ISessionRepository', useClass: SessionRepository },
+        AuthRecoveryService,
     ],
     exports: [],
 })

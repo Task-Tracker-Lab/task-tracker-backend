@@ -1,7 +1,7 @@
 import { createId } from '@paralleldrive/cuid2';
 import { text, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { boolean } from 'drizzle-orm/pg-core';
-import { baseSchema } from 'src/shared/entities';
+import { baseSchema } from '@shared/entities';
 import { users } from '../../user/entities';
 
 export const sessions = baseSchema.table('sessions', {

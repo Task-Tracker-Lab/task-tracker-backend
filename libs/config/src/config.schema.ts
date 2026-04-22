@@ -35,6 +35,11 @@ export const ConfigSchema = z.object({
         .min(1, "CORS_ALLOWED_ORIGINS can't be empty")
         .transform((val) => val.split(',').map((s) => s.trim()))
         .pipe(z.array(z.string().url('Each origin must be a valid URL'))),
+    JWT_AUDIENCE: z
+        .string({
+            error: 'JWT_AUDIENCE is required',
+        })
+        .min(1),
     JWT_ACCESS_SECRET: z.string().refine(jwtSecretValidation, {
         message:
             'JWT_ACCESS_SECRET must be at least 32 characters long OR contain at least 5 words separated by hyphens',

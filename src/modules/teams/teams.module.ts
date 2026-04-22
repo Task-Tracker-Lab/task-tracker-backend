@@ -1,14 +1,27 @@
 import { Module } from '@nestjs/common';
-import { MembersController, TeamsController } from './controller';
-import { MediaModule } from '../media/media.module';
-import { TeamsService, MembersService } from './services';
+import {
+    TeamsInvitationsController,
+    TeamsSettingsController,
+    TeamsMembersController,
+    TeamsController,
+    MeController,
+} from './controller';
+import { MediaModule } from '../media';
+import {
+    MeService,
+    TeamsService,
+    TeamMembersService,
+    TeamsSettingsService,
+    TeamInvitationsService,
+} from './services';
 import { TeamsRepository } from './repository';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { Queues } from 'src/shared/workers';
+import { Queues } from '@shared/workers';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { FindTeamCommand, FindTeamMemberCommand } from './commands';
 
 const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
 
@@ -42,7 +55,23 @@ const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
             adapter: BullMQAdapter,
         }),
     ],
-    controllers: [TeamsController, MembersController],
-    providers: [REPOSITORY, TeamsService, MembersService],
+    controllers: [
+        TeamsInvitationsController,
+        TeamsSettingsController,
+        TeamsMembersController,
+        TeamsController,
+        MeController,
+    ],
+    providers: [
+        REPOSITORY,
+        MeService,
+        TeamsService,
+        TeamMembersService,
+        TeamsSettingsService,
+        TeamInvitationsService,
+        FindTeamCommand,
+        FindTeamMemberCommand,
+    ],
+    exports: [FindTeamCommand, FindTeamMemberCommand],
 })
 export class TeamsModule {}

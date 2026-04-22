@@ -44,7 +44,6 @@ export class TeamMemberMapper {
         };
     }
 
-    // TODO: FIX ANY TEMPORARY
     public static toPublicInvite(raw: string | null, code: string) {
         if (!raw) return null;
         try {

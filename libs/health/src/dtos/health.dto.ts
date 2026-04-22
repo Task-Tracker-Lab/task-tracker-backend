@@ -1,4 +1,4 @@
-import { createZodDto } from 'node_modules/nestjs-zod/dist/dto.cjs';
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod/v4';
 
 const HealthResponseSchema = z.object({

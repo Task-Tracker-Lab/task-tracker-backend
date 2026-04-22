@@ -15,9 +15,12 @@ const NotificationsSchema = z
     })
     .describe('Настройки уведомлений пользователя');
 
-export const UpdateNotificationsSchema = NotificationsSchema.partial().describe(
-    'Схема для частичного обновления настроек уведомлений',
-);
+export const UpdateNotificationsSchema = NotificationsSchema.partial()
+    .refine((data) => Object.keys(data).length > 0, {
+        error: 'Необходимо передать хотя бы одно поле для обновления',
+        abort: true,
+    })
+    .describe('Схема для частичного обновления настроек уведомлений');
 
 export class UpdateNotificationsDto extends createZodDto(UpdateNotificationsSchema) {}
 
@@ -69,6 +72,10 @@ export const UpdateProfileSchema = z
             .string()
             .length(2, 'Используйте формат ISO (например, "ru" или "en")')
             .optional(),
+    })
+    .refine((data) => Object.keys(data).length > 0, {
+        error: 'Необходимо передать хотя бы одно поле для обновления',
+        abort: true,
     })
     .describe('Схема для частичного обновления данных профиля');
 

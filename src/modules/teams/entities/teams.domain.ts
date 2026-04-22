@@ -20,12 +20,3 @@ export type TeamWithMembers = Team & {
 export type TeamWithTags = Team & {
     tags: Tag[];
 };
-
-// TODO: ADD TO GLOBAL
-export const ROLE_PRIORITY: Record<string, number> = {
-    owner: 4,
-    admin: 3,
-    moderator: 2,
-    member: 1,
-    viewer: 0,
-};

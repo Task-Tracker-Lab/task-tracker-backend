@@ -1,52 +1,94 @@
-<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    .container { width: 100%; max-width: 600px; margin: 0 auto; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; }
-    .header { background-color: #0B99FF; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0; }
-    .header h1 { color: #FFFFFF; margin: 0; font-size: 24px; letter-spacing: -1px; }
-    .content { padding: 40px; background-color: #ffffff; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; text-align: center; }
-    .content h2 { font-size: 22px; margin-bottom: 24px; color: #1f2937; }
-    .content p { margin: 10px 0; line-height: 1.5; font-size: 16px; }
-
-    .button {
-      display: inline-block;
-      margin: 30px 0;
-      padding: 14px 28px;
-      background-color: #0B99FF;
-      color: #ffffff !important;
-      text-decoration: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    .footer { font-size: 13px; color: #9ca3af; text-align: center; margin-top: 20px; }
-    .footer p { margin: 5px 0; }
-  </style>
-</head>
-<body>
-<div class="container">
-  <div class="header">
-    <h1>Task Tracker</h1>
-  </div>
-  <div class="content">
-    <h2>Приглашение в команду</h2>
-    <p>Вас пригласили присоединиться к команде <b>{{teamName}}</b>!</p>
-
-    <a href="{{inviteUrl}}" class="button">Присоединиться к команде</a>
-
-    <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
-      Если кнопка не работает, скопируйте и вставьте эту ссылку в браузер:<br>
-      <a href="{{inviteUrl}}" style="color: #0B99FF;">{{inviteUrl}}</a>
-    </p>
-  </div>
-  <div class="footer">
-    <p>&copy; {{year}} Task Tracker Team</p>
-    <p>Если вы не ждали этого письма, просто проигнорируйте его.</p>
-  </div>
-</div>
-</body>
+    <head>
+        <meta charset='utf-8' />
+        <style>
+            .container {
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                color: #333;
+            }
+            .header {
+                background-color: #0b99ff;
+                padding: 30px 20px;
+                text-align: center;
+                border-radius: 12px 12px 0 0;
+            }
+            .header h1 {
+                color: #ffffff;
+                margin: 0;
+                font-size: 24px;
+                letter-spacing: -1px;
+            }
+            .content {
+                padding: 40px;
+                background-color: #ffffff;
+                border: 1px solid #e5e7eb;
+                border-top: none;
+                border-radius: 0 0 12px 12px;
+                text-align: center;
+            }
+            .content h2 {
+                font-size: 22px;
+                margin-bottom: 24px;
+                color: #1f2937;
+            }
+            .content p {
+                margin: 10px 0;
+                line-height: 1.5;
+                font-size: 16px;
+            }
+            .button {
+                display: inline-block;
+                margin: 30px 0;
+                padding: 14px 28px;
+                background-color: #0b99ff;
+                color: #ffffff !important;
+                text-decoration: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            .footer {
+                font-size: 13px;
+                color: #9ca3af;
+                text-align: center;
+                margin-top: 20px;
+            }
+            .footer p {
+                margin: 5px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <div class='header'>
+                <h1>Task Tracker</h1>
+            </div>
+            <div class='content'>
+                <h2>Приглашение в команду</h2>
+                <p>Вас пригласили присоединиться к команде <b>{{teamName}}</b>!</p>
+                <a
+                    href='{{inviteUrl}}'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    class='button'
+                >Присоединиться к команде</a>
+                <p style='font-size: 14px; color: #6b7280; margin-top: 20px;'>
+                    Если кнопка не работает, скопируйте и вставьте эту ссылку в браузер:<br />
+                    <a
+                        href='{{inviteUrl}}'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        style='color: #0B99FF;'
+                    >{{inviteUrl}}</a>
+                </p>
+            </div>
+            <div class='footer'>
+                <p>&copy; {{year}} Task Tracker Team</p>
+                <p>Если вы не ждали этого письма, просто проигнорируйте его.</p>
+            </div>
+        </div>
+    </body>
 </html>
-

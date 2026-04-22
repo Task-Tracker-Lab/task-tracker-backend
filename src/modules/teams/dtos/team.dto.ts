@@ -17,7 +17,12 @@ export const CreateTeamSchema = z.object({
 });
 
 export class CreateTeamDto extends createZodDto(CreateTeamSchema) {}
-export class UpdateTeamDto extends createZodDto(CreateTeamSchema.partial()) {}
+export class UpdateTeamDto extends createZodDto(
+    CreateTeamSchema.partial().refine((data) => Object.keys(data).length > 0, {
+        error: 'Необходимо передать хотя бы одно поле для обновления',
+        abort: true,
+    }),
+) {}
 
 export const TagSchema = z.object({
     id: z.string().describe('Уникальный идентификатор тега (CUID2)'),

@@ -9,7 +9,14 @@ bootstrapApp({
     portEnvKey: 'PORT',
     swaggerOptions: {
         title: 'Task Tracker API',
-        description: 'API бэкенда таск-трекера',
+        description: `
+### Описание
+RESTful API сервиса управления задачами (Task Tracker).
+
+### Поддержка
+Для доступа к закрытым методам используйте заголовок Authorization: Bearer token.
+По вопросам интеграции обращаться к команде разработки.
+    `.trim(),
         version: '0.1.0',
         path: 'docs',
     },

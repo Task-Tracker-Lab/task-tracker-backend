@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { MailJobs, Queues } from '../enum';
 import type { Job } from 'bullmq';
-import { IMailPort } from 'src/shared/adapters/mail';
+import { IMailPort } from '@shared/adapters/mail';
 import { Inject } from '@nestjs/common';
 import { RegisterCodeEvent, ResetPasswordEvent, TeamInvitationEvent } from '../events';
 

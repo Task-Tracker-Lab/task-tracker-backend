@@ -1,4 +1,4 @@
-import { FileUploadDto, FileUploadResponse } from '../dtos';
+import type { FileUploadDto, FileUploadResponse } from '../dtos';
 
 export const USER_MEDIA_TOKEN = 'IUserMedia';
 
