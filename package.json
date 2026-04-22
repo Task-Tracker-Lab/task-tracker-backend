@@ -27,7 +27,7 @@
         "k6:user": "pnpm --filter @project/performance-tests test:user",
         "k6:board": "pnpm --filter @project/performance-tests test:board",
         "k6:tasks": "pnpm --filter @project/performance-tests test:tasks",
-        "k6:smoke": "pnpm --filter @project/performance-tests k6:smoke"
+        "k6:smoke": "pnpm --filter @project/performance-tests smoke"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1029.0",
