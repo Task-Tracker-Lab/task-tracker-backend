@@ -10,7 +10,7 @@
         "test:user": "k6 run scenarios/user.js",
         "test:board": "k6 run scenarios/board-full.js",
         "test:tasks": "k6 run scenarios/tasks.js",
-        "k6:smoke": "k6 run scripts/smoke-test.js"
+        "smoke": "k6 run smoke.js"
     },
     "packageManager": "pnpm@10.33.0"
 }
