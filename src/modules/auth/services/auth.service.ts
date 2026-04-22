@@ -151,9 +151,9 @@ export class AuthService {
     };
 
     public signIn = async (dto: SignInDto, meta: DeviceMetadata) => {
-        const { user, security } = await this.findUserCommand.execute({ email: dto.email });
+        const entities = await this.findUserCommand.execute({ email: dto.email });
 
-        if (!user || !security) {
+        if (!entities?.user || !entities?.security) {
             throw new BaseException(
                 {
                     code: 'INVALID_CREDENTIALS',
@@ -163,6 +163,7 @@ export class AuthService {
             );
         }
 
+        const { security, user } = entities;
         const isPasswordValid = await argon.verify(security.passwordHash, dto.password);
 
         if (!isPasswordValid) {

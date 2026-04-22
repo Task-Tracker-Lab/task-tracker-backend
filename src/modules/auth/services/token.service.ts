@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { JwtPayload } from '@shared/types';
+import type { User } from '@core/modules/user';
 
 @Injectable()
 export class TokenService {
@@ -10,16 +11,16 @@ export class TokenService {
         private readonly cfg: ConfigService,
     ) {}
 
-    async generateTokens(user: any, sessionId: string) {
+    async generateTokens(user: User, sessionId: string) {
         const domain = this.cfg.get('DOMAIN');
+        const audConstraint = this.cfg.getOrThrow('JWT_AUDIENCE');
 
         const payload = {
             jti: sessionId,
             sub: user.id,
             email: user.email,
             iss: btoa(domain),
-            aud: btoa(this.cfg.getOrThrow('JWT_AUDIENCE')),
-            role: user.role,
+            aud: btoa(audConstraint),
         };
 
         const [access, refresh] = await Promise.all([
@@ -38,10 +39,10 @@ export class TokenService {
 
     async validateToken(token: string, type: 'access' | 'refresh'): Promise<JwtPayload> {
         try {
-            const secret =
-                type === 'access'
-                    ? this.cfg.get('JWT_ACCESS_SECRET')
-                    : this.cfg.get('JWT_REFRESH_SECRET');
+            const accessSecret = this.cfg.get('JWT_ACCESS_SECRET');
+            const refreshSecret = this.cfg.get('JWT_REFRESH_SECRET');
+
+            const secret = type === 'access' ? accessSecret : refreshSecret;
 
             return this.jwtService.verifyAsync(token, { secret });
         } catch (e) {
