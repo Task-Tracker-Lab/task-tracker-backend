@@ -28,9 +28,15 @@ export async function setupSwagger(app: NestFastifyApplication, options: Swagger
         .setVersion(version)
         .addBearerAuth();
 
-    if (port) builder.addServer(`http://localhost:${port}`, 'Local');
-    if (stage) builder.addServer(`https://api.${stage}`, 'Staging');
-    if (domain) builder.addServer(`https://api.${domain}`, 'Production');
+    if ((!stage || !domain) && port) {
+        builder.addServer(`http://localhost:${port}`, 'Local');
+    }
+    if (stage) {
+        builder.addServer(`https://api.${stage}`, 'Staging');
+    }
+    if (domain) {
+        builder.addServer(`https://api.${domain}`, 'Production');
+    }
 
     const document = SwaggerModule.createDocument(app, builder.build(), {
         extraModels: [GlobalErrorResponse.Output],

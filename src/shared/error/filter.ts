@@ -1,4 +1,10 @@
-import { type ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
+import {
+    type ArgumentsHost,
+    Catch,
+    ExceptionFilter,
+    HttpException,
+    HttpStatus,
+} from '@nestjs/common';
 import { ZodValidationException } from 'nestjs-zod';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { DatabaseError } from 'pg';
@@ -18,6 +24,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
         if (exception instanceof BaseException) {
             return this.parseHttp(exception, host);
+        }
+
+        if (exception instanceof HttpException) {
+            return this.parseNestHttp(exception, host);
         }
 
         if (exception instanceof DrizzleQueryError) {
@@ -89,6 +99,29 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                 message: error.message || exception.message,
                 details: error.details || [],
                 stack: exception.stack,
+            }),
+        );
+    };
+
+    private parseNestHttp = async (exception: HttpException, host: ArgumentsHost) => {
+        const { request, response } = this.getCtxBase(host);
+        const status = exception.getStatus();
+        const res = exception.getResponse();
+
+        const message =
+            typeof res === 'object' && res['message'] ? res['message'] : exception.message;
+
+        const code =
+            typeof res === 'object' && res['error']
+                ? res['error'].toUpperCase().replace(/\s+/g, '_')
+                : 'HTTP_EXCEPTION';
+
+        return response.status(status).send(
+            this.formatErrorResponse(request, status, {
+                code,
+                message,
+                stack: exception.stack,
+                details: [],
             }),
         );
     };

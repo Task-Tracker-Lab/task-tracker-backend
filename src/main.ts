@@ -4,7 +4,7 @@ import { AppModule } from './modules/app/app.module';
 bootstrapApp({
     serviceName: 'Tracker Monolit',
     appModule: AppModule,
-    apiPrefix: 'api/v1',
+    version: 'v1',
     defaultPort: 2000,
     portEnvKey: 'PORT',
     swaggerOptions: {
