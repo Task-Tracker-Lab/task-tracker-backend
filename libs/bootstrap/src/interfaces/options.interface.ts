@@ -23,6 +23,7 @@ export interface SwaggerOptions extends SwaggerMetadata, SwaggerInfrastructure {
 
 export interface BootstrapOptions {
     apiPrefix?: string;
+    version?: string;
     appModule: Type<unknown>;
     defaultPort?: number;
     portEnvKey?: keyof Config;

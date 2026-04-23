@@ -22,7 +22,6 @@ export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
     }
 
     validate(_req: FastifyRequest, payload: JwtPayload) {
-        console.log(_req, payload);
         if (!payload || !payload.jti) {
             throw new BaseException(
                 {

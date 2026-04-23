@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { setupThrottler } from './setups/throttler';
@@ -23,7 +23,8 @@ export async function bootstrapApp(options: BootstrapOptions) {
 
     const {
         appModule,
-        apiPrefix = 'api/v1',
+        apiPrefix,
+        version = 'v1',
         serviceName = 'App',
         portEnvKey = 'PORT',
         defaultPort = 3000,
@@ -62,6 +63,15 @@ export async function bootstrapApp(options: BootstrapOptions) {
     });
 
     if (apiPrefix) app.setGlobalPrefix(apiPrefix);
+    if (version) {
+        const hasV = version.startsWith('v');
+
+        app.enableVersioning({
+            type: VersioningType.URI,
+            prefix: hasV ? 'v' : '',
+            defaultVersion: hasV ? version.slice(1) : version,
+        });
+    }
     if (useCors) setupCors(app, origins);
     if (swaggerOptions) {
         const { path = 'docs', ...metadata } = swaggerOptions;
@@ -96,7 +106,11 @@ export async function bootstrapApp(options: BootstrapOptions) {
     if (setupApp) setupApp(app);
 
     await app.listen(port, '0.0.0.0', (_err, address) => {
-        const baseUrl = `${address}${apiPrefix ? '/' + apiPrefix : ''}`;
+        const prefix = [apiPrefix, version].filter(Boolean).join('/');
+        const baseUrl = `${address}${prefix ? '/' + prefix : ''}`;
+
+        const swaggerBase = `${address}${apiPrefix ? '/' + apiPrefix : ''}`;
+        const swaggerPath = swaggerOptions?.path ?? 'docs';
 
         if (_err) {
             logger.error(_err);
@@ -107,10 +121,8 @@ export async function bootstrapApp(options: BootstrapOptions) {
         logger.verbose(`Environment:     ${process.env.NODE_ENV || 'development'}`);
         logger.verbose(`API Endpoint:    ${baseUrl}`);
         logger.verbose(`Health Check:    ${baseUrl}/health`);
-        logger.verbose(`Swagger UI:      ${baseUrl}/${swaggerOptions?.path ?? 'docs'}`);
-        logger.verbose(
-            `OpenAPI (Specs): ${baseUrl}/${swaggerOptions?.path ?? 'docs'}/s/{json,yaml}`,
-        );
+        logger.verbose(`Swagger UI:      ${swaggerBase}/${swaggerPath}`);
+        logger.verbose(`OpenAPI (Specs): ${swaggerBase}/${swaggerPath}/s/{json,yaml}`);
         logger.verbose(`Boot Time:       ${startupTime}ms`);
     });
 }
