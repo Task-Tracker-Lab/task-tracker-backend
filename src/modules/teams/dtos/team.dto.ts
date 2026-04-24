@@ -6,13 +6,25 @@ export const CreateTeamSchema = z.object({
     name: z.string().min(2).max(100).describe('Название команды, отображаемое в интерфейсе'),
     description: z
         .string()
+        .min(10)
         .max(500)
-        .optional()
         .describe('Краткое описание деятельности или целей команды'),
     slug: z.string().optional().describe('Уникальная ссылка на изображение команду'),
     tags: z
         .array(z.string())
         .optional()
+        .superRefine((items, ctx) => {
+            if (!items) return;
+            const lowerItems = items.map((i) => i.toLowerCase());
+            const hasDuplicates = new Set(lowerItems).size !== items.length;
+
+            if (hasDuplicates) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Теги в списке не должны повторяться (регистр не важен)',
+                });
+            }
+        })
         .describe('Список строковых названий тегов для классификации'),
 });
 

@@ -8,7 +8,7 @@ import {
     UpdateTeamSwagger,
     CheckSlugSwagger,
 } from './teams.swagger';
-import type { CreateTeamDto } from '../dtos';
+import { CreateTeamDto } from '../dtos';
 
 @ApiBaseController('teams', 'Teams', true)
 export class TeamsController {
