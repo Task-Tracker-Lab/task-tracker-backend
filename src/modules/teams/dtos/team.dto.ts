@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 import { createZodDto } from 'nestjs-zod';
-import { createPaginationSchema } from '../../../shared/schemas';
+import { createPaginationSchema } from '@shared/schemas';
 
 export const CreateTeamSchema = z.object({
     name: z.string().min(2).max(100).describe('Название команды, отображаемое в интерфейсе'),
@@ -11,8 +11,11 @@ export const CreateTeamSchema = z.object({
         .describe('Краткое описание деятельности или целей команды'),
     slug: z.string().optional().describe('Уникальная ссылка на изображение команду'),
     tags: z
-        .array(z.string())
+        .array(z.string().toLowerCase())
         .optional()
+        .refine((items) => !items || new Set(items).size === items.length, {
+            message: 'Теги в списке не должны повторяться',
+        })
         .describe('Список строковых названий тегов для классификации'),
 });
 

@@ -50,6 +50,7 @@ export class TeamsService {
         }
 
         const { tags, ...teamData } = dto;
+        const uniqueTags = tags ? [...new Set(tags.map((tag) => tag.toLowerCase()))] : [];
 
         try {
             const result = await this.teamsRepo.create(
@@ -58,7 +59,7 @@ export class TeamsService {
                     ...teamData,
                     slug: baseSlug,
                 },
-                tags,
+                uniqueTags,
             );
 
             return {
