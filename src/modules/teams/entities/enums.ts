@@ -8,6 +8,8 @@ export const roleEnum = baseSchema.enum('team_role', [
     'member', // обычный работяга
     'viewer', // просто смотрит
 ]);
+export type TeamRole = (typeof roleEnum.enumValues)[number];
+
 export const statusEnum = baseSchema.enum('member_status', [
     'active', // Полноценный участник
     'banned', // Заблокирован не может вернуться по инвайту

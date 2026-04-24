@@ -4,6 +4,7 @@ export {
     TeamMemberResponse,
     UserInviteResponse,
 } from './member.dto';
+export { UpdateInvitationDto, TeamInvitationResponse } from './invitation.dto';
 export {
     CreateTeamDto,
     UpdateTeamDto,

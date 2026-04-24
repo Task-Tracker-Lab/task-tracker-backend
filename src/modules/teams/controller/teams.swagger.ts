@@ -12,12 +12,14 @@ import {
 import {
     CreateTeamDto,
     InviteMemberDto,
+    TeamInvitationResponse,
     SyncTagsDto,
     UpdateTeamDto,
     TagResponse,
     TeamMemberResponse,
     CheckSlugResponse,
     UpdateMemberDto,
+    UpdateInvitationDto,
     UserTeamResponse,
     UserInviteResponse,
 } from '../dtos';
@@ -304,5 +306,81 @@ export const AcceptInviteSwagger = () =>
         ApiBadRequest('Невалидный код, срок действия приглашения истек или оно уже использовано'),
         ApiNotFound('Приглашение с таким кодом не найдено'),
         ApiConflict('Пользователь уже является участником этой команды'),
+        ApiUnauthorized(),
+    );
+
+export const GetTeamInvitationsSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Получить список всех приглашений в команду',
+            description: 'Возвращает все активные инвайты команды. Доступно только owner/admin.',
+        }),
+        ApiParam({ name: 'slug', description: 'Слаг команды' }),
+        ApiResponse({
+            status: 200,
+            description: 'Список приглашений команды',
+            type: [TeamInvitationResponse.Output],
+        }),
+        ApiNotFound('Команда не найдена'),
+        ApiForbidden('Недостаточно прав (только owner/admin)'),
+        ApiUnauthorized(),
+    );
+
+export const GetTeamInvitationSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Получить приглашение по коду',
+            description:
+                'Возвращает данные инвайта по коду в рамках команды. Доступно только owner/admin.',
+        }),
+        ApiParam({ name: 'slug', description: 'Слаг команды' }),
+        ApiParam({ name: 'code', description: 'Код инвайта' }),
+        ApiResponse({
+            status: 200,
+            description: 'Инвайт найден',
+            type: TeamInvitationResponse.Output,
+        }),
+        ApiNotFound('Инвайт или команда не найдены'),
+        ApiForbidden('Недостаточно прав (только owner/admin)'),
+        ApiUnauthorized(),
+    );
+
+export const UpdateTeamInvitationSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Обновить приглашение (только роль)',
+            description:
+                'Позволяет изменить только поле role у существующего инвайта. TTL сохраняется.',
+        }),
+        ApiParam({ name: 'slug', description: 'Слаг команды' }),
+        ApiParam({ name: 'code', description: 'Код инвайта' }),
+        ApiBody({ type: UpdateInvitationDto.Output }),
+        ApiResponse({
+            status: 200,
+            description: 'Инвайт обновлён',
+            type: TeamInvitationResponse.Output,
+        }),
+        ApiValidationError(),
+        ApiNotFound('Инвайт или команда не найдены'),
+        ApiForbidden('Недостаточно прав (только owner/admin)'),
+        ApiUnauthorized(),
+    );
+
+export const DeleteTeamInvitationSwagger = () =>
+    applyDecorators(
+        ApiOperation({
+            summary: 'Удалить приглашение',
+            description:
+                'Удаляет инвайт и чистит индексы в Redis (team:invites и user:invites). Доступно только owner/admin.',
+        }),
+        ApiParam({ name: 'slug', description: 'Слаг команды' }),
+        ApiParam({ name: 'code', description: 'Код инвайта' }),
+        ApiResponse({
+            status: 200,
+            description: 'Инвайт удалён',
+            type: ActionResponse.Output,
+        }),
+        ApiNotFound('Инвайт или команда не найдены'),
+        ApiForbidden('Недостаточно прав (только owner/admin)'),
         ApiUnauthorized(),
     );
