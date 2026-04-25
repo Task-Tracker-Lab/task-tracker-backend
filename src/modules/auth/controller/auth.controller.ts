@@ -1,5 +1,4 @@
-import { ApiBaseController } from '../../../shared/decorators';
-import { Body, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from '../services';
 import {
     PostLoginSwagger,
@@ -12,6 +11,7 @@ import { SignInDto, SignUpDto, VerifyDto } from '../dtos';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getDeviceMeta } from '../helpers';
 import { BearerAuthGuard, CookieAuthGuard } from '@shared/guards';
+import { ApiBaseController } from '@shared/decorators';
 
 @ApiBaseController('auth', 'Auth')
 export class AuthController {
@@ -66,6 +66,7 @@ export class AuthController {
     }
 
     @Post('sign-out')
+    @HttpCode(HttpStatus.OK)
     @UseGuards(BearerAuthGuard)
     @PostLogoutSwagger()
     async logout(@Res({ passthrough: true }) res: FastifyReply, @Req() req: FastifyRequest) {

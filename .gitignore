@@ -58,3 +58,5 @@ pids
 *.seed
 *.pid.lock
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+infra/k6/data/*.json
