@@ -2,16 +2,25 @@ FROM node:20-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+
 RUN corepack enable
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+FROM base AS fetch
 
-FROM base AS build
+COPY pnpm-lock.yaml ./
+
+# Загружаем всё в виртуальное хранилище.
+# Если lock-файл не менялся, этот слой будет взят из кэша
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm fetch
+
+FROM fetch AS build
+COPY package.json ./
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --offline
 
 COPY . .
 
@@ -21,17 +30,23 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm prune --prod --ignore-scripts
 
 FROM node:20-alpine AS runner
+
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=${PORT:-1010}
 
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/migrations ./migrations
-COPY --from=build /app/package.json ./
-COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nestjs
 
-EXPOSE 3000
+COPY --from=build --chown=nestjs:nodejs /app/dist ./dist
+COPY --from=build --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=build --chown=nestjs:nodejs /app/package.json ./
+COPY --from=build --chown=nestjs:nodejs /app/migrations ./migrations
+COPY --from=build --chown=nestjs:nodejs /app/drizzle.config.ts ./drizzle.config.ts
+
+USER nestjs
+
+EXPOSE $PORT
 
 CMD ["node", "dist/main"]
