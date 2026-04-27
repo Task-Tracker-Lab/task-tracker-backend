@@ -14,7 +14,7 @@ async function seed() {
     const DB_URL = process.env.DATABASE_URL;
     if (!DB_URL) throw new Error('DATABASE_URL is not defined in .env');
 
-    const COUNT = 500;
+    const COUNT = 1000;
     const OUT_FILE = resolve(process.cwd(), 'infra/k6/data/users.json');
 
     console.log(`Start seeding ${COUNT} users using pg driver...`);
@@ -28,6 +28,7 @@ async function seed() {
     const usersToInsert = [];
     const securityToInsert = [];
     const notificationsToInsert = [];
+    const activitiesToInsert = [];
     const k6Data = [];
 
     for (let i = 0; i < COUNT; i++) {
@@ -48,6 +49,21 @@ async function seed() {
         notificationsToInsert.push({ userId });
 
         k6Data.push({ email, password });
+
+        for (let j = 0; j < 10; j++) {
+            activitiesToInsert.push({
+                id: createId(),
+                userId: userId,
+                eventType: 'SIGN_IN',
+                entityId: userId,
+                metadata: {
+                    description: `K6 Load Test Iteration ${j}`,
+                    ip: '127.0.0.1',
+                    userAgent: 'k6-test-agent',
+                },
+                createdAt: new Date(Date.now() - j * 1000 * 60 * 60),
+            });
+        }
     }
 
     console.log('Cleaning up ONLY k6 test users...');
@@ -61,6 +77,13 @@ async function seed() {
             await tx.insert(sc.users).values(usersToInsert);
             await tx.insert(sc.userSecurity).values(securityToInsert);
             await tx.insert(sc.userNotifications).values(notificationsToInsert);
+
+            const chunkSize = 1000;
+            for (let i = 0; i < activitiesToInsert.length; i += chunkSize) {
+                const chunk = activitiesToInsert.slice(i, i + chunkSize);
+                console.log(`Inserting activities chunk: ${i} to ${i + chunkSize}...`);
+                await tx.insert(sc.userActivity).values(chunk);
+            }
         });
 
         mkdirSync(dirname(OUT_FILE), { recursive: true });
