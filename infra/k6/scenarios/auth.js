@@ -1,6 +1,7 @@
 import { SharedArray } from 'k6/data';
 import http from 'k6/http';
 import { check, sleep } from 'k6';
+import signIn from '../shared/sign-in.js';
 
 const users = new SharedArray('test users', function () {
     return JSON.parse(open('../data/users.json'));
@@ -28,26 +29,9 @@ export const options = {
 
 export default function () {
     const user = users[(__VU - 1) % users.length];
-    const params = {
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    };
 
     // --- SIGN-IN ---
-    const signInRes = http.post(
-        `${BASE_URL}/auth/sign-in`,
-        JSON.stringify({ email: user.email, password: user.password }),
-        Object.assign({}, params, { tags: { name: 'sign-in' } }),
-    );
-
-    const signInToken = signInRes.json().token;
-    const signInCookie = signInRes.cookies.refresh ? signInRes.cookies.refresh[0].value : 'MISSING';
-
-    check(signInRes, {
-        'login: status is 201': (r) => r.status === 201,
-        'login: has access token': (r) => r.json().token !== undefined,
-    });
+    const { signInToken, signInCookie } = signIn(BASE_URL, user);
 
     sleep(1);
 

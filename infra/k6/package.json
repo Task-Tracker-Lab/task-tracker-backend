@@ -7,7 +7,7 @@
         "test:auth": "k6 run scenarios/auth.js",
         "test:team": "k6 run scenarios/team.js",
         "test:projects": "k6 run scenarios/projects.js",
-        "test:user": "k6 run scenarios/user.js",
+        "test:users": "k6 run scenarios/users.js",
         "test:board": "k6 run scenarios/board-full.js",
         "test:tasks": "k6 run scenarios/tasks.js",
         "smoke": "k6 run smoke.js"
