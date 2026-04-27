@@ -25,5 +25,6 @@ export default function signIn(baseUrl, user) {
     return {
         signInToken,
         signInCookie,
+        signInStatus: signInRes.status,
     };
 }

@@ -24,7 +24,7 @@
         "k6:auth": "pnpm --filter @project/performance-tests test:auth",
         "k6:team": "pnpm --filter @project/performance-tests test:team",
         "k6:projects": "pnpm --filter @project/performance-tests test:projects",
-        "k6:user": "pnpm --filter @project/performance-tests test:user",
+        "k6:users": "pnpm --filter @project/performance-tests test:users",
         "k6:board": "pnpm --filter @project/performance-tests test:board",
         "k6:tasks": "pnpm --filter @project/performance-tests test:tasks",
         "k6:smoke": "pnpm --filter @project/performance-tests smoke",
