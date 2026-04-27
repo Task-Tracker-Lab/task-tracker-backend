@@ -45,6 +45,7 @@ import { ProjectsModule } from '../projects';
             inject: [ConfigService],
             useFactory: (cfg: ConfigService) => ({
                 connection: {
+                    password: cfg.get('REDIS_PASSWORD'),
                     host: cfg.getOrThrow('REDIS_HOST'),
                     port: cfg.get('REDIS_PORT'),
                 },
