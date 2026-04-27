@@ -33,12 +33,14 @@ const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
             useFactory: async (cfg: ConfigService) => {
                 const host = cfg.getOrThrow('REDIS_HOST', { infer: true });
                 const port = cfg.get('REDIS_PORT');
+                const password = cfg.get('REDIS_PASSWORD');
                 const url = `redis://${host}${port ? `:${port}` : ''}`;
 
                 return {
                     type: 'single',
                     url,
                     options: {
+                        password,
                         retryStrategy(times) {
                             return Math.min(times * 50, 2000);
                         },
