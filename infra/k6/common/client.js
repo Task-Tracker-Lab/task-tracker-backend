@@ -1,5 +1,6 @@
 import http from 'k6/http';
 import { check } from 'k6';
+import { BASE_URL } from './config.js';
 
 /**
  * Обертка над стандартным HTTP-клиентом k6.
@@ -9,7 +10,7 @@ export class ApiClient {
      * @param {string} baseUrl - Базовый адрес API.
      * @param {string|null} [token=null] - Bearer токен для авторизации.
      */
-    constructor(baseUrl, token = null) {
+    constructor({ baseUrl = BASE_URL, token = null } = {}) {
         this.baseUrl = baseUrl;
         this.token = token;
     }
@@ -19,12 +20,53 @@ export class ApiClient {
      * @private
      * @returns {Object.<string, string>}
      */
-    _getHeaders() {
-        const headers = { 'Content-Type': 'application/json' };
+    _getHeaders(useJsonDefault = true, extraHeaders = {}) {
+        const headers = {};
         if (this.token) {
             headers['Authorization'] = `Bearer ${this.token}`;
         }
-        return headers;
+        if (useJsonDefault) {
+            headers['Content-Type'] = 'application/json';
+        }
+        return Object.assign(headers, extraHeaders);
+    }
+
+    /**
+     * Формирует параметры запроса (headers/cookies/tags).
+     * @private
+     * @param {Object} [options] - Доп. параметры запроса.
+     * @param {Object.<string, string>} [options.headers] - Доп. заголовки.
+     * @param {Object.<string, string>} [options.cookies] - Cookies для запроса.
+     * @param {Object.<string, string>} [options.tags] - Tags для метрик k6.
+     * @param {boolean} [useJsonDefault=true] - Добавлять ли JSON Content-Type по умолчанию.
+     * @returns {Object}
+     */
+    _buildOptions(options = {}, useJsonDefault = true) {
+        const headers = this._getHeaders(useJsonDefault, options.headers || {});
+        const reqOptions = { headers };
+
+        if (options.cookies) {
+            reqOptions.cookies = options.cookies;
+        }
+        if (options.tags) {
+            reqOptions.tags = options.tags;
+        }
+
+        return reqOptions;
+    }
+
+    /**
+     * Формирует строку query-параметров.
+     * @private
+     * @param {Object.<string, string|number|boolean>} [params] - Query-параметры.
+     * @returns {string}
+     */
+    _buildQuery(params = {}) {
+        return Object.keys(params).length
+            ? `?${Object.entries(params)
+                  .map(([k, v]) => `${k}=${v}`)
+                  .join('&')}`
+            : '';
     }
 
     /**
@@ -33,15 +75,10 @@ export class ApiClient {
      * @param {Object.<string, string>} [params] - Query-параметры.
      * @returns {import('k6/http').RefinedResponse<any>}
      */
-    get(path, params = {}) {
-        const query = Object.keys(params).length
-            ? `?${Object.entries(params)
-                  .map(([k, v]) => `${k}=${v}`)
-                  .join('&')}`
-            : '';
-
-        const res = http.get(`${this.baseUrl}${path}`, { headers: this._getHeaders() });
-        this._logError(res, path);
+    get(path, params = {}, options = {}) {
+        const query = this._buildQuery(params);
+        const res = http.get(`${this.baseUrl}${path}${query}`, this._buildOptions(options));
+        this._logError(res, 'GET', path);
         return res;
     }
 
@@ -51,11 +88,15 @@ export class ApiClient {
      * @param {Object} body - Объект данных (будет преобразован в JSON).
      * @returns {import('k6/http').RefinedResponse<any>}
      */
-    post(path, body) {
-        const res = http.post(`${this.baseUrl}${path}`, JSON.stringify(body), {
-            headers: this._getHeaders(),
-        });
-        this._logError(res, path);
+    post(path, body, options = {}) {
+        const useJsonDefault = !options.rawBody;
+        const payload = options.rawBody ? body : JSON.stringify(body);
+        const res = http.post(
+            `${this.baseUrl}${path}`,
+            payload,
+            this._buildOptions(options, useJsonDefault),
+        );
+        this._logError(res, 'POST', path);
         return res;
     }
 
@@ -65,10 +106,14 @@ export class ApiClient {
      * @param {Object} body - Данные для частичного обновления.
      * @returns {import('k6/http').RefinedResponse<any>}
      */
-    patch(path, body) {
-        const res = http.patch(`${this.baseUrl}${path}`, JSON.stringify(body), {
-            headers: this._getHeaders(),
-        });
+    patch(path, body, options = {}) {
+        const useJsonDefault = !options.rawBody;
+        const payload = options.rawBody ? body : JSON.stringify(body);
+        const res = http.patch(
+            `${this.baseUrl}${path}`,
+            payload,
+            this._buildOptions(options, useJsonDefault),
+        );
         this._logError(res, 'PATCH', path);
         return res;
     }
@@ -79,10 +124,14 @@ export class ApiClient {
      * @param {Object} body - Данные для полного обновления.
      * @returns {import('k6/http').RefinedResponse<any>}
      */
-    put(path, body) {
-        const res = http.put(`${this.baseUrl}${path}`, JSON.stringify(body), {
-            headers: this._getHeaders(),
-        });
+    put(path, body, options = {}) {
+        const useJsonDefault = !options.rawBody;
+        const payload = options.rawBody ? body : JSON.stringify(body);
+        const res = http.put(
+            `${this.baseUrl}${path}`,
+            payload,
+            this._buildOptions(options, useJsonDefault),
+        );
         this._logError(res, 'PUT', path);
         return res;
     }
@@ -92,10 +141,8 @@ export class ApiClient {
      * @param {string} path - Относительный путь.
      * @returns {import('k6/http').RefinedResponse<any>}
      */
-    del(path) {
-        const res = http.del(`${this.baseUrl}${path}`, null, {
-            headers: this._getHeaders(),
-        });
+    delete(path, options = {}) {
+        const res = http.del(`${this.baseUrl}${path}`, null, this._buildOptions(options, false));
         this._logError(res, 'DELETE', path);
         return res;
     }
@@ -107,13 +154,13 @@ export class ApiClient {
      * @param {string} method - Название HTTP метода для лога.
      * @param {string} path - Путь запроса для лога.
      */
-    _logError(res, path) {
+    _logError(res, method, path) {
         check(res, {
-            [`${path} status is 2xx`]: (r) => r.status >= 200 && r.status < 300,
+            [`${method} ${path} status is 2xx`]: (r) => r.status >= 200 && r.status < 300,
         });
 
         if (res.status >= 400) {
-            console.error(`Error on ${path}: [${res.status}] ${res.body}`);
+            console.error(`Error on ${method} ${path}: [${res.status}] ${res.body}`);
         }
     }
 }

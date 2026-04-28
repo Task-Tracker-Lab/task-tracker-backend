@@ -64,7 +64,9 @@ export const GET_OPTIONS = () => {
     const profile = PROFILES[profileName] || PROFILES.smoke;
 
     return {
-        ...profile,
+        vus: profile.vus,
+        duration: profile.duration,
+        stages: profile.stages,
         thresholds: THRESHOLDS,
     };
 };
