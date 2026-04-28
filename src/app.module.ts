@@ -2,22 +2,22 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@libs/config';
 import { DatabaseModule } from '@libs/database';
 import { ConfigService } from '@nestjs/config';
-import * as schema from '../../shared/entities';
+import * as schema from './shared/entities';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { HealthModule } from '@libs/health';
-import { UserModule } from '../user';
+import { UserModule } from './modules/user';
 import { GlobalExceptionFilter } from '@shared/error';
-import { AuthModule } from '../auth';
+import { AuthModule } from './modules/auth';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { FastifyAdapter } from '@bull-board/fastify';
 import { MailProcessor } from '@shared/workers';
 import { BullModule } from '@nestjs/bullmq';
 import { MailAdapter } from '@shared/adapters/mail';
 import { MigrationService } from '@shared/migration';
-import { TeamsModule } from '../teams';
-import { ProjectsModule } from '../projects';
+import { TeamsModule } from './modules/teams';
+import { ProjectsModule } from './modules/projects';
 
 @Module({
     imports: [

@@ -24,9 +24,9 @@ export class AuthRecoveryService {
     ) {}
 
     public resetPass = async (dto: ResetPasswordDto) => {
-        const { user } = await this.findUserCommand.execute({ email: dto.email });
+        const entity = await this.findUserCommand.execute({ email: dto.email });
 
-        if (!user) {
+        if (!entity.user) {
             throw new BaseException(
                 {
                     code: 'USER_NOT_FOUND',
@@ -46,7 +46,7 @@ export class AuthRecoveryService {
         });
 
         const resetPayload = {
-            email: user.email,
+            email: entity.user.email,
             otp: { secret, token },
             isVerified: false,
         };
