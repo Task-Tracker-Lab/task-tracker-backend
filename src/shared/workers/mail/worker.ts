@@ -3,7 +3,7 @@ import { MailJobs, Queues } from '../enum';
 import type { Job } from 'bullmq';
 import { IMailPort } from '@shared/adapters/mail';
 import { Inject } from '@nestjs/common';
-import { RegisterCodeEvent, ResetPasswordEvent, TeamInvitationEvent } from '../events';
+import { TeamInvitationEvent } from '../events';
 
 @Processor(Queues.MAIL)
 export class MailProcessor extends WorkerHost {
@@ -14,20 +14,12 @@ export class MailProcessor extends WorkerHost {
         super();
     }
 
-    async process(job: Job<RegisterCodeEvent>): Promise<void>;
-    async process(job: Job<ResetPasswordEvent>): Promise<void>;
     async process(job: Job<TeamInvitationEvent>): Promise<void>;
     async process(job: Job<any>): Promise<void> {
         await job.log(`[START] Job ID: ${job.id} | Type: ${job.name}`);
 
         try {
             switch (job.name) {
-                case MailJobs.SEND_REGISTER_CODE:
-                    await this.sendRegisterCode(job);
-                    break;
-                case MailJobs.SEND_RESET_PASSWORD:
-                    await this.sendResetPassCode(job);
-                    break;
                 case MailJobs.SEND_TEAM_INVITATION:
                     await this.sendTeamInvitation(job);
                     break;
@@ -49,30 +41,6 @@ export class MailProcessor extends WorkerHost {
             throw error;
         }
     }
-
-    private sendRegisterCode = async (job: Job<RegisterCodeEvent>) => {
-        const { email, name, otp } = job.data;
-
-        await job.log(`Sending registration code to: ${email}`);
-        await job.updateProgress(20);
-
-        await this.mailAdapter.sendRegistrationCode(email, name, otp);
-
-        await job.log(`Successfully sent to ${email}`);
-        await job.updateProgress(100);
-    };
-
-    private sendResetPassCode = async (job: Job<ResetPasswordEvent>) => {
-        const { email, otp } = job.data;
-
-        await job.log(`Sending password reset to: ${email}`);
-        await job.updateProgress(30);
-
-        await this.mailAdapter.sendResetPasswordCode(email, otp);
-
-        await job.log(`Reset link delivered to ${email}`);
-        await job.updateProgress(100);
-    };
 
     private sendTeamInvitation = async (job: Job<TeamInvitationEvent>) => {
         const { email, teamName, inviteUrl } = job.data;
