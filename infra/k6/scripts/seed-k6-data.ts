@@ -1,6 +1,3 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-
 import { createId } from '@paralleldrive/cuid2';
 import * as argon from 'argon2';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -8,16 +5,9 @@ import { Pool } from 'pg';
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import * as sc from '../../../src/shared/entities/index';
-import { sql } from 'drizzle-orm';
 import Redis from 'ioredis';
-
-const DB_URL = process.env.DATABASE_URL;
-const REDIS_URL = `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
-const KEYS = {
-    INVITE: (code: string) => `inv:code:${code}`,
-    TEAM_INVITES: (teamId: string) => `team:invites:${teamId}`,
-    USER_INVITES: (email: string) => `user:invites:${email.toLowerCase()}`,
-};
+import { assertEnv, DB_URL, REDIS_URL } from './k6-env';
+import { KEYS } from './k6-data-keys';
 
 async function seed_db(db: NodePgDatabase<typeof sc>) {
     const COUNT = 1000;
@@ -200,39 +190,13 @@ async function seed_redis(redis: Redis) {
     console.log(`Invites data saved to: ${OUT_FILE}`);
 }
 
-async function clearDB(db: NodePgDatabase<typeof sc>) {
-    console.log('Cleaning up ONLY k6 test data from DB...');
-    return await db.transaction(async (tx) => {
-        await tx.delete(sc.users).where(sql`${sc.users.email} LIKE 'k6_user_%'`);
-        await tx.delete(sc.teams).where(sql`${sc.teams.name} LIKE 'k6_team_%'`);
-        await tx.delete(sc.tags).where(sql`${sc.tags.name} LIKE 'k6_tag_%'`);
-    });
-}
-
-async function clearRedis(redis: Redis) {
-    console.log('Cleaning up ONLY k6 test data from Redis...');
-    const SCAN_PATTERNS = Object.values(KEYS).map((fn) => fn('*'));
-
-    for (const pattern of SCAN_PATTERNS) {
-        let cursor = '0';
-        do {
-            const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
-            cursor = nextCursor;
-            if (keys.length > 0) await redis.del(...keys);
-        } while (cursor !== '0');
-    }
-}
-
 async function main() {
-    if (!DB_URL || !REDIS_URL)
-        throw new Error('DATABASE_URL OR REDIS_HOST, REDIS_PORT  is not defined in .env');
+    assertEnv();
     const redis = new Redis(REDIS_URL);
     const pool = new Pool({ connectionString: DB_URL });
     const db = drizzle(pool, { schema: sc });
 
     try {
-        await clearDB(db);
-        await clearRedis(redis);
         await seed_db(db);
         await seed_redis(redis);
     } catch (e) {

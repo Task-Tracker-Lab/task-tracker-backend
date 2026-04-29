@@ -1,4 +1,4 @@
-export const BASE_URL = __ENV.BASE_URL || 'http://0.0.0.0:3000/api/v1';
+export const BASE_URL = __ENV.BASE_URL || 'http://0.0.0.0:3000/v1';
 export const REDIS_URL = __ENV.REDIS_URL || 'http://localhost:7000';
 
 /**

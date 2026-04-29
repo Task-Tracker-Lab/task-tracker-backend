@@ -31,7 +31,7 @@ export default function () {
     // --- POST /teams ---
     const slug = randomStr(10);
     const team = {
-        name: 'k6_test_team_' + slug,
+        name: 'k6_team_' + slug,
         description: randomStr(15),
         slug: slug,
     };
