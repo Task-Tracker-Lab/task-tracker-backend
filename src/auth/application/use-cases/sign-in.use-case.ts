@@ -1,11 +1,11 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import * as argon from 'argon2';
-import { FindOneUserCommand } from '@core/modules/user';
 import { BaseException } from '@shared/error';
 import { ISessionRepository } from '../../domain/repository';
 import { TokenService } from '../../infrastructure/security';
 import { DeviceMetadata } from '../../infrastructure/utils/get-device-meta';
 import { SignInDto } from '../dtos';
+import { FindUserQuery } from '@core/user';
 
 @Injectable()
 export class SignInUseCase {
@@ -13,11 +13,11 @@ export class SignInUseCase {
         @Inject('ISessionRepository')
         private readonly sessionRepo: ISessionRepository,
         private readonly tokenService: TokenService,
-        private readonly findUserCommand: FindOneUserCommand,
+        private readonly findUserQuery: FindUserQuery,
     ) {}
 
     async execute(dto: SignInDto, meta: DeviceMetadata) {
-        const entities = await this.findUserCommand.execute({ email: dto.email });
+        const entities = await this.findUserQuery.execute({ email: dto.email });
 
         if (!entities?.user || !entities?.security) {
             throw new BaseException(

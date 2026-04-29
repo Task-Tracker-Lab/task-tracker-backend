@@ -7,7 +7,7 @@ import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { HealthModule } from '@libs/health';
-import { UserModule } from './modules/user';
+import { UserModule } from './user';
 import { GlobalExceptionFilter } from '@shared/error';
 import { AuthModule } from './auth/auth.module';
 import { BullBoardModule } from '@bull-board/nestjs';

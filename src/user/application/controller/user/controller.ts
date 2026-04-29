@@ -1,21 +1,14 @@
-import { Body, Get, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { UserService } from '../services';
-import {
-    GetMeActivitySwagger,
-    GetMeSwagger,
-    PatchMeSwagger,
-    PostMeAvatarSwagger,
-} from './user.swagger';
-import type { UpdateProfileDto } from '../dtos';
-import { ApiBaseController, ExtractFastifyFile, GetUserId } from '../../../shared/decorators';
-import { BearerAuthGuard } from '@shared/guards';
-import type { PaginationDto } from '../../../shared/dtos';
-import type { FileUploadDto } from '../../media';
+import { Body, Get, Patch, Post, Query } from '@nestjs/common';
+import { GetMeActivitySwagger, GetMeSwagger, PatchMeSwagger, PostMeAvatarSwagger } from './swagger';
+import { UpdateProfileDto } from '../../dtos';
+import { ApiBaseController, ExtractFastifyFile, GetUserId } from '@shared/decorators';
+import { UserFacade } from '../../user.facade';
+import { PaginationDto } from '@shared/dtos';
+import { FileUploadDto } from '@core/modules/media';
 
-@ApiBaseController('users/me', 'Account Profile')
-@UseGuards(BearerAuthGuard)
+@ApiBaseController('users/me', 'Account Profile', true)
 export class UserController {
-    constructor(private readonly facade: UserService) {}
+    constructor(private readonly facade: UserFacade) {}
 
     @Get()
     @GetMeSwagger()

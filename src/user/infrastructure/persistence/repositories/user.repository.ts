@@ -1,10 +1,10 @@
-import * as sc from '../entities';
+import { IUserRepository } from '@core/user/domain/repository';
+import * as sc from '../models';
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
-import { IUserRepository } from './user.repository.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import type { NewUser, NewUserActivity, User, UserNotifications } from '../entities/user.domain';
 import { createId } from '@paralleldrive/cuid2';
 import { desc, eq, count } from 'drizzle-orm';
+import type { NewUser, NewUserActivity, User, UserNotifications } from '@core/user/domain/entities';
 
 @Injectable()
 export class UserRepository implements IUserRepository {

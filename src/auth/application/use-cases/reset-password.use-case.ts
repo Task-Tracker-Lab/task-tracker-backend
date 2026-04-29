@@ -4,11 +4,11 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import Redis from 'ioredis';
 import { generate, generateSecret } from 'otplib';
-import { FindOneUserCommand } from '@core/modules/user';
 import { BaseException } from '@shared/error';
 import { AuthMailJobs, AuthQueues } from '../../domain/enums';
 import { ResetPasswordEvent } from '../../domain/events';
 import { ResetPasswordDto } from '../dtos';
+import { FindUserQuery } from '@core/user';
 
 @Injectable()
 export class ResetPasswordUseCase {
@@ -17,11 +17,11 @@ export class ResetPasswordUseCase {
         private readonly redis: Redis,
         @InjectQueue(AuthQueues.AUTH_MAIL)
         private readonly mailQueue: Queue,
-        private readonly findUserCommand: FindOneUserCommand,
+        private readonly findUserQuery: FindUserQuery,
     ) {}
 
     async execute(dto: ResetPasswordDto) {
-        const entity = await this.findUserCommand.execute({ email: dto.email });
+        const entity = await this.findUserQuery.execute({ email: dto.email });
 
         if (!entity.user) {
             throw new BaseException(

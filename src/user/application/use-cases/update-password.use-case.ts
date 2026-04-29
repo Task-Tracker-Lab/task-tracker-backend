@@ -1,36 +1,35 @@
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { IUserRepository } from '../repository/user.repository.interface';
+import { IUserRepository } from '@core/user/domain/repository';
+import { Injectable, Inject, HttpStatus } from '@nestjs/common';
 import { BaseException } from '@shared/error';
 
 @Injectable()
-export class UpdatePassUserCommand {
+export class UpdatePasswordUseCase {
     constructor(
         @Inject('IUserRepository')
         private readonly repository: IUserRepository,
     ) {}
 
     async execute(email: string, password: string) {
-        const { user } = await this.repository.findByEmail(email);
+        const result = await this.repository.findByEmail(email);
 
-        if (!user) {
+        if (!result?.user) {
             throw new BaseException(
                 {
                     code: 'USER_NOT_FOUND',
                     message: 'Пользователь для обновления пароля не найден',
-                    details: [{ target: 'email', value: email }],
                 },
                 HttpStatus.NOT_FOUND,
             );
         }
 
         try {
-            const isUpdated = await this.repository.updatePasswordHash(user.id, password);
+            const isUpdated = await this.repository.updatePasswordHash(result.user.id, password);
 
             if (!isUpdated) {
                 throw new BaseException(
                     {
                         code: 'PASSWORD_UPDATE_FAILED',
-                        message: 'Не удалось обновить пароль. Запись не была изменена.',
+                        message: 'Запись не была изменена',
                     },
                     HttpStatus.INTERNAL_SERVER_ERROR,
                 );
@@ -41,12 +40,8 @@ export class UpdatePassUserCommand {
             throw new BaseException(
                 {
                     code: 'DATABASE_ERROR',
-                    message: 'Произошла критическая ошибка при работе с базой данных',
-                    details: [
-                        {
-                            reason: error instanceof Error ? error.message : 'Unknown DB error',
-                        },
-                    ],
+                    message: 'Ошибка при работе с БД',
+                    details: [{ reason: error instanceof Error ? error.message : 'Unknown' }],
                 },
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );

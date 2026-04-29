@@ -5,7 +5,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { UserModule } from '@core/modules/user';
+import { UserModule } from '@core/user';
 import { AuthController, AuthRecoveryController } from './application/controller';
 import { AuthFacade } from './application/auth.facade';
 import {
