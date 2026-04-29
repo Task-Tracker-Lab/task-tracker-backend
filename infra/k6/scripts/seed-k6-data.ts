@@ -5,14 +5,21 @@ import { createId } from '@paralleldrive/cuid2';
 import * as argon from 'argon2';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import * as sc from '../../../src/shared/entities/index';
 import { sql } from 'drizzle-orm';
+import Redis from 'ioredis';
 
 const DB_URL = process.env.DATABASE_URL;
+const REDIS_URL = `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
+const KEYS = {
+    INVITE: (code: string) => `inv:code:${code}`,
+    TEAM_INVITES: (teamId: string) => `team:invites:${teamId}`,
+    USER_INVITES: (email: string) => `user:invites:${email.toLowerCase()}`,
+};
 
-async function seed(db: NodePgDatabase<typeof sc>) {
+async function seed_db(db: NodePgDatabase<typeof sc>) {
     const COUNT = 1000;
     const OUT_USERS_FILE = resolve(process.cwd(), 'infra/k6/data/users.json');
     const OUT_TEAMS_FILE = resolve(process.cwd(), 'infra/k6/data/teams.json');
@@ -132,8 +139,69 @@ async function seed(db: NodePgDatabase<typeof sc>) {
     console.log(`Tags data saved to: ${OUT_TAGS_FILE}`);
 }
 
-async function clearDB(db) {
-    console.log('Cleaning up ONLY k6 test data...');
+async function seed_redis(redis: Redis) {
+    console.log('Seeding Redis with OTP codes...');
+    const multi = redis.multi();
+
+    const dataDir = resolve(process.cwd(), 'infra/k6/data');
+    const users = JSON.parse(readFileSync(`${dataDir}/users.json`, 'utf-8')) as {
+        email: string;
+    }[];
+    const teams = JSON.parse(readFileSync(`${dataDir}/teams.json`, 'utf-8')) as {
+        id: string;
+        ownerId: string;
+        name: string;
+        slug: string;
+        description: string;
+    }[];
+
+    const INVITE_TTL = 86400;
+    const INVITES_PER_TEAM = 10;
+
+    const invitesData = [];
+    teams.forEach((team, teamIdx) => {
+        for (let j = 1; j <= INVITES_PER_TEAM; j++) {
+            const inviteeIdx = (teamIdx + j) % users.length;
+            const invitee = users[inviteeIdx];
+
+            const code = `INV_${teamIdx}_${inviteeIdx}`;
+
+            const inviteData = {
+                teamId: team.id,
+                teamName: team.name,
+                teamAvatar:
+                    'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png',
+                email: invitee.email,
+                role: 'member',
+                inviterId: team.ownerId,
+                inviterName: `Owner of ${team.name}`,
+                createdAt: new Date().toISOString(),
+                expiresAt: new Date(Date.now() + INVITE_TTL * 1000).toISOString(),
+            };
+
+            multi.set(KEYS.INVITE(code), JSON.stringify(inviteData), 'EX', INVITE_TTL);
+            multi.sadd(KEYS.TEAM_INVITES(team.id), code);
+            multi.sadd(KEYS.USER_INVITES(invitee.email), code);
+
+            invitesData.push({
+                code,
+                email: invitee.email,
+                teamSlug: team.slug,
+            });
+        }
+    });
+
+    await multi.exec();
+
+    const OUT_FILE = `${dataDir}/invites.json`;
+    writeFileSync(OUT_FILE, JSON.stringify(invitesData, null, 2));
+
+    console.log(`Success! Redis seeded. Created ${invitesData.length} unique invites.`);
+    console.log(`Invites data saved to: ${OUT_FILE}`);
+}
+
+async function clearDB(db: NodePgDatabase<typeof sc>) {
+    console.log('Cleaning up ONLY k6 test data from DB...');
     return await db.transaction(async (tx) => {
         await tx.delete(sc.users).where(sql`${sc.users.email} LIKE 'k6_user_%'`);
         await tx.delete(sc.teams).where(sql`${sc.teams.name} LIKE 'k6_team_%'`);
@@ -141,19 +209,38 @@ async function clearDB(db) {
     });
 }
 
-async function main() {
-    if (!DB_URL) throw new Error('DATABASE_URL is not defined in .env');
+async function clearRedis(redis: Redis) {
+    console.log('Cleaning up ONLY k6 test data from Redis...');
+    const SCAN_PATTERNS = Object.values(KEYS).map((fn) => fn('*'));
 
+    for (const pattern of SCAN_PATTERNS) {
+        let cursor = '0';
+        do {
+            const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+            cursor = nextCursor;
+            if (keys.length > 0) await redis.del(...keys);
+        } while (cursor !== '0');
+    }
+}
+
+async function main() {
+    if (!DB_URL || !REDIS_URL)
+        throw new Error('DATABASE_URL OR REDIS_HOST, REDIS_PORT  is not defined in .env');
+    const redis = new Redis(REDIS_URL);
     const pool = new Pool({ connectionString: DB_URL });
     const db = drizzle(pool, { schema: sc });
+
     try {
         await clearDB(db);
-        await seed(db);
+        await clearRedis(redis);
+        await seed_db(db);
+        await seed_redis(redis);
     } catch (e) {
         console.error('Error:', e);
         process.exit(1);
     } finally {
         await pool.end();
+        await redis.quit();
     }
 }
 
