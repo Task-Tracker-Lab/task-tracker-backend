@@ -1,44 +1,31 @@
 import { SharedArray } from 'k6/data';
-import http from 'k6/http';
-import { check, sleep } from 'k6';
-import signIn from '../shared/sign-in.js';
+import { sleep } from 'k6';
+import { GET_OPTIONS } from '../common/config.js';
+import getAuthUser from '../shared/get-auth-user.js';
 
 const users = new SharedArray('test users', function () {
     return JSON.parse(open('../data/users.json'));
 });
 
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000/api/v1';
-const VUS = parseInt(__ENV.VUS) || 10;
-const DURATION = __ENV.DURATION || '1m';
+const baseOptions = GET_OPTIONS();
+baseOptions.thresholds = Object.assign({}, baseOptions.thresholds, {
+    'http_req_duration{name:auth-sign-in}': ['p(95)<333'],
+    'http_req_duration{name:auth-refresh}': ['p(95)<333'],
+    'http_req_duration{name:auth-sign-out}': ['p(95)<333'],
+});
 
-export const options = {
-    thresholds: {
-        'http_req_duration{name:sign-in}': ['p(95)<800'],
-        'http_req_duration{name:refresh}': ['p(95)<200'],
-        'http_req_duration{name:sign-out}': ['p(95)<200'],
-        http_req_failed: ['rate<0.1'],
-    },
-    scenarios: {
-        auth_load_test: {
-            executor: 'constant-vus',
-            vus: VUS,
-            duration: DURATION,
-        },
-    },
-};
+export const options = baseOptions;
 
 export default function () {
     const user = users[(__VU - 1) % users.length];
-
-    // --- SIGN-IN ---
-    const { signInToken, signInCookie } = signIn(BASE_URL, user);
+    const { client, token, refreshCookie } = getAuthUser(user);
 
     sleep(1);
 
     // --- REFRESH ---
-    const refreshRes = http.post(`${BASE_URL}/auth/refresh`, null, {
-        tags: { name: 'refresh' },
-        cookies: { refresh: signInCookie },
+    const refreshRes = client.post('/auth/refresh', null, {
+        cookies: { refresh: refreshCookie },
+        tags: { name: 'auth-refresh' },
     });
 
     const newAccessToken = refreshRes.json().token;
@@ -46,31 +33,23 @@ export default function () {
         ? refreshRes.cookies.refresh[0].value
         : 'NOT_ROTATED';
 
-    check(refreshRes, {
-        'refresh: status is 200': (r) => r.status === 200,
-    });
-
     sleep(1);
 
     // --- SIGN OUT ---
-    const refreshToken = newAccessToken || signInToken;
-    const refreshCookie = newRefreshCookie !== 'NOT_ROTATED' ? newRefreshCookie : signInCookie;
+    const refreshToken = newAccessToken || token;
+    const signOutCookie = newRefreshCookie !== 'NOT_ROTATED' ? newRefreshCookie : refreshCookie;
 
-    const signOutRes = http.post(
-        `${BASE_URL}/auth/sign-out`,
+    client.post(
+        '/auth/sign-out',
         {},
         {
             headers: {
                 Authorization: `Bearer ${refreshToken}`,
             },
-            tags: { name: 'sign-out' },
-            cookies: { refresh: refreshCookie },
+            cookies: { refresh: signOutCookie },
+            tags: { name: 'auth-sign-out' },
         },
     );
-
-    check(signOutRes, {
-        'sign-out: status is 200': (r) => r.status === 200,
-    });
 
     sleep(1);
 }

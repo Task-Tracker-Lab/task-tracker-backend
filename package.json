@@ -22,13 +22,13 @@
         "prepare": "husky",
         "k6:all": "pnpm --filter @project/performance-tests test:all",
         "k6:auth": "pnpm --filter @project/performance-tests test:auth",
-        "k6:team": "pnpm --filter @project/performance-tests test:team",
+        "k6:teams": "pnpm --filter @project/performance-tests test:teams",
         "k6:projects": "pnpm --filter @project/performance-tests test:projects",
         "k6:users": "pnpm --filter @project/performance-tests test:users",
         "k6:board": "pnpm --filter @project/performance-tests test:board",
         "k6:tasks": "pnpm --filter @project/performance-tests test:tasks",
         "k6:smoke": "pnpm --filter @project/performance-tests smoke",
-        "k6:db-seed": "npx tsx infra/k6/scripts/db-seed.ts"
+        "k6:seed": "npx tsx infra/k6/scripts/seed-k6-data.ts"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1029.0",

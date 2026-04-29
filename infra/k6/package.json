@@ -5,7 +5,7 @@
     "scripts": {
         "test:all": "k6 run scenarios/stress-full.js",
         "test:auth": "k6 run scenarios/auth.js",
-        "test:team": "k6 run scenarios/team.js",
+        "test:teams": "k6 run scenarios/teams.js",
         "test:projects": "k6 run scenarios/projects.js",
         "test:users": "k6 run scenarios/users.js",
         "test:board": "k6 run scenarios/board-full.js",
