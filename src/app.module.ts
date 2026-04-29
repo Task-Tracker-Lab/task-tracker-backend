@@ -9,12 +9,11 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { HealthModule } from '@libs/health';
 import { UserModule } from './modules/user';
 import { GlobalExceptionFilter } from '@shared/error';
-import { AuthModule } from './modules/auth';
+import { AuthModule } from './auth/auth.module';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { FastifyAdapter } from '@bull-board/fastify';
-import { MailProcessor } from '@shared/workers';
 import { BullModule } from '@nestjs/bullmq';
-import { MailAdapter } from '@shared/adapters/mail';
+import { MailModule } from '@shared/adapters/mail';
 import { MigrationService } from '@shared/migration';
 import { TeamsModule } from './modules/teams';
 import { ProjectsModule } from './modules/projects';
@@ -63,11 +62,7 @@ import { ProjectsModule } from './modules/projects';
     ],
     providers: [
         MigrationService,
-        {
-            provide: 'IMailPort',
-            useClass: MailAdapter,
-        },
-        MailProcessor,
+        MailModule,
         {
             provide: APP_PIPE,
             useClass: ZodValidationPipe,
