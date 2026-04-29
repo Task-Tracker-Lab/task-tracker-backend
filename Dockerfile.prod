@@ -13,6 +13,7 @@ COPY pnpm-lock.yaml ./
 
 # Загружаем всё в виртуальное хранилище.
 # Если lock-файл не менялся, этот слой будет взят из кэша
+ENV CI=true
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch
 
