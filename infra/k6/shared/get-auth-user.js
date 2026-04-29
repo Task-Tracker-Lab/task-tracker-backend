@@ -1,5 +1,5 @@
 import { check } from 'k6';
-import { ApiClient } from '../common/client.js';
+import { ApiClient } from '../common/api-client.js';
 
 export default function getAuthUser(user, options = {}) {
     const client = new ApiClient();
