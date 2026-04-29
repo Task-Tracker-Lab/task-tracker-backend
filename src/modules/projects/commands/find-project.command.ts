@@ -1,6 +1,6 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { IProjectsRepository } from '../repository';
-import { FindTeamMemberCommand } from '@core/modules/teams';
+import { FindTeamMemberQuery } from '@core/teams';
 import { createHash } from 'crypto';
 import type { Project } from '../entities';
 import { BaseException } from '@shared/error';
@@ -10,7 +10,7 @@ export class FindProjectCommand {
     constructor(
         @Inject('IProjectsRepository')
         private readonly projectsRepo: IProjectsRepository,
-        private readonly findTeamMemberCommand: FindTeamMemberCommand,
+        private readonly findTeamMemberQ: FindTeamMemberQuery,
     ) {}
 
     public async execute(projectId: string, userId?: string, shareToken?: string) {
@@ -45,7 +45,7 @@ export class FindProjectCommand {
             );
         }
 
-        const member = await this.findTeamMemberCommand.execute(project.teamId, userId);
+        const member = await this.findTeamMemberQ.execute(project.teamId, userId);
 
         if (!member) {
             throw new BaseException(

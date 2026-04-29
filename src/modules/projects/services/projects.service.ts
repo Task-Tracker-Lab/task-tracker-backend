@@ -1,20 +1,20 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { IProjectsRepository } from '../repository';
 import type { CreateProjectDto, CreateShareTokenDto, UpdateProjectDto } from '../dtos';
-import { FindTeamCommand, FindTeamMemberCommand } from '@core/modules/teams';
 import { ROLE_PRIORITY } from '@shared/constants';
 import { ProjectStatus } from '../entities';
 import { ProjectsMapper } from '../mappers';
 import { createHash, randomBytes } from 'crypto';
 import { BaseException } from '@shared/error';
+import { FindTeamMemberQuery, FindTeamQuery } from '@core/teams';
 
 @Injectable()
 export class ProjectsService {
     constructor(
         @Inject('IProjectsRepository')
         private readonly projectsRepo: IProjectsRepository,
-        private readonly findTeamCommand: FindTeamCommand,
-        private readonly findTeamMemberCommand: FindTeamMemberCommand,
+        private readonly findTeamQ: FindTeamQuery,
+        private readonly findTeamMemberQ: FindTeamMemberQuery,
     ) {}
 
     public create = async (userId: string, slug: string, dto: CreateProjectDto) => {
@@ -254,7 +254,7 @@ export class ProjectsService {
         userId: string,
         minRole: keyof typeof ROLE_PRIORITY = 'viewer',
     ) {
-        const team = await this.findTeamCommand.execute(slug);
+        const team = await this.findTeamQ.execute(slug);
         if (!team) {
             throw new BaseException(
                 {
@@ -265,7 +265,7 @@ export class ProjectsService {
             );
         }
 
-        const member = await this.findTeamMemberCommand.execute(team.id, userId);
+        const member = await this.findTeamMemberQ.execute(team.id, userId);
         if (!member) {
             throw new BaseException(
                 {
