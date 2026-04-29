@@ -15,7 +15,7 @@ import { FastifyAdapter } from '@bull-board/fastify';
 import { BullModule } from '@nestjs/bullmq';
 import { MailModule } from '@shared/adapters/mail';
 import { MigrationService } from '@shared/migration';
-import { TeamsModule } from './modules/teams';
+import { TeamsModule } from './teams';
 import { ProjectsModule } from './modules/projects';
 
 @Module({

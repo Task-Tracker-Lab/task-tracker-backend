@@ -1,1 +1,0 @@
-export { MailProcessor } from './worker';

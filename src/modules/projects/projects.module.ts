@@ -2,7 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { ProjectsService } from './services';
 import { ProjectsController } from './controller';
 import { ProjectsRepository } from './repository';
-import { TeamsModule } from '../teams';
+import { TeamsModule } from '../../teams';
 import { FindProjectCommand } from './commands';
 
 const REPOSITORY = {

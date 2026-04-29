@@ -1,6 +1,5 @@
 import { Global, Module } from '@nestjs/common';
 import { MailAdapter } from './adapter';
-import { MailProcessor } from '@shared/workers';
 
 @Global()
 @Module({
@@ -9,7 +8,6 @@ import { MailProcessor } from '@shared/workers';
             provide: 'IMailPort',
             useClass: MailAdapter,
         },
-        MailProcessor,
     ],
     exports: ['IMailPort'],
 })
