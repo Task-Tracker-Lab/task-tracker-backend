@@ -2,7 +2,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 import { verify as verifyOTP } from 'otplib';
-import { CreateUserCommand } from '@core/modules/user';
+import { RegisterUserUseCase } from '@core/user';
 import { BaseException } from '@shared/error';
 import { ISessionRepository } from '../../domain/repository';
 import { TokenService } from '../../infrastructure/security';
@@ -17,7 +17,7 @@ export class SignUpVerifyUseCase {
         @Inject('ISessionRepository')
         private readonly sessionRepo: ISessionRepository,
         private readonly tokenService: TokenService,
-        private readonly createUserCommand: CreateUserCommand,
+        private readonly registerUserUseCase: RegisterUserUseCase,
     ) {}
 
     async execute(dto: VerifyDto, meta: DeviceMetadata) {
@@ -58,7 +58,7 @@ export class SignUpVerifyUseCase {
             );
         }
 
-        const user = await this.createUserCommand.execute({
+        const user = await this.registerUserUseCase.execute({
             ...userData.user,
             password: userData.password,
         });

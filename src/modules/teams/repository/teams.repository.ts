@@ -2,7 +2,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { ITeamsRepository } from './teams.repository.interface';
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
 import * as schema from '../entities';
-import * as scUsers from '@core/modules/user/entities';
+import * as scUsers from '@core/user/infrastructure/persistence/models';
 import { and, asc, count, desc, eq, ilike, inArray, isNull, sql } from 'drizzle-orm';
 
 export class TeamsRepository implements ITeamsRepository {

@@ -1,9 +1,9 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { FindOneUserCommand } from '@core/modules/user';
 import { BaseException } from '@shared/error';
 import { ISessionRepository } from '../../domain/repository';
 import { TokenService } from '../../infrastructure/security';
 import { DeviceMetadata } from '../../infrastructure/utils/get-device-meta';
+import { FindUserQuery } from '@core/user';
 
 @Injectable()
 export class RefreshTokensUseCase {
@@ -11,7 +11,7 @@ export class RefreshTokensUseCase {
         @Inject('ISessionRepository')
         private readonly sessionRepo: ISessionRepository,
         private readonly tokenService: TokenService,
-        private readonly findUserCommand: FindOneUserCommand,
+        private readonly findUserQuery: FindUserQuery,
     ) {}
 
     async execute(token: string, metadata: DeviceMetadata) {
@@ -39,7 +39,7 @@ export class RefreshTokensUseCase {
             );
         }
 
-        const { user } = await this.findUserCommand.execute({ id: session.userId });
+        const { user } = await this.findUserQuery.execute({ id: session.userId });
 
         if (!user) {
             await this.sessionRepo.revoke(session.id);

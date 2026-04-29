@@ -6,7 +6,7 @@ import {
     ApiQuery,
     ApiResponse,
 } from '@nestjs/swagger';
-import { UpdateNotificationsDto, UpdateProfileDto, UserResponse } from '../dtos';
+import { UpdateProfileDto, UserResponse } from '../../dtos';
 import { applyDecorators } from '@nestjs/common';
 import { ApiBadRequest, ApiUnauthorized, ApiValidationError } from '@shared/error';
 import { ActionResponse } from '@shared/dtos';
@@ -46,24 +46,6 @@ export const PatchMeSwagger = () =>
                 code: 'too_small',
             },
         ]),
-        ApiUnauthorized(),
-    );
-
-export const PatchMeNotificationsSwagger = () =>
-    applyDecorators(
-        ApiOperation({
-            summary: 'Обновить настройки уведомлений',
-            description: 'Частичное обновление настроек email и push уведомлений.',
-        }),
-        ApiBody({
-            type: UpdateNotificationsDto.Output,
-        }),
-        ApiResponse({
-            status: 200,
-            description: 'Настройки успешно сохранены.',
-            type: ActionResponse.Output,
-        }),
-        ApiValidationError('Некорректный формат настроек'),
         ApiUnauthorized(),
     );
 

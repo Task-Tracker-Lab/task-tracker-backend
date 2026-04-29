@@ -5,7 +5,7 @@ import * as argon from 'argon2';
 import { Queue } from 'bullmq';
 import Redis from 'ioredis';
 import { generate, generateSecret } from 'otplib';
-import { FindOneUserCommand } from '@core/modules/user';
+import { FindUserQuery } from '@core/user';
 import { BaseException } from '@shared/error';
 import { AuthQueues, AuthMailJobs } from '../../domain/enums';
 import { RegisterCodeEvent } from '../../domain/events';
@@ -18,7 +18,7 @@ export class SignUpUseCase {
         private readonly redis: Redis,
         @InjectQueue(AuthQueues.AUTH_MAIL)
         private readonly mailQueue: Queue,
-        private readonly findUserCommand: FindOneUserCommand,
+        private readonly findUserQuery: FindUserQuery,
     ) {}
 
     async execute(dto: SignUpDto) {
@@ -37,7 +37,7 @@ export class SignUpUseCase {
             );
         }
 
-        const isExists = await this.findUserCommand.execute({ email: dto.email });
+        const isExists = await this.findUserQuery.execute({ email: dto.email });
 
         if (isExists) {
             throw new BaseException(
