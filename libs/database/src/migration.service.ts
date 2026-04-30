@@ -1,6 +1,8 @@
 import { Inject, Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { DATABASE_SERVICE, type DatabaseService } from '@libs/database';
+
+import { DATABASE_OPTIONS, DATABASE_SERVICE } from './database.constants';
+import type { DatabaseService, DatabaseModuleOptions } from './interfaces';
 import * as path from 'path';
 
 @Injectable()
@@ -10,9 +12,15 @@ export class MigrationService implements OnModuleInit {
     constructor(
         @Inject(DATABASE_SERVICE)
         private readonly db: DatabaseService<Record<string, unknown>>,
+        @Inject(DATABASE_OPTIONS)
+        private readonly options: DatabaseModuleOptions,
     ) {}
 
     async onModuleInit() {
+        if (this.options.runMigrations === false) {
+            return;
+        }
+
         this.logger.debug('Checking for database migrations...');
         try {
             await migrate(this.db, {

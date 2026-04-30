@@ -15,6 +15,7 @@ import type {
     DatabaseModuleOptions,
     DatabaseModuleOptionsFactory,
 } from './interfaces';
+import { MigrationService } from './migration.service';
 
 @Module({
     providers: [],
@@ -28,7 +29,11 @@ export class DatabaseModule implements OnApplicationShutdown {
         return {
             module: DatabaseModule,
             global: config.global ?? false,
-            providers: [this.createOptionsProvider(config), this.createDatabaseProvider()],
+            providers: [
+                this.createOptionsProvider(config),
+                this.createDatabaseProvider(),
+                MigrationService,
+            ],
             exports: [DATABASE_SERVICE],
         };
     }
@@ -38,7 +43,11 @@ export class DatabaseModule implements OnApplicationShutdown {
             module: DatabaseModule,
             global: config.global ?? false,
             imports: config.imports ?? [],
-            providers: [...this.createAsyncProviders(config), this.createDatabaseProvider()],
+            providers: [
+                ...this.createAsyncProviders(config),
+                this.createDatabaseProvider(),
+                MigrationService,
+            ],
             exports: [DATABASE_SERVICE],
         };
     }
@@ -61,11 +70,15 @@ export class DatabaseModule implements OnApplicationShutdown {
                 const pool = new Pool({
                     connectionString: url.toString(),
                     max: 20,
-                    min: 5,
-                    connectionTimeoutMillis: 5000,
-                    idleTimeoutMillis: 30000,
-                    maxUses: 7500,
+                    min: 2,
+                    connectionTimeoutMillis: 2000,
+                    idleTimeoutMillis: 10000,
+                    maxUses: 5000,
                     keepAlive: true,
+                });
+
+                pool.on('error', (err) => {
+                    DatabaseModule.logger.error('Database pool connection lost or reset', err);
                 });
 
                 this.pool = pool;

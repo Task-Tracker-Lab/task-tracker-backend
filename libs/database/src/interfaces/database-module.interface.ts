@@ -6,6 +6,11 @@ export interface DatabaseModuleOptions {
     schema: Record<string, unknown>;
     logging?: boolean;
     global?: boolean;
+    /**
+     * Запускать миграции автоматически при инициализации модуля
+     * @default true
+     */
+    runMigrations?: boolean;
 }
 
 export interface DatabaseModuleOptionsFactory {
