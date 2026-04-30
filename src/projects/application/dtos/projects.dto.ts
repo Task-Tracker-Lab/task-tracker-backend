@@ -1,7 +1,7 @@
 import { z } from 'zod/v4';
 import { createZodDto } from 'nestjs-zod';
-import { ProjectStatus } from '../entities';
 import { ActionResponseSchema } from '@shared/dtos';
+import { ProjectStatus } from '@core/projects/domain/entities';
 
 export const CreateProjectSchema = z.object({
     name: z

@@ -7,7 +7,7 @@ import {
     CreateProjectResponse,
     CreateShareTokenDto,
     UpdateProjectDto,
-} from '../dtos';
+} from '../../dtos';
 
 export const CreateProjectSwagger = () =>
     applyDecorators(
