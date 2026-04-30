@@ -1,4 +1,4 @@
-import { FileUploadDto, ITeamMedia, TEAM_MEDIA_TOKEN } from '@core/modules/media';
+import { FileUploadDto, ITeamMedia, TEAM_MEDIA_TOKEN } from '@shared/media';
 import { ITeamsRepository } from '@core/teams/domain/repository';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { BaseException } from '@shared/error';

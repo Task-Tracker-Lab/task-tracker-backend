@@ -7,7 +7,7 @@ import type {
     UpdateMemberDto,
     UpdateTeamDto,
 } from './dtos';
-import { FileUploadDto } from '@core/modules/media';
+import { FileUploadDto } from '@shared/media';
 
 @Injectable()
 export class TeamsFacade {

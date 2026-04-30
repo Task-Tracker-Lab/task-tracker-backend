@@ -3,7 +3,7 @@ import { ApiBody, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger
 import { ActionResponse } from '@shared/dtos';
 import { ApiBadRequest, ApiForbidden, ApiNotFound, ApiUnauthorized } from '@shared/error';
 import { SyncTagsDto } from '../../dtos';
-import { FileUploadResponse } from '@core/modules/media';
+import { FileUploadResponse } from '@shared/media';
 
 export const SyncTeamTagsSwagger = () =>
     applyDecorators(

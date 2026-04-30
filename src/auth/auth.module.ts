@@ -8,33 +8,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from '@core/user';
 import { AuthController, AuthRecoveryController } from './application/controller';
 import { AuthFacade } from './application/auth.facade';
-import {
-    ConfirmResetPasswordUseCase,
-    VerifyResetPasswordUseCase,
-    RefreshTokensUseCase,
-    ResetPasswordUseCase,
-    SignUpVerifyUseCase,
-    SignInUseCase,
-    SignOutUseCase,
-    SignUpUseCase,
-} from './application/use-cases';
+import { AuthUseCases } from './application/use-cases';
 import { AuthQueues } from './domain/enums';
 import { SessionRepository } from './infrastructure/persistence/repositories';
 import { TokenService } from './infrastructure/security';
 import { BearerStrategy, CookieStrategy } from './infrastructure/strategies';
 import { MailProcessor } from './infrastructure/workers';
 import { MailAdapter } from '@shared/adapters/mail';
-
-const USE_CASES = [
-    ConfirmResetPasswordUseCase,
-    VerifyResetPasswordUseCase,
-    RefreshTokensUseCase,
-    ResetPasswordUseCase,
-    SignUpVerifyUseCase,
-    SignInUseCase,
-    SignOutUseCase,
-    SignUpUseCase,
-];
 
 const WORKERS = [MailProcessor];
 
@@ -105,9 +85,9 @@ const REPOSITORY = {
         ...WORKERS,
         TokenService,
         CookieStrategy,
+        ...AuthUseCases,
         BearerStrategy,
         REPOSITORY,
-        ...USE_CASES,
         AuthFacade,
     ],
     exports: [],

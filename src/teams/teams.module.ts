@@ -13,42 +13,11 @@ import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { TeamsRepository } from './infrastructure/persistence/repositories';
 import { TeamQueues } from './domain/enums';
-import { MediaModule } from '@core/modules/media';
 import { TeamsFacade } from './application/team.facade';
-
-import * as UC from './application/use-cases';
+import { TeamQueries, TeamUseCases, TEAM_EXTERNAL_QUERIES } from './application/use-cases';
+import { MediaModule } from '@shared/media';
 
 const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
-
-const QUERIES = [
-    UC.FindTeamQuery,
-    UC.FindTeamMemberQuery,
-    UC.GetInvitationQuery,
-    UC.GetInvitationsQuery,
-    UC.GetTeamMembersQuery,
-    UC.GetMyInvitesUseCase,
-    UC.GetMyTeamsUseCase,
-    UC.GetUserInvitesUseCase,
-    UC.GetAllTagsUseCase,
-    UC.CheckTeamSlugQuery,
-];
-
-const USE_CASES = [
-    UC.CreateTeamUseCase,
-    UC.DeleteTeamUseCase,
-    UC.UpdateTeamUseCase,
-    UC.UpdateTeamAvatarUseCase,
-    UC.UpdateTeamBannerUseCase,
-    UC.SyncTeamTagsUseCase,
-    UC.UpdateTeamMemberUseCase,
-    UC.RemoveTeamMemberUseCase,
-    UC.SendInvitationUseCase,
-    UC.AcceptInvitationUseCase,
-    UC.UpdateInvitationUseCase,
-    UC.DeclineInvitationUseCase,
-];
-
-const EXTERNAL_USE_CASES = [UC.FindTeamMemberQuery, UC.FindTeamQuery];
 
 @Module({
     imports: [
@@ -89,7 +58,7 @@ const EXTERNAL_USE_CASES = [UC.FindTeamMemberQuery, UC.FindTeamQuery];
         TeamsController,
         MeController,
     ],
-    providers: [REPOSITORY, ...USE_CASES, ...QUERIES, TeamsFacade],
-    exports: [...EXTERNAL_USE_CASES],
+    providers: [REPOSITORY, ...TeamUseCases, ...TeamQueries, TeamsFacade],
+    exports: [...TEAM_EXTERNAL_QUERIES],
 })
 export class TeamsModule {}

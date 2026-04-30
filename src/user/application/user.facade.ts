@@ -7,7 +7,7 @@ import {
     UploadAvatarUseCase,
 } from './use-cases';
 import { UpdateProfileDto, UpdateNotificationsDto } from './dtos';
-import { FileUploadDto } from '@core/modules/media';
+import { FileUploadDto } from '@shared/media';
 
 @Injectable()
 export class UserFacade {

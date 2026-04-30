@@ -3,7 +3,7 @@ import { ApiBaseController, ExtractFastifyFile } from '@shared/decorators';
 import { SyncTeamTagsSwagger, PatchTeamAvatarSwagger, PatchTeamBannerSwagger } from './swagger';
 import { SyncTagsDto } from '../../dtos';
 import { TeamsFacade } from '../../team.facade';
-import { FileUploadDto } from '@core/modules/media';
+import { FileUploadDto } from '@shared/media';
 
 @ApiBaseController('teams/:slug', 'Teams Settings', true)
 export class TeamsSettingsController {

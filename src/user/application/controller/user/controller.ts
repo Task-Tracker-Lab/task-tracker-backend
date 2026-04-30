@@ -4,7 +4,7 @@ import { UpdateProfileDto } from '../../dtos';
 import { ApiBaseController, ExtractFastifyFile, GetUserId } from '@shared/decorators';
 import { UserFacade } from '../../user.facade';
 import { PaginationDto } from '@shared/dtos';
-import { FileUploadDto } from '@core/modules/media';
+import { FileUploadDto } from '@shared/media';
 
 @ApiBaseController('users/me', 'Account Profile', true)
 export class UserController {

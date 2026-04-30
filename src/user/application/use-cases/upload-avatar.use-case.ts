@@ -1,4 +1,4 @@
-import { FileUploadDto, IUserMedia, USER_MEDIA_TOKEN } from '@core/modules/media';
+import { FileUploadDto, IUserMedia, USER_MEDIA_TOKEN } from '@shared/media';
 import { IUserRepository } from '@core/user/domain/repository';
 import { Inject, Injectable } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
