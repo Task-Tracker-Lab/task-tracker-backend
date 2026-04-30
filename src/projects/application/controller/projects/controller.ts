@@ -1,5 +1,4 @@
 import { ApiBaseController, GetUserId, Public } from '@shared/decorators';
-import { ProjectsService } from '../services';
 import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import {
     ArchiveProjectSwagger,
@@ -9,18 +8,19 @@ import {
     FindOneProjectSwagger,
     RemoveProjectSwagger,
     UpdateProjectSwagger,
-} from './projects.swagger';
-import { CreateProjectDto, CreateShareTokenDto, UpdateProjectDto } from '../dtos';
-import { ProjectStatus } from '../entities';
+} from './swagger';
+import { CreateProjectDto, CreateShareTokenDto, UpdateProjectDto } from '../../dtos';
+import { ProjectStatus } from '@core/projects/domain/entities';
+import { ProjectsFacade } from '../../projects.facade';
 
 @ApiBaseController('teams/:slug/projects', 'Team Projects', true)
 export class ProjectsController {
-    constructor(private readonly facade: ProjectsService) {}
+    constructor(private readonly facade: ProjectsFacade) {}
 
     @Get()
     @FindAllProjectsSwagger()
     async findAll(@Param('slug') slug: string, @GetUserId() userId: string) {
-        return this.facade.findByTeam(slug, userId);
+        return this.facade.getTeamProjects(slug, userId);
     }
 
     @Get(':id')
@@ -32,7 +32,7 @@ export class ProjectsController {
         @GetUserId() userId?: string,
         @Query('token') token?: string,
     ) {
-        return this.facade.findOne(id, slug, userId, token);
+        return this.facade.getDetail(id, slug, userId, token);
     }
 
     @Post(':id/share')
@@ -43,7 +43,7 @@ export class ProjectsController {
         @GetUserId() userId: string,
         @Body() dto: CreateShareTokenDto,
     ) {
-        return this.facade.generateToken(id, slug, userId, dto);
+        return this.facade.generateShareToken(id, slug, userId, dto);
     }
 
     @Post(':id/archive')

@@ -1,8 +1,9 @@
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
 import { Injectable, Inject } from '@nestjs/common';
-import * as schema from '../entities';
-import { IProjectsRepository } from './projects.repository.interface';
+import * as schema from '../models';
+import { IProjectsRepository } from '../../../domain/repository';
 import { and, eq, gt, isNull, or } from 'drizzle-orm';
+import type { NewProject, NewProjectShare } from '@core/projects/domain/entities';
 
 @Injectable()
 export class ProjectsRepository implements IProjectsRepository {
@@ -11,7 +12,7 @@ export class ProjectsRepository implements IProjectsRepository {
         private readonly db: DatabaseService<typeof schema>,
     ) {}
 
-    public create = async (data: schema.NewProject) => {
+    public create = async (data: NewProject) => {
         const result = await this.db
             .insert(schema.projects)
             .values(data)
@@ -20,7 +21,7 @@ export class ProjectsRepository implements IProjectsRepository {
         return { result: result.length > 0, id: result[0].id };
     };
 
-    public update = async (id: string, data: Partial<schema.NewProject>) => {
+    public update = async (id: string, data: Partial<NewProject>) => {
         const result = await this.db
             .update(schema.projects)
             .set({ ...data, updatedAt: new Date() })
@@ -58,7 +59,7 @@ export class ProjectsRepository implements IProjectsRepository {
             .where(and(eq(schema.projects.teamId, teamId), isNull(schema.projects.deletedAt)));
     };
 
-    public createShare = async (data: schema.NewProjectShare) => {
+    public createShare = async (data: NewProjectShare) => {
         const [result] = await this.db
             .insert(schema.projectShares)
             .values(data)

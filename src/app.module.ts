@@ -16,7 +16,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { MailModule } from '@shared/adapters/mail';
 import { MigrationService } from '@shared/migration';
 import { TeamsModule } from './teams';
-import { ProjectsModule } from './modules/projects';
+import { ProjectsModule } from './projects';
 
 @Module({
     imports: [

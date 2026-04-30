@@ -1,5 +1,5 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import { projects, projectShares } from './projects.entity';
+import { projects, projectShares } from '../../infrastructure/persistence/models/projects.model';
 
 export enum ProjectStatus {
     Active = 'active',
