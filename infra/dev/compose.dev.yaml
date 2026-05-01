@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 name: task-tracker-api
 
@@ -10,7 +10,7 @@ services:
         env_file:
             - .env
         ports:
-            - "3000:3000"
+            - '3000:3000'
         depends_on:
             database:
                 condition: service_healthy
@@ -21,10 +21,10 @@ services:
         deploy:
             resources:
                 limits:
-                    cpus: "2.0"
+                    cpus: '2.0'
                     memory: 1024M
                 reservations:
-                    cpus: "0.5"
+                    cpus: '0.5'
                     memory: 256M
 
     database:
@@ -39,22 +39,21 @@ services:
             POSTGRES_PASSWORD: ${DB_PASSWORD}
             POSTGRES_DB: ${DB_DATABASE}
         ports:
-            - "6000:5432"
+            - '6000:5432'
         volumes:
             - postgres_data:/var/lib/postgresql/data
         networks:
             - backend
         healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\" -q
-                      || exit 1",
+            test: [
+                    'CMD-SHELL',
+                    'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -q
+                    || exit 1',
                 ]
             interval: 5s
             timeout: 5s
             retries: 5
-        profiles: [ "infra" ]
+        profiles: ['infra']
 
     redis:
         hostname: redis
@@ -62,18 +61,18 @@ services:
         image: redis:7-alpine
         restart: always
         ports:
-            - "${REDIS_PORT:-6999}:6379"
+            - '${REDIS_PORT:-6999}:6379'
         command: redis-server --save 60 1 --loglevel notice
         volumes:
             - redis_data:/data
         networks:
             - backend
         healthcheck:
-            test: [ "CMD", "redis-cli", "ping" ]
+            test: ['CMD', 'redis-cli', 'ping']
             interval: 5s
             timeout: 3s
             retries: 5
-        profiles: [ "infra" ]
+        profiles: ['infra']
 
     minio:
         hostname: minio
@@ -84,14 +83,14 @@ services:
             MINIO_ROOT_USER: ${S3_ACCESS_KEY}
             MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
         ports:
-            - "9000:9000" # API
-            - "9001:9001" # Console (UI)
+            - '9000:9000' # API
+            - '9001:9001' # Console (UI)
         command: server /data --console-address ":9001"
         volumes:
             - minio_data:/data
         networks:
             - backend
-        profiles: [ "infra" ]
+        profiles: ['infra']
 
     minio-init:
         image: minio/mc:latest
@@ -102,7 +101,7 @@ services:
             MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
         networks:
             - backend
-        profiles: [ "infra" ]
+        profiles: ['infra']
         entrypoint: >
             /bin/sh -c " sleep 5; mc alias set myminio http://minio:9000
             ${S3_ACCESS_KEY} ${S3_SECRET_KEY}; mc mb myminio/${S3_BUCKET_NAME}

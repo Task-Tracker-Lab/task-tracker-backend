@@ -1,5 +1,5 @@
 export { baseSchema } from './schema';
-export * from '../../modules/user/entities';
-export * from '../../modules/auth/entities';
-export * from '../../modules/teams/entities';
-export * from '../../modules/projects/entities';
+export * from '../../user/infrastructure/persistence/models';
+export * from '../../auth/infrastructure/persistence/models';
+export * from '../../teams/infrastructure/persistence/models';
+export * from '../../projects/infrastructure/persistence/models';
