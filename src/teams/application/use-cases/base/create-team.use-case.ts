@@ -1,6 +1,6 @@
 import { ITeamsRepository } from '@core/teams/domain/repository';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { CreateTeamDto } from '../dtos';
+import { CreateTeamDto } from '../../dtos';
 import { BaseException } from '@shared/error';
 import { slugify } from 'transliteration';
 
@@ -45,6 +45,8 @@ export class CreateTeamUseCase {
                 message: 'Команда успешно создана',
             };
         } catch (error) {
+            if (error instanceof BaseException) throw error;
+
             throw new BaseException(
                 {
                     code: 'TEAM_CREATE_FAILED',

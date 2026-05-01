@@ -54,6 +54,7 @@ export class ConfirmResetPasswordUseCase {
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
+
         await this.redis.del(redisKey);
 
         return {

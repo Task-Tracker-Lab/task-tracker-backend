@@ -12,7 +12,16 @@ export class UpdateProfileUseCase {
     ) {}
 
     async execute(id: string, dto: UpdateProfileDto) {
-        const isUpdated = await this.userRepo.updateProfile(id, dto);
+        const entity = await this.userRepo.findById(id);
+
+        if (!entity.user) {
+            throw new BaseException(
+                { code: 'USER_NOT_FOUND', message: 'Пользователь не найден' },
+                HttpStatus.NOT_FOUND,
+            );
+        }
+
+        const isUpdated = await this.userRepo.updateProfile(entity.user.id, dto);
 
         if (!isUpdated) {
             throw new BaseException(
@@ -27,6 +36,6 @@ export class UpdateProfileUseCase {
             eventType: 'PROFILE_UPDATED',
         });
 
-        return { success: true };
+        return { success: true, message: 'Профиль успешно обновлен' };
     }
 }

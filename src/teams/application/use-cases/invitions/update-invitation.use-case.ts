@@ -2,9 +2,9 @@ import { ITeamsRepository } from '@core/teams/domain/repository';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
-import { UpdateInvitationDto } from '../dtos';
+import { UpdateInvitationDto } from '../../dtos';
 import { BaseException } from '@shared/error';
-import { TeamInvite } from '../dtos/invitation.dto';
+import { TeamInvite } from '../../dtos/invitation.dto';
 
 @Injectable()
 export class UpdateInvitationUseCase {

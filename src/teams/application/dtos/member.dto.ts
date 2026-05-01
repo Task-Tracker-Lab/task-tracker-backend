@@ -14,7 +14,7 @@ export class InviteMemberDto extends createZodDto(InviteMemberSchema) {}
 
 const UpdateMemberDtoSchema = z
     .object({
-        role: z.string().optional().describe('Новая роль участника'),
+        role: z.enum(roleEnum.enumValues).optional().describe('Новая роль участника'),
         status: z.string().optional().describe('Новый статус (active, blocked и т.д.)'),
     })
     .refine((data) => Object.keys(data).length > 0, {

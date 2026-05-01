@@ -23,7 +23,6 @@ export class SignUpUseCase {
 
     async execute(dto: SignUpDto) {
         const redisKey = `reg:${dto.email}`;
-
         const cachedData = await this.redis.get(redisKey);
 
         if (cachedData) {

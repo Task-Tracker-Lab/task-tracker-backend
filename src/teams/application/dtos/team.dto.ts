@@ -46,6 +46,18 @@ export const SyncTagsSchema = z.object({
         .array(z.string())
         .min(1, 'Список тегов не может быть пустым')
         .max(15, 'Нельзя добавить более 15 тегов за раз')
+        .superRefine((items, ctx) => {
+            if (!items) return;
+            const lowerItems = items.map((i) => i.toLowerCase());
+            const hasDuplicates = new Set(lowerItems).size !== items.length;
+
+            if (hasDuplicates) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Теги в списке не должны повторяться (регистр не важен)',
+                });
+            }
+        })
         .describe(
             'Массив названий тегов для привязки к команде. Если тега нет в базе, он будет создан.',
         ),

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { FindTagsQuery } from '../dtos';
+import { FindTagsQuery } from '../../dtos';
 import { ITeamsRepository } from '@core/teams/domain/repository';
 
 @Injectable()

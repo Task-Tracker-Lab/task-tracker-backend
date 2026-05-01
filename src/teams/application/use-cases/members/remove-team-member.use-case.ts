@@ -1,6 +1,7 @@
+import { TeamMemberPolicy } from '@core/teams/domain/policy';
 import { ITeamsRepository } from '@core/teams/domain/repository';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { ROLE_PRIORITY } from '@shared/constants';
+import type { TeamRole } from '@shared/entities';
 import { BaseException } from '@shared/error';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class RemoveTeamMemberUseCase {
     constructor(
         @Inject('ITeamsRepository')
         private readonly teamsRepo: ITeamsRepository,
+        private readonly policy: TeamMemberPolicy,
     ) {}
 
     async execute(slug: string, currentUserId: string, targetUserId: string) {
@@ -30,6 +32,7 @@ export class RemoveTeamMemberUseCase {
                 HttpStatus.NOT_FOUND,
             );
         }
+
         if (!currentUser) {
             throw new BaseException(
                 { code: 'NOT_A_TEAM_MEMBER', message: 'Вы не состоите в этой команде' },
@@ -39,29 +42,22 @@ export class RemoveTeamMemberUseCase {
 
         const isSelfRemoval = currentUserId === targetUserId;
 
-        if (isSelfRemoval) {
-            if (currentUser.role === 'owner') {
-                throw new BaseException(
-                    { code: 'OWNER_CANNOT_LEAVE', message: 'Владелец не может покинуть команду' },
-                    HttpStatus.BAD_REQUEST,
-                );
-            }
-        } else {
-            const canKick = ROLE_PRIORITY[currentUser.role] > ROLE_PRIORITY[targetUser.role];
-            const hasAuthority = ROLE_PRIORITY[currentUser.role] >= ROLE_PRIORITY.admin;
+        const canRemove = this.policy.canRemove(
+            currentUser.role as TeamRole,
+            targetUser.role as TeamRole,
+            isSelfRemoval,
+        );
 
-            if (!hasAuthority || !canKick) {
-                throw new BaseException(
-                    {
-                        code: 'KICK_FORBIDDEN',
-                        message: 'У вас недостаточно прав, чтобы исключить этого участника',
-                        details: [
-                            { reason: !hasAuthority ? 'Low authority' : 'Target rank too high' },
-                        ],
-                    },
-                    HttpStatus.FORBIDDEN,
-                );
-            }
+        if (!canRemove) {
+            const errorCode = isSelfRemoval ? 'OWNER_CANNOT_LEAVE' : 'KICK_FORBIDDEN';
+            const errorMessage = isSelfRemoval
+                ? 'Владелец не может покинуть команду без передачи прав'
+                : 'У вас недостаточно прав, чтобы исключить этого участника';
+
+            throw new BaseException(
+                { code: errorCode, message: errorMessage },
+                HttpStatus.FORBIDDEN,
+            );
         }
 
         try {
@@ -73,6 +69,8 @@ export class RemoveTeamMemberUseCase {
                     : `Участник успешно исключен из команды ${team.name}`,
             };
         } catch (error) {
+            if (error instanceof BaseException) throw error;
+
             throw new BaseException(
                 { code: 'MEMBER_REMOVAL_FAILED', message: 'Ошибка при удалении участника' },
                 HttpStatus.INTERNAL_SERVER_ERROR,

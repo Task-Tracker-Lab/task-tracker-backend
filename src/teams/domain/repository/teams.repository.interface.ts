@@ -1,6 +1,6 @@
 import type { Team, NewTeam, NewTeamMember, Tag } from '../entities';
 
-type TResponse = { success: boolean; tags: number; teamId: string };
+type TResponse = { success: boolean; teamId: string };
 
 export type RawMemberRow = {
     userId: string;

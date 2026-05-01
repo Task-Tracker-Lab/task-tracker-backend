@@ -13,9 +13,8 @@ export class CheckTeamSlugQuery {
         return {
             available,
             message: available
-                ? `Slug "${normalizedSlug}" доступен для использования`
-                : `Slug "${normalizedSlug}" уже занят`,
-            details: { slug: normalizedSlug },
+                ? `Slug ${normalizedSlug} доступен для использования`
+                : `Slug ${normalizedSlug} уже занят`,
         };
     }
 }

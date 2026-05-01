@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ITeamsRepository } from '../../domain/repository';
+import { ITeamsRepository } from '../../../domain/repository';
 
 @Injectable()
 export class FindTeamMemberQuery {

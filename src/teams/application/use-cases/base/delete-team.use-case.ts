@@ -1,16 +1,15 @@
+import { ITeamsRepository } from '@core/teams/domain/repository';
 import { Inject, Injectable, HttpStatus } from '@nestjs/common';
-import { ITeamsRepository } from '../../domain/repository';
-import type { UpdateTeamDto } from '../dtos';
 import { BaseException } from '@shared/error';
 
 @Injectable()
-export class UpdateTeamUseCase {
+export class DeleteTeamUseCase {
     constructor(
         @Inject('ITeamsRepository')
         private readonly teamsRepo: ITeamsRepository,
     ) {}
 
-    async execute(slug: string, userId: string, dto: UpdateTeamDto) {
+    async execute(slug: string, userId: string) {
         const team = await this.teamsRepo.findBySlug(slug);
 
         if (!team) {
@@ -24,33 +23,32 @@ export class UpdateTeamUseCase {
         }
 
         const member = await this.teamsRepo.findMember(team.id, userId);
-        const canEdit = member?.role === 'admin' || member?.role === 'owner';
+        const isOwner = team.ownerId === userId || member?.role === 'owner';
 
-        if (!canEdit) {
+        if (!isOwner) {
             throw new BaseException(
                 {
-                    code: 'INSUFFICIENT_PERMISSIONS',
-                    message: 'У вас нет прав для редактирования этой команды',
-                    details: [{ target: 'role', value: member?.role }],
+                    code: 'ONLY_OWNER_CAN_DELETE',
+                    message: 'Только владелец может удалить команду',
                 },
                 HttpStatus.FORBIDDEN,
             );
         }
 
-        const { tags, ...data } = dto;
-
         try {
-            const result = await this.teamsRepo.update(team.id, data, tags);
+            const result = await this.teamsRepo.remove(team.id, userId);
 
             return {
-                ...result,
-                message: 'Данные команды успешно обновлены',
+                success: result,
+                message: 'Команда успешно удалена',
             };
         } catch (error) {
+            if (error instanceof BaseException) throw error;
+
             throw new BaseException(
                 {
-                    code: 'TEAM_UPDATE_FAILED',
-                    message: 'Ошибка при обновлении данных команды',
+                    code: 'TEAM_DELETE_FAILED',
+                    message: 'Не удалось удалить команду',
                     details: [{ reason: error instanceof Error ? error.message : 'Unknown error' }],
                 },
                 HttpStatus.INTERNAL_SERVER_ERROR,

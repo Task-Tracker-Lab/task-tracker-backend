@@ -6,10 +6,10 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
 import Redis from 'ioredis';
-import { InviteMemberDto } from '../dtos';
+import { InviteMemberDto } from '../../dtos';
 import { BaseException } from '@shared/error';
 import { generateSecret } from 'otplib';
-import { TeamInvite } from '../dtos/invitation.dto';
+import { TeamInvite } from '../../dtos/invitation.dto';
 import { TeamInvitationEvent } from '@core/teams/domain/events';
 
 @Injectable()

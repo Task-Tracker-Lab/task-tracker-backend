@@ -29,7 +29,7 @@ export class RefreshTokensUseCase {
 
         const session = await this.sessionRepo.findById(payload.jti);
 
-        if (!session || session.isRevoked) {
+        if (!session || session?.isRevoked) {
             throw new BaseException(
                 {
                     code: 'SESSION_REVOKED',
@@ -39,9 +39,9 @@ export class RefreshTokensUseCase {
             );
         }
 
-        const { user } = await this.findUserQuery.execute({ id: session.userId });
+        const entity = await this.findUserQuery.execute({ id: session.userId });
 
-        if (!user) {
+        if (!entity?.user) {
             await this.sessionRepo.revoke(session.id);
             throw new BaseException(
                 {
@@ -55,12 +55,15 @@ export class RefreshTokensUseCase {
         await this.sessionRepo.revoke(session.id);
 
         const newSession = await this.sessionRepo.create({
-            userId: user.id,
+            userId: entity.user.id,
             ...metadata,
             expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
         });
 
-        const { access, refresh } = await this.tokenService.generateTokens(user, newSession.id);
+        const { access, refresh } = await this.tokenService.generateTokens(
+            entity.user,
+            newSession.id,
+        );
 
         return {
             tokens: { access, refresh },

@@ -22,7 +22,6 @@ export class SignUpVerifyUseCase {
 
     async execute(dto: VerifyDto, meta: DeviceMetadata) {
         const redisKey = `reg:${dto.email}`;
-
         const cachedData = await this.redis.get(redisKey);
 
         if (!cachedData) {
@@ -36,6 +35,16 @@ export class SignUpVerifyUseCase {
         }
 
         const userData = JSON.parse(cachedData);
+
+        if (!userData) {
+            throw new BaseException(
+                {
+                    code: 'INTERNAL_DATA_CORRUPTION',
+                    message: 'Ошибка целостности данных. Попробуйте начать регистрацию заново.',
+                },
+                HttpStatus.UNPROCESSABLE_ENTITY,
+            );
+        }
 
         const verifyResult = await verifyOTP({
             token: dto.code,

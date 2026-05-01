@@ -39,12 +39,12 @@ export class TeamsRepository implements ITeamsRepository {
                 .values({ ...dto, ownerId })
                 .returning({ teamId: schema.teams.id });
 
-            let insertedTagsCount = 0;
-
             if (tags?.length) {
+                const names = tags.map((n) => ({ name: n }));
+
                 const insertedTags = await tx
                     .insert(schema.tags)
-                    .values(tags.map((name) => ({ name })))
+                    .values(names)
                     .onConflictDoUpdate({
                         target: schema.tags.name,
                         set: { name: sql`${schema.tags.name}` },
@@ -52,14 +52,9 @@ export class TeamsRepository implements ITeamsRepository {
                     .returning({ id: schema.tags.id });
 
                 if (insertedTags.length > 0) {
-                    await tx.insert(schema.teamsToTags).values(
-                        insertedTags.map((tag) => ({
-                            teamId,
-                            tagId: tag.id,
-                        })),
-                    );
+                    const tags = insertedTags.map((t) => ({ teamId, tagId: t.id }));
 
-                    insertedTagsCount = insertedTags.length;
+                    await tx.insert(schema.teamsToTags).values(tags);
                 }
             }
 
@@ -74,7 +69,6 @@ export class TeamsRepository implements ITeamsRepository {
             return {
                 success: true,
                 teamId,
-                tags: insertedTagsCount,
             };
         });
     };
@@ -88,12 +82,12 @@ export class TeamsRepository implements ITeamsRepository {
                 .returning({ teamId: schema.teams.id });
 
             if (tags?.length) {
+                // TODO: FEAT AT FEATURE
             }
 
             return {
                 success: true,
                 teamId,
-                tags: 0,
             };
         });
     };

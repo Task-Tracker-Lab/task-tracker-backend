@@ -1,26 +1,25 @@
-import { CheckTeamSlugQuery } from './check-team-slug.query';
-import { FindTeamQuery } from './find-team.query';
-import { FindTeamMemberQuery } from './find-team-member.query';
-import { GetInvitationQuery } from './get-invitation.query';
-import { GetInvitationsQuery } from './get-invitations.query';
-import { GetTeamMembersQuery } from './get-team-members.query';
-import { GetAllTagsUseCase } from './get-all-tags.use-case';
-import { GetMyInvitesUseCase } from './get-my-invites.use-case';
-import { GetMyTeamsUseCase } from './get-my-teams.use-case';
-import { GetUserInvitesUseCase } from './get-user-invites.use-case';
+import { CheckTeamSlugQuery } from './base/check-team-slug.query';
+import { FindTeamQuery } from './base/find-team.query';
+import { FindTeamMemberQuery } from './members/find-team-member.query';
+import { GetInvitationQuery } from './invitions/get-invitation.query';
+import { GetInvitationsQuery } from './invitions/get-invitations.query';
+import { GetTeamMembersQuery } from './members/get-team-members.query';
+import { GetAllTagsUseCase } from './base/get-all-tags.use-case';
+import { GetMyInvitesUseCase } from './invitions/get-my-invites.use-case';
+import { GetMyTeamsUseCase } from './base/get-my-teams.use-case';
 
-import { AcceptInvitationUseCase } from './accept-invitation.use-case';
-import { CreateTeamUseCase } from './create-team.use-case';
-import { DeleteTeamUseCase } from './delete-team.use-case';
-import { RemoveTeamMemberUseCase } from './remove-team-member.use-case';
-import { SendInvitationUseCase } from './send-invitation.use-case';
-import { SyncTeamTagsUseCase } from './sync-team-tags.use-case';
-import { UpdateTeamUseCase } from './update-team.use-case';
-import { UpdateTeamAvatarUseCase } from './update-team-avatar.use-case';
-import { UpdateTeamBannerUseCase } from './update-team-banner.use-case';
-import { UpdateTeamMemberUseCase } from './update-team-member.use-case';
-import { UpdateInvitationUseCase } from './update-invitation.use-case';
-import { DeclineInvitationUseCase } from './decline-invitation.use-case';
+import { AcceptInvitationUseCase } from './invitions/accept-invitation.use-case';
+import { CreateTeamUseCase } from './base/create-team.use-case';
+import { DeleteTeamUseCase } from './base/delete-team.use-case';
+import { RemoveTeamMemberUseCase } from './members/remove-team-member.use-case';
+import { SendInvitationUseCase } from './invitions/send-invitation.use-case';
+import { SyncTeamTagsUseCase } from './base/sync-team-tags.use-case';
+import { UpdateTeamUseCase } from './base/update-team.use-case';
+import { UpdateTeamAvatarUseCase } from './base/update-team-avatar.use-case';
+import { UpdateTeamBannerUseCase } from './base/update-team-banner.use-case';
+import { UpdateTeamMemberUseCase } from './members/update-team-member.use-case';
+import { UpdateInvitationUseCase } from './invitions/update-invitation.use-case';
+import { DeclineInvitationUseCase } from './invitions/decline-invitation.use-case';
 
 export {
     CheckTeamSlugQuery,
@@ -32,7 +31,6 @@ export {
     GetAllTagsUseCase,
     GetMyInvitesUseCase,
     GetMyTeamsUseCase,
-    GetUserInvitesUseCase,
     AcceptInvitationUseCase,
     CreateTeamUseCase,
     DeleteTeamUseCase,
@@ -57,7 +55,6 @@ export const TeamQueries = [
     GetAllTagsUseCase,
     GetMyInvitesUseCase,
     GetMyTeamsUseCase,
-    GetUserInvitesUseCase,
 ];
 
 export const TeamUseCases = [

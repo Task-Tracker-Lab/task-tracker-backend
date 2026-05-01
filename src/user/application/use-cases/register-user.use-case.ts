@@ -39,6 +39,10 @@ export class RegisterUserUseCase {
 
             return user;
         } catch (error) {
+            if (error instanceof BaseException) {
+                throw error;
+            }
+
             throw new BaseException(
                 {
                     code: 'USER_REGISTRATION_FAILED',

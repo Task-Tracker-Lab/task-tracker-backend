@@ -3,7 +3,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { BaseException } from '@shared/error';
 import Redis from 'ioredis';
-import type { TeamInvite } from '../dtos/invitation.dto';
+import type { TeamInvite } from '../../dtos/invitation.dto';
 
 @Injectable()
 export class AcceptInvitationUseCase {

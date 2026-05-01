@@ -16,6 +16,7 @@ import { TeamQueues } from './domain/enums';
 import { TeamsFacade } from './application/team.facade';
 import { TeamQueries, TeamUseCases, TEAM_EXTERNAL_QUERIES } from './application/use-cases';
 import { MediaModule } from '@shared/media';
+import { TeamMemberPolicy } from './domain/policy';
 
 const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
 
@@ -58,7 +59,7 @@ const REPOSITORY = { provide: 'ITeamsRepository', useClass: TeamsRepository };
         TeamsController,
         MeController,
     ],
-    providers: [REPOSITORY, ...TeamUseCases, ...TeamQueries, TeamsFacade],
+    providers: [TeamMemberPolicy, REPOSITORY, ...TeamUseCases, ...TeamQueries, TeamsFacade],
     exports: [...TEAM_EXTERNAL_QUERIES],
 })
 export class TeamsModule {}
