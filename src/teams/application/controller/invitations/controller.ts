@@ -27,9 +27,9 @@ export class TeamsInvitationsController {
     async getOne(
         @Param('slug') slug: string,
         @Param('code') code: string,
-        @GetUserId() userId: string,
+        @GetUser() user: JwtPayload,
     ) {
-        return this.facade.getInvitation(slug, code, userId);
+        return this.facade.getInvitation(slug, code, user.sub, user.email);
     }
 
     @Post()
@@ -64,8 +64,8 @@ export class TeamsInvitationsController {
     async decline(
         @Param('slug') slug: string,
         @Param('code') code: string,
-        @GetUserId() userId: string,
+        @GetUser() user: JwtPayload,
     ) {
-        return this.facade.declineInvitation(slug, code, userId);
+        return this.facade.declineInvitation(slug, code, user.sub, user.email);
     }
 }

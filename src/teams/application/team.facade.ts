@@ -40,8 +40,8 @@ export class TeamsFacade {
 
     public getTeamBySlug = (slug: string) => this.findTeamQ.execute(slug);
 
-    public getInvitation = (slug: string, code: string, userId: string) =>
-        this.getInvitationQ.execute(slug, code, userId);
+    public getInvitation = (slug: string, code: string, userId: string, userEmail: string) =>
+        this.getInvitationQ.execute(slug, code, userId, userEmail);
 
     public createTeam = (ownerId: string, dto: CreateTeamDto) =>
         this.createTeamUc.execute(ownerId, dto);
@@ -68,8 +68,8 @@ export class TeamsFacade {
     public acceptInvite = (code: string, userId: string, email: string) =>
         this.acceptInviteUc.execute(code, userId, email);
 
-    public declineInvitation = (slug: string, code: string, userId: string) =>
-        this.declineInvitationUc.execute(slug, code, userId);
+    public declineInvitation = (slug: string, code: string, userId: string, userEmail: string) =>
+        this.declineInvitationUc.execute(slug, code, userId, userEmail);
 
     public updateInvitation = (
         slug: string,
