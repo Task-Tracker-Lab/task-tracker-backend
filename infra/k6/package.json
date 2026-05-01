@@ -1,0 +1,16 @@
+{
+    "name": "@project/performance-tests",
+    "version": "0.0.1",
+    "description": "Нагрузочные и стресс-тесты API бэкенда с использованием k6",
+    "scripts": {
+        "test:all": "k6 run scenarios/stress-full.js",
+        "test:auth": "k6 run scenarios/auth.js",
+        "test:teams": "k6 run scenarios/teams.js",
+        "test:projects": "k6 run scenarios/projects.js",
+        "test:users": "k6 run scenarios/users.js",
+        "test:board": "k6 run scenarios/board-full.js",
+        "test:tasks": "k6 run scenarios/tasks.js",
+        "smoke": "k6 run smoke.js"
+    },
+    "packageManager": "pnpm@10.33.0"
+}

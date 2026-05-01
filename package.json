@@ -1,7 +1,7 @@
 {
     "name": "task-backend",
     "version": "0.0.1",
-    "description": "",
+    "description": "Основной API-сервис управления задачами (NestJS + Fastify + Drizzle ORM)",
     "author": "",
     "private": true,
     "license": "MIT",
@@ -19,8 +19,17 @@
         "test:e2e": "vitest run -c vitest.config.e2e.ts",
         "db:generate": "drizzle-kit generate",
         "db:migrate": "drizzle-kit migrate",
-        "db:studio": "drizzle-kit studio",
-        "prepare": "husky"
+        "prepare": "husky",
+        "k6:all": "pnpm --filter @project/performance-tests test:all",
+        "k6:auth": "pnpm --filter @project/performance-tests test:auth",
+        "k6:teams": "pnpm --filter @project/performance-tests test:teams",
+        "k6:projects": "pnpm --filter @project/performance-tests test:projects",
+        "k6:users": "pnpm --filter @project/performance-tests test:users",
+        "k6:board": "pnpm --filter @project/performance-tests test:board",
+        "k6:tasks": "pnpm --filter @project/performance-tests test:tasks",
+        "k6:smoke": "pnpm --filter @project/performance-tests smoke",
+        "k6:seed": "npx tsx infra/k6/scripts/seed-k6-data.ts",
+        "k6:clear": "npx tsx infra/k6/scripts/clear-k6-data.ts"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1029.0",
@@ -48,6 +57,7 @@
         "@willsoto/nestjs-prometheus": "^6.1.0",
         "argon2": "^0.44.0",
         "bullmq": "^5.73.4",
+        "dotenv": "^17.4.2",
         "drizzle-orm": "^0.45.2",
         "drizzle-zod": "^0.8.3",
         "fastify": "^5.8.4",
