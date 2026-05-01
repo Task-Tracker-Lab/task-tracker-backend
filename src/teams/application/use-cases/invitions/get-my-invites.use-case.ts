@@ -11,14 +11,32 @@ export class GetMyInvitesUseCase {
     ) {}
 
     async execute(email: string) {
-        const codes = await this.redis.smembers(`user:invites:${email}`);
+        const userKey = `user:invites:${email.toLowerCase()}`;
+        const codes = await this.redis.smembers(userKey);
 
         if (!codes.length) return [];
 
-        const results = await this.redis.mget(codes.map((c) => `inv:code:${c}`));
+        const inviteKeys = codes.map((c) => `inv:code:${c}`);
+        const results = await this.redis.mget(inviteKeys);
 
-        return results
-            .map((raw, i) => TeamMemberMapper.toPublicInvite(raw, codes[i]))
-            .filter(Boolean);
+        const { activeInvites, expiredCodes } = results.reduce(
+            (acc, raw, i) => {
+                if (raw) {
+                    acc.activeInvites.push(TeamMemberMapper.toPublicInvite(raw, codes[i]));
+                } else {
+                    acc.expiredCodes.push(codes[i]);
+                }
+                return acc;
+            },
+            { activeInvites: [], expiredCodes: [] },
+        );
+
+        if (expiredCodes.length > 0) {
+            this.redis.srem(userKey, ...expiredCodes).catch((err) => {
+                console.error('Failed to cleanup expired invites:', err);
+            });
+        }
+
+        return activeInvites;
     }
 }

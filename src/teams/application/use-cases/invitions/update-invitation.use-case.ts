@@ -5,6 +5,8 @@ import Redis from 'ioredis';
 import { UpdateInvitationDto } from '../../dtos';
 import { BaseException } from '@shared/error';
 import { TeamInvite } from '../../dtos/invitation.dto';
+import { TeamMemberPolicy } from '@core/teams/domain/policy';
+import { TeamRole } from '@shared/entities';
 
 @Injectable()
 export class UpdateInvitationUseCase {
@@ -13,9 +15,29 @@ export class UpdateInvitationUseCase {
     constructor(
         @Inject('ITeamsRepository') private readonly teamsRepo: ITeamsRepository,
         @InjectRedis() private readonly redis: Redis,
+        private readonly policy: TeamMemberPolicy,
     ) {}
 
     async execute(slug: string, code: string, userId: string, dto: UpdateInvitationDto) {
+        const team = await this.getTeamOrThrow(slug);
+        const member = await this.getMemberOrThrow(team.id, userId);
+
+        const key = this.INVITES_KEY(code);
+        const { invite, ttl } = await this.getInviteContextOrThrow(key);
+
+        this.validateInviteOwnership(invite, team.id);
+        this.validatePolicy(member.role as TeamRole, invite.role as TeamRole, dto.role as TeamRole);
+
+        invite.role = dto.role as TeamRole;
+        await this.redis.set(key, JSON.stringify(invite), 'EX', ttl);
+
+        return {
+            success: true,
+            message: 'Роль в приглашении успешно обновлена',
+        };
+    }
+
+    private async getTeamOrThrow(slug: string) {
         const team = await this.teamsRepo.findBySlug(slug);
         if (!team) {
             throw new BaseException(
@@ -23,58 +45,56 @@ export class UpdateInvitationUseCase {
                 HttpStatus.NOT_FOUND,
             );
         }
+        return team;
+    }
 
-        const member = await this.teamsRepo.findMember(team.id, userId);
-        if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
+    private async getMemberOrThrow(teamId: string, userId: string) {
+        const member = await this.teamsRepo.findMember(teamId, userId);
+        if (!member) {
             throw new BaseException(
-                {
-                    code: 'INSUFFICIENT_PERMISSIONS',
-                    message: 'У вас нет прав на редактирование приглашений в этой команде',
-                    details: [{ requiredRoles: ['owner', 'admin'], currentRole: member?.role }],
-                },
+                { code: 'NOT_A_MEMBER', message: 'Вы не член команды' },
                 HttpStatus.FORBIDDEN,
             );
         }
+        return member;
+    }
 
-        const key = this.INVITES_KEY(code);
+    private async getInviteContextOrThrow(key: string) {
         const [rawInvite, ttl] = await Promise.all([this.redis.get(key), this.redis.ttl(key)]);
 
         if (!rawInvite || ttl <= 0) {
             throw new BaseException(
                 {
                     code: 'INVITE_NOT_FOUND_OR_EXPIRED',
-                    message: 'Приглашение не найдено или его срок действия уже истек',
-                    details: [{ code }],
+                    message: 'Приглашение не найдено или истекло',
                 },
                 HttpStatus.NOT_FOUND,
             );
         }
 
-        const invite = JSON.parse(rawInvite) as TeamInvite;
+        return { invite: JSON.parse(rawInvite) as TeamInvite, ttl };
+    }
 
-        if (invite.teamId !== team.id) {
+    private validateInviteOwnership(invite: TeamInvite, teamId: string) {
+        if (invite.teamId !== teamId) {
             throw new BaseException(
-                {
-                    code: 'INVITE_TEAM_MISMATCH',
-                    message: 'Это приглашение принадлежит другой команде',
-                    details: [{ inviteTeamId: invite.teamId, requestTeamId: team.id }],
-                },
+                { code: 'INVITE_TEAM_MISMATCH', message: 'Приглашение принадлежит другой команде' },
                 HttpStatus.BAD_REQUEST,
             );
         }
+    }
 
-        invite.role = dto.role;
+    private validatePolicy(issuerRole: TeamRole, currentTargetRole: TeamRole, newRole: TeamRole) {
+        const canUpdate = this.policy.canAssignRole(issuerRole, currentTargetRole, newRole);
 
-        if (ttl > 0) {
-            await this.redis.set(key, JSON.stringify(invite), 'EX', ttl);
-        } else {
-            await this.redis.set(key, JSON.stringify(invite));
+        if (!canUpdate) {
+            throw new BaseException(
+                {
+                    code: 'INSUFFICIENT_PERMISSIONS',
+                    message: 'У вас недостаточно прав для назначения этой роли',
+                },
+                HttpStatus.FORBIDDEN,
+            );
         }
-
-        return {
-            success: true,
-            message: 'Приглашение успешно обновлено',
-            details: { code, role: invite.role, email: invite.email },
-        };
     }
 }

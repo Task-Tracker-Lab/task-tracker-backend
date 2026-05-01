@@ -57,7 +57,7 @@ export class TeamMemberPolicy {
     /**
      * Может ли Инициатор удалить Цель (или самого себя)?
      */
-    canRemove(issuerRole: TeamRole, targetRole: TeamRole, isSelf: boolean): boolean {
+    public canRemove(issuerRole: TeamRole, targetRole: TeamRole, isSelf: boolean): boolean {
         if (isSelf) {
             return issuerRole !== 'owner';
         }
@@ -66,5 +66,24 @@ export class TeamMemberPolicy {
         const targetPrio = this.getPriority(targetRole);
 
         return issuerPrio >= ROLE_PRIORITY.admin && issuerPrio > targetPrio;
+    }
+
+    /**
+     * Может ли Инициатор приглашать новых участников с определенной ролью?
+     */
+    public canInvite(issuerRole: TeamRole, newMemberRole: TeamRole): boolean {
+        const issuerPrio = this.getPriority(issuerRole);
+        const newRolePrio = this.getPriority(newMemberRole);
+
+        // Только админы и выше могут приглашать
+        if (issuerPrio < ROLE_PRIORITY.admin) return false;
+
+        // Нельзя пригласить кого-то на роль выше или равную своей (кроме owner)
+        if (issuerRole !== 'owner' && newRolePrio >= issuerPrio) return false;
+
+        // Нельзя пригласить на роль owner через обычный инвайт
+        if (newMemberRole === 'owner') return false;
+
+        return true;
     }
 }

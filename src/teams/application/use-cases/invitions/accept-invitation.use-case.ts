@@ -29,7 +29,7 @@ export class AcceptInvitationUseCase {
         }
 
         const invite = JSON.parse(inviteRaw) as TeamInvite;
-        if (invite.email.toLowerCase() !== email.toLowerCase()) {
+        if (invite?.email?.toLowerCase() !== email.toLowerCase()) {
             throw new BaseException(
                 {
                     code: 'INVITE_EMAIL_MISMATCH',
@@ -64,20 +64,31 @@ export class AcceptInvitationUseCase {
             joinedAt: new Date(),
         });
 
-        const multi = this.redis.multi();
-        multi.del(this.INVITES_KEY(code));
-        multi.srem(this.TEAM_INVITES_KEY(invite.teamId), code);
-        multi.srem(this.USER_INVITES_KEY(email.toLowerCase()), code);
-        await multi.exec();
+        await this.redis
+            .multi()
+            .del(this.INVITES_KEY(code))
+            .srem(this.TEAM_INVITES_KEY(invite.teamId), code)
+            .srem(this.USER_INVITES_KEY(email.toLowerCase()), code)
+            .exec();
 
         return { success: true, message: 'Вы успешно присоединились к команде' };
     }
 
+    private checkMemberStatus(member: any) {
+        if (member?.status === 'banned') {
+            // throw new BaseException({ code: 'MEMBER_BANNED' }, 403);
+        }
+        if (member?.status === 'active') {
+            // throw new BaseException({ code: 'ALREADY_MEMBER' }, 400);
+        }
+    }
+
     private async cleanupInvite(code: string, teamId: string, email: string) {
-        const multi = this.redis.multi();
-        multi.del(this.INVITES_KEY(code));
-        multi.srem(this.TEAM_INVITES_KEY(teamId), code);
-        multi.srem(this.USER_INVITES_KEY(email.toLowerCase()), code);
-        await multi.exec();
+        await this.redis
+            .multi()
+            .del(this.INVITES_KEY(code))
+            .srem(this.TEAM_INVITES_KEY(teamId), code)
+            .srem(this.USER_INVITES_KEY(email.toLowerCase()), code)
+            .exec();
     }
 }
