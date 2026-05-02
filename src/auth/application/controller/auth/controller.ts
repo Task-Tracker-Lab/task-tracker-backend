@@ -12,10 +12,20 @@ import { BearerAuthGuard, CookieAuthGuard } from '@shared/guards';
 import { AuthFacade } from '../../auth.facade';
 import { getDeviceMeta } from '@core/auth/infrastructure/utils/get-device-meta';
 import { ApiBaseController } from '@shared/decorators';
+import { ConfigService } from '@nestjs/config';
 
 @ApiBaseController('auth', 'Auth')
 export class AuthController {
-    constructor(private readonly facade: AuthFacade) {}
+    constructor(
+        private readonly facade: AuthFacade,
+        private cfg: ConfigService,
+    ) {
+        this.isProduction = this.cfg.get('NODE_ENV') === 'production';
+        this.domain = this.cfg.get('DOMAIN');
+    }
+
+    private readonly isProduction: boolean;
+    private readonly domain: string;
 
     @Post('sign-up')
     @PostRegisterSwagger()
@@ -35,12 +45,7 @@ export class AuthController {
         const meta = getDeviceMeta(req);
         const { tokens, ...response } = await this.facade.verifySignUp(dto, meta);
 
-        res.setCookie('refresh', tokens.refresh, {
-            httpOnly: true,
-            secure: false,
-            path: '/',
-            sameSite: 'lax',
-        });
+        this.setRefreshCookie(res, tokens.refresh);
 
         return { ...response, token: tokens.access };
     }
@@ -55,12 +60,7 @@ export class AuthController {
         const meta = getDeviceMeta(req);
         const { tokens, ...response } = await this.facade.signIn(dto, meta);
 
-        res.setCookie('refresh', tokens.refresh, {
-            httpOnly: true,
-            secure: false,
-            path: '/',
-            sameSite: 'lax',
-        });
+        this.setRefreshCookie(res, tokens.refresh);
 
         return { ...response, token: tokens.access };
     }
@@ -87,13 +87,18 @@ export class AuthController {
         const session = req.cookies?.['refresh'];
         const { tokens, ...response } = await this.facade.refreshTokens(session, meta);
 
-        res.setCookie('refresh', tokens.refresh, {
-            httpOnly: true,
-            secure: false,
-            path: '/',
-            sameSite: 'lax',
-        });
+        this.setRefreshCookie(res, tokens.refresh);
 
         return { token: tokens.access, ...response };
+    }
+
+    private setRefreshCookie(res: FastifyReply, refreshToken: string) {
+        res.setCookie('refresh', refreshToken, {
+            httpOnly: true,
+            secure: this.isProduction,
+            path: '/',
+            sameSite: 'lax',
+            domain: `*.${this.domain}`,
+        });
     }
 }
