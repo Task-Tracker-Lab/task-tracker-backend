@@ -123,7 +123,9 @@ export class SendInvitationUseCase {
             .multi()
             .set(this.INVITES_KEY(code), JSON.stringify(data), 'EX', this.INVITE_TTL)
             .sadd(this.TEAM_INVITES_KEY(data.teamId), code)
+            .expire(this.TEAM_INVITES_KEY(data.teamId), this.INVITE_TTL)
             .sadd(this.USER_INVITES_KEY(data.email), code)
+            .expire(this.USER_INVITES_KEY(data.email), this.INVITE_TTL)
             .exec();
     }
 
