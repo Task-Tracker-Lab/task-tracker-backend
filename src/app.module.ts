@@ -49,6 +49,7 @@ import { ProjectsModule } from './projects';
                 },
             }),
         }),
+        MailModule,
         AuthModule,
         UserModule,
         TeamsModule,
@@ -60,7 +61,6 @@ import { ProjectsModule } from './projects';
         HealthModule.register('gateway'),
     ],
     providers: [
-        MailModule,
         {
             provide: APP_PIPE,
             useClass: ZodValidationPipe,
