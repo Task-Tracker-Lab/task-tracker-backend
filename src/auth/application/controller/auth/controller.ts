@@ -73,7 +73,7 @@ export class AuthController {
         const session = req.cookies?.['refresh'];
         const response = await this.facade.signOut(session);
 
-        res.clearCookie('refresh', { path: '/' });
+        res.clearCookie('refresh', { path: '/', domain: `.${this.domain}` });
 
         return response;
     }
