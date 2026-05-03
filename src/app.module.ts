@@ -16,6 +16,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { MailModule } from '@shared/adapters/mail';
 import { TeamsModule } from './teams';
 import { ProjectsModule } from './projects';
+import { ImagorModule } from '../libs/imagor/src';
 
 @Module({
     imports: [
@@ -47,6 +48,13 @@ import { ProjectsModule } from './projects';
                     host: cfg.getOrThrow('REDIS_HOST'),
                     port: cfg.get('REDIS_PORT'),
                 },
+            }),
+        }),
+        ImagorModule.forRootAsync({
+            global: true,
+            inject: [ConfigService],
+            useFactory: () => ({
+                url: 'http://127.0.0.1:8000',
             }),
         }),
         MailModule,
