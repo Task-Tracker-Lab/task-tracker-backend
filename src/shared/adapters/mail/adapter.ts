@@ -11,13 +11,22 @@ export class MailAdapter implements IMailPort {
     private transporter: nodemailer.Transporter;
 
     constructor(private cfg: ConfigService) {
+        const port = this.cfg.get('MAIL_PORT');
+        const mode = this.cfg.get('NODE_ENV');
+
         this.transporter = nodemailer.createTransport({
             host: this.cfg.get('MAIL_HOST'),
-            port: this.cfg.get('MAIL_PORT'),
-            secure: true,
+            port: +port,
+            secure: port === 465,
             auth: {
                 user: this.cfg.get('MAIL_USER'),
                 pass: this.cfg.get('MAIL_PASSWORD'),
+            },
+            pool: true,
+            connectionTimeout: 10000,
+            tls: {
+                rejectUnauthorized: mode === 'production',
+                servername: 'smtp.gmail.com',
             },
         });
     }
