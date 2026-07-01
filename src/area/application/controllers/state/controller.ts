@@ -14,7 +14,7 @@ import {
     UpdateStateSwagger,
 } from './swagger';
 
-@ApiBaseController('area/:slug/states', 'Area States', true)
+@ApiBaseController('areas/:slug/states', 'Area States', true)
 export class StateController {
     constructor(private readonly facade: AreaFacade) {}
 

@@ -70,7 +70,7 @@ export class MoveStateUseCase {
 
             await this.stateRepo.update(area.id, stateId, { position });
 
-            await this.checkReorder(dto, area.id);
+            // await this.checkReorder(dto, area.id);
 
             return {
                 success: true,
@@ -91,6 +91,8 @@ export class MoveStateUseCase {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-expect-error
     private async checkReorder(dto: MoveStateDto, areaId: string) {
         const prev = dto.prevStatePosition;
         const next = dto.nextStatePosition;

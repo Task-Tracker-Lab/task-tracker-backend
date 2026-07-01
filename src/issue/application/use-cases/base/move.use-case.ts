@@ -50,7 +50,7 @@ export class MoveIssueUseCase {
 
             await this.issueRepo.update(id, data);
 
-            await this.checkReorder(dto, issue.stateId);
+            // await this.checkReorder(dto, issue.stateId);
 
             return {
                 success: true,
@@ -80,6 +80,8 @@ export class MoveIssueUseCase {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-expect-error
     private async checkReorder(dto: MoveIssueDto, currentStateId: string | null) {
         const prev = dto.prevIssuePosition;
         const next = dto.nextIssuePosition;
