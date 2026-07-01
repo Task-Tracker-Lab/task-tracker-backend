@@ -1,3 +1,4 @@
+import { StateQueues } from '@core/area/domain/enums';
 import { ProjectModule } from '@core/project';
 import { BullModule } from '@nestjs/bullmq';
 import { forwardRef, Module } from '@nestjs/common';
@@ -11,7 +12,7 @@ import { AreaProcessor } from './infrastructure/workers/area.processor';
 
 @Module({
     imports: [
-        BullModule.registerQueue({ name: AreaQueues.AREA_WORKSPACE }),
+        BullModule.registerQueue({ name: AreaQueues.AREA_WORKSPACE }, { name: StateQueues.STATE }),
         forwardRef(() => ProjectModule),
     ],
     controllers: [...CONTROLLERS],

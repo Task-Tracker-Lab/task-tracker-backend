@@ -40,7 +40,7 @@ export class UpdateIssueUseCase {
 
             await this.validateContext(id, dto, project.id, key, userId);
 
-            const result = await this.issueRepo.update(id, dto, userId);
+            const result = await this.issueRepo.update(id, dto);
 
             return {
                 success: result,

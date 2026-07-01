@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 import {
     CreateStateDto,
+    MoveStateDto,
     UpdateStateDto,
-    ReordersStatesDto,
     CreateAreaDto,
     UpdateAreaDto,
     QueryParamsDto,
@@ -20,7 +20,7 @@ import {
     DeleteStateUseCase,
     GetStateQuery,
     GetStatesQuery,
-    ReorderStateUseCase,
+    MoveStateUseCase,
     RestoreStateUseCase,
     UpdateStateUseCase,
 } from './use-cases/states';
@@ -40,7 +40,7 @@ export class AreaFacade {
         private readonly updateStateUC: UpdateStateUseCase,
         private readonly deleteStateUC: DeleteStateUseCase,
         private readonly restoreStateUC: RestoreStateUseCase,
-        private readonly reorderStateUC: ReorderStateUseCase,
+        private readonly moveStateUC: MoveStateUseCase,
     ) {}
 
     public async createArea(slug: string, dto: CreateAreaDto, userId: string) {
@@ -87,7 +87,7 @@ export class AreaFacade {
         return this.restoreStateUC.execute(slug, stateId, userId);
     }
 
-    public async reoderStates(slug: string, dto: ReordersStatesDto, userId: string) {
-        return this.reorderStateUC.execute(slug, dto, userId);
+    public async moveState(slug: string, stateId: string, dto: MoveStateDto, userId: string) {
+        return this.moveStateUC.execute(slug, stateId, dto, userId);
     }
 }

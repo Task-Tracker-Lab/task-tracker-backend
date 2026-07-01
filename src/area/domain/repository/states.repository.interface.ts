@@ -12,4 +12,5 @@ export interface IStateRepository {
         type: 'custom' | 'archived' | 'backlog' | 'todo' | 'in_progress' | 'review' | 'done',
     ): Promise<State | null>;
     countByArea(areaId: string): Promise<number>;
+    reorder(areaId: string): Promise<void>;
 }

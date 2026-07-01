@@ -1,7 +1,7 @@
 import { IStateRepository } from '@core/area/domain/repository';
 import { DATABASE_SERVICE, DatabaseService } from '@libs/database';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, count, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 
 import * as schema from '../models';
 
@@ -111,6 +111,32 @@ export class StateRepository implements IStateRepository {
             );
 
         return result ?? null;
+    }
+
+    public async reorder(areaId: string) {
+        const currentStates = await this.db
+            .select({ id: schema.states.id })
+            .from(schema.states)
+            .where(eq(schema.states.areaId, areaId))
+            .orderBy(schema.states.position);
+
+        if (currentStates.length === 0) {
+            return;
+        }
+
+        const STEP = 100.0;
+        const sqlChunks: string[] = [];
+
+        currentStates.forEach((state, index) => {
+            const newPos = (index + 1) * STEP;
+            sqlChunks.push(`WHEN id = '${state.id}' THEN ${newPos}::double precision`);
+        });
+
+        await this.db.execute(sql`
+          UPDATE ${schema.states}
+          SET position = CASE ${sql.raw(sqlChunks.join(' '))} END
+          WHERE area_id = ${areaId}
+        `);
     }
 
     public readonly countByArea = async (areaId: string) => {

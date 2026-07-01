@@ -3,7 +3,7 @@ import { DATABASE_SERVICE, DatabaseService, paginateCursor } from '@libs/databas
 import { Inject, Injectable } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import { CursorQuery } from '@shared/schemas';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 
 import * as sc from '../models';
 
@@ -186,7 +186,9 @@ export class UserRepository implements IUserRepository {
     public updateNotifications = async (id: string, settings: UserNotifications['settings']) => {
         const result = await this.db
             .update(sc.userNotifications)
-            .set({ settings })
+            .set({
+                settings: sql`${sc.userNotifications.settings} || ${JSON.stringify(settings)}::jsonb`,
+            })
             .where(eq(sc.userNotifications.userId, id));
         return (result?.count ?? 0) > 0;
     };

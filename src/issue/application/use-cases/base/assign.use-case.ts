@@ -50,7 +50,7 @@ export class AssignIssueUseCase {
                 }
             }
 
-            const result = await this.issueRepo.update(id, { assigneeId: dto.assigneeId }, userId);
+            const result = await this.issueRepo.update(id, { assigneeId: dto.assigneeId });
 
             return {
                 success: result,

@@ -161,7 +161,7 @@ export const ProjectListItemSchema = z.object({
     id: z.string().describe('ID проекта'),
     slug: z.string().describe('Slug проекта (URL-идентификатор)'),
     name: z.string().describe('Название проекта'),
-    description: z.string().describe('Описание проекта'),
+    description: z.string().nullable().describe('Описание проекта'),
     status: ProjectStatusSchema.default('active').describe('Текущий статус проекта'),
     color: z.string().describe('Цвет проекта'),
     icon: z.string().nullish().describe('Иконка проекта'),

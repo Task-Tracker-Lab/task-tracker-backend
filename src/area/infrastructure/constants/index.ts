@@ -9,3 +9,5 @@ export const DEFAULT_STATES = [
     { title: 'Готово', type: 'done', category: 'completed', position: 4, color: '#10B981' },
     { title: 'Архив', type: 'archived', category: 'archived', position: 5, color: '#6B7280' },
 ] as const;
+
+export const REORDER_TRIGGER = 0.00001;

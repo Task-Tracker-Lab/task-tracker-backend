@@ -55,7 +55,7 @@ export class FindProjectQuery {
             throw new BaseException(
                 {
                     code: 'AUTH_REQUIRED',
-                    message: 'Требуется авторизация для доступа к приватному проекту',
+                    message: 'Требуется авторизация для доступа к проекту',
                 },
                 HttpStatus.UNAUTHORIZED,
             );

@@ -12,7 +12,7 @@ import {
     UpdateAreaSwagger,
 } from './swagger';
 
-@ApiBaseController('projects/:slug/area', 'Project Areas', true)
+@ApiBaseController('projects/:slug/areas', 'Project Areas', true)
 export class AreaController {
     constructor(private readonly facade: AreaFacade) {}
 

@@ -123,22 +123,6 @@ export const CreateStateSchema = StateSchema.omit({
     })
     .describe('Схема для создания нового состояния');
 
-export const ReorderStateItemSchema = z.object({
-    id: z.string().describe('ID состояния'),
-    orderIndex: z.number().min(0).describe('Новый порядковый индекс'),
-});
-
-export const ReorderStatesSchema = z.object({
-    items: z.array(ReorderStateItemSchema).min(1).describe('Массив состояний с новыми индексами'),
-});
-
-export class StateResponse extends createZodDto(StateSchema) {}
-export class StatesResponse extends createZodDto(StatesSchema) {}
-export class CreateStateDto extends createZodDto(CreateStateSchema) {}
-export class UpdateStateDto extends createZodDto(CreateStateSchema.partial()) {}
-export class CreateStateResponse extends createZodDto(CreateStateResponseSchema) {}
-export class ReordersStatesDto extends createZodDto(ReorderStatesSchema) {}
-
 export const QueryParamsSchema = z
     .object({
         hidden: z.boolean().optional().default(false).describe('Скрытые записи'),
@@ -151,3 +135,32 @@ export const QueryParamsSchema = z
     .extend(createSortingSchema(['order', 'title', 'tasksCount', 'createdAt']).shape);
 
 export class QueryParamsDto extends createZodDto(QueryParamsSchema) {}
+
+export const MoveStateSchema = z
+    .object({
+        position: z
+            .number()
+            .int('Позиция должна быть целым числом')
+            .min(0, 'Позиция не может быть отрицательной')
+            .describe('Новая позиция состояния на доске'),
+        prevStatePosition: z
+            .number()
+            .int('Позиция должна быть целым числом')
+            .min(0, 'Позиция не может быть отрицательной')
+            .nullable()
+            .describe('Позиция предыдущего состояния'),
+        nextStatePosition: z
+            .number()
+            .int('Позиция должна быть целым числом')
+            .min(0, 'Позиция не может быть отрицательной')
+            .nullable()
+            .describe('Позиция следующего состояния'),
+    })
+    .describe('Схема для перемещения состояния (колонки) на доске');
+
+export class MoveStateDto extends createZodDto(MoveStateSchema) {}
+export class StateResponse extends createZodDto(StateSchema) {}
+export class StatesResponse extends createZodDto(StatesSchema) {}
+export class CreateStateDto extends createZodDto(CreateStateSchema) {}
+export class UpdateStateDto extends createZodDto(CreateStateSchema.partial()) {}
+export class CreateStateResponse extends createZodDto(CreateStateResponseSchema) {}

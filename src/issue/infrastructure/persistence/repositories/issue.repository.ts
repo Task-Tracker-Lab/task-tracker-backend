@@ -69,11 +69,7 @@ export class IssueRepository implements IIssueRepository {
         return (result.count ?? 0) > 0;
     }
 
-    public async update(
-        id: string,
-        data: Partial<typeof schema.issues.$inferInsert>,
-        _userId: string,
-    ) {
+    public async update(id: string, data: Partial<typeof schema.issues.$inferInsert>) {
         const result = await this.db
             .update(schema.issues)
             .set(data)
@@ -85,6 +81,32 @@ export class IssueRepository implements IIssueRepository {
         }
 
         return result.length > 0;
+    }
+
+    public async reorder(stateId: string) {
+        const currentIssues = await this.db
+            .select({ id: schema.issues.id })
+            .from(schema.issues)
+            .where(eq(schema.issues.stateId, stateId))
+            .orderBy(schema.issues.position);
+
+        if (currentIssues.length === 0) {
+            return;
+        }
+
+        const STEP = 100.0;
+        const sqlChunks: string[] = [];
+
+        currentIssues.forEach((issue, index) => {
+            const newPos = (index + 1) * STEP;
+            sqlChunks.push(`WHEN id = '${issue.id}' THEN ${newPos}::double precision`);
+        });
+
+        await this.db.execute(sql`
+              UPDATE ${schema.issues}
+              SET position = CASE ${sql.raw(sqlChunks.join(' '))} END
+              WHERE state_id = ${stateId}
+            `);
     }
 
     private get baseIssueQuery() {

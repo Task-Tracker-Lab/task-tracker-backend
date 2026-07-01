@@ -2,19 +2,19 @@ import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBaseController, GetUserId, Public } from '@shared/decorators';
 
 import { AreaFacade } from '../../area.facade';
-import { CreateStateDto, QueryParamsDto, ReordersStatesDto, UpdateStateDto } from '../../dtos';
+import { CreateStateDto, MoveStateDto, QueryParamsDto, UpdateStateDto } from '../../dtos';
 
 import {
     CreateStateSwagger,
     FindAllStatesSwagger,
     FindOneStateSwagger,
+    MoveStateSwagger,
     RemoveStateSwagger,
-    ReorderStatesSwagger,
     RestoreStateSwagger,
     UpdateStateSwagger,
 } from './swagger';
 
-@ApiBaseController('area/:slug/states', 'Area States', true)
+@ApiBaseController('areas/:slug/states', 'Area States', true)
 export class StateController {
     constructor(private readonly facade: AreaFacade) {}
 
@@ -59,16 +59,6 @@ export class StateController {
         return this.facade.deleteState(slug, stateId, userId);
     }
 
-    @Patch('reorder')
-    @ReorderStatesSwagger()
-    async reorder(
-        @Param('slug') slug: string,
-        @Body() dto: ReordersStatesDto,
-        @GetUserId() userId: string,
-    ) {
-        return this.facade.reoderStates(slug, dto, userId);
-    }
-
     @Patch(':stateId')
     @UpdateStateSwagger()
     async update(
@@ -88,5 +78,16 @@ export class StateController {
         @GetUserId() userId: string,
     ) {
         return this.facade.restoreState(slug, stateId, userId);
+    }
+
+    @Post(':stateId/move')
+    @MoveStateSwagger()
+    async move(
+        @Param('slug') slug: string,
+        @Param('stateId') stateId: string,
+        @Body() dto: MoveStateDto,
+        @GetUserId() userId: string,
+    ) {
+        return this.facade.moveState(slug, stateId, dto, userId);
     }
 }

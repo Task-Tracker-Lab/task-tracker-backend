@@ -14,10 +14,10 @@ import { ActionResponse } from '@shared/schemas';
 import {
     CreateStateDto,
     UpdateStateDto,
-    ReordersStatesDto,
     CreateStateResponse,
     StateResponse,
     StatesResponse,
+    MoveStateDto,
 } from '../../dtos';
 
 export const FindAllStatesSwagger = () =>
@@ -205,16 +205,14 @@ export const UpdateStateSwagger = () =>
         SetMetadata(ZOD_RESPONSE_TOKEN, ActionResponse),
     );
 
-export const ReorderStatesSwagger = () =>
+export const MoveStateSwagger = () =>
     applyDecorators(
         ApiOperation({
-            deprecated: true,
-            summary: 'Изменить порядок колонок на доске',
+            summary: 'Переместить колонку на доске',
             description: [
-                'Позволяет переставить колонки на канбан-доске так, как вам удобно.',
-                'Вы просто передаёте массив ID колонок в нужном порядке —',
-                'сервер сохранит эту последовательность.',
-                'Например, вы хотите, чтобы колонка «Готово» была не последней, а перед «Архивом».',
+                'Изменяет порядок колонки (статуса) на доске проекта.',
+                'Позволяет переставлять колонки местами, задавая новую позицию.',
+                'Кастомные колонки можно перемещать свободно, системные — нельзя.',
             ].join('\n'),
         }),
         ApiParam({
@@ -223,19 +221,26 @@ export const ReorderStatesSwagger = () =>
             description: 'Slug проекта',
             example: 'super-project',
         }),
+        ApiParam({
+            name: 'stateId',
+            type: 'string',
+            description: 'State id состояния',
+            example: 'clv123456',
+        }),
         ApiBody({
-            type: ReordersStatesDto.Output,
-            description: 'Массив ID состояний в правильном порядке',
+            type: MoveStateDto.Output,
+            description: 'Данные для перемещения состояния',
         }),
         ApiResponse({
             status: 200,
-            description: 'Порядок обновлён',
+            description: 'Состояние перемещено',
             type: ActionResponse.Output,
         }),
         ApiValidationError(),
-        ApiNotFound('Одно или несколько состояний не найдены'),
+        ApiNotFound('Состояние не найдено'),
         ApiUnauthorized(),
-        ApiForbidden('Нет прав для изменения порядка'),
+        ApiForbidden('Нельзя переместить системный статус'),
+        ApiConflict('Состояние заблокировано'),
 
         SetMetadata(ZOD_RESPONSE_TOKEN, ActionResponse),
     );

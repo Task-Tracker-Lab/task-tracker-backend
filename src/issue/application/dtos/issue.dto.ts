@@ -154,7 +154,10 @@ export const CreateIssueResponseSchema = ActionResponseSchema.extend({
     id: z.string().describe('Уникальный идентификатор созданной задачи'),
 });
 
-export const UpdateIssueSchema = CreateIssueSchema.partial()
+export const UpdateIssueSchema = CreateIssueSchema.omit({
+    position: true,
+})
+    .partial()
     .refine((data) => Object.keys(data).length > 0, {
         error: 'Необходимо передать хотя бы одно поле для обновления',
         abort: true,
@@ -179,6 +182,18 @@ export const MoveIssueSchema = z
             .int('Позиция должна быть целым числом')
             .min(0, 'Позиция не может быть отрицательной')
             .describe('Новая позиция в колонке (0 — первая/верхняя)'),
+        prevIssuePosition: z
+            .number()
+            .int('Позиция должна быть целым числом')
+            .min(0, 'Позиция не может быть отрицательной')
+            .nullable()
+            .describe('Позиция предидущей задачи в колонке'),
+        nextIssuePosition: z
+            .number()
+            .int('Позиция должна быть целым числом')
+            .min(0, 'Позиция не может быть отрицательной')
+            .nullable()
+            .describe('Позиция следующей задачи в колонке'),
     })
     .describe('Схема для перемещения задачи по доске или между областями');
 
